@@ -1,11 +1,6 @@
-let RECT = (left = 0, top = 0, right = 0, bottom = 0) => ({left, top, right, bottom,
-	copy: function() {
-		return RECT(this.left, this.top, this.right, this.bottom);
-	},
-});
+
 
 //ddraw
-let            lpDD = null;           // DirectDraw object
 let     lpDDSPrimary =null ;   // DirectDraw primary surface
 let     lpDDSBack = null;      // DirectDraw back surface
 let     lpDDSMisc = null;      // DirectDraw Bilder surface
@@ -29,11 +24,9 @@ let     lpDDSScape= null;      // DirectDraw Landschaft surface
 let     lpDDSSchatzkarte= null;// SchatzkartenSurface
 let     lpdsbWav = new Array(WAVANZ); //Wavedateispeicher
 
-let                    bActive =false;        // is application active?
 let					Spielzustand = SZNICHTS;	   // in welchem Zustand ist das Spiel?
 let					MouseAktiv = false;    // Mouse angestellt?
 let					LAnimation = true;	   // Ist die Landschaftanimation angeschaltet?
-//HWND					hwnd;
 let					Gitter;			//Gitternetz an/aus
 let					ScapeGrenze = RECT();     //Diese Koordinaten zeigen die Größe der Landschaft an
 let					Flusslaenge = new Array(FLUSSANZAHL);
@@ -67,14 +60,6 @@ let					SchatzGef	= false;	//wurde der Schatz gefunden
 let		Step,Steps;
 let		LenMap = Array.from(Array(MAXYKACH), x => Array(MAXXKACH).fill(0));
 
-//Bereiche
-//								links,		oben,		rechts,				unten
-const    rcGesamt	    = RECT(0,			0,			MAXX,				MAXY);
-const    rcSpielflaeche	= RECT(0,			0,			MAXX-195,			MAXY-20);
-const    rcPanel		= RECT(MAXX-205,	0,			MAXX,				MAXY);
-const    rcKarte		= RECT(MAXX-158,	23,			MAXX-158+MAXXKACH*2,23+MAXYKACH*2);
-const    rcTextFeld1    = RECT(0,			MAXY-20,	MAXX-195,			MAXY);
-
 class TEXTBEREICH
 {
 	constructor()
@@ -101,9 +86,6 @@ let RGBSTRUCT = (r=0, g=0, b=0) => ({r,g,b,
 		return RGBSTRUCT(this.r, this.g, this.b);
 	},
 });
-let rgbStruct = RGBSTRUCT(); //Hier werden die Farben eines Pixels zwischengespeichert
-
-// inline void DWORD2RGB(DWORD color,RGBSTRUCT *PrgbStruct);
 
 let Guy = {
 	Aktiv: false,//Ist er aktiv?
@@ -130,12 +112,6 @@ class BMP
 let Bmp = Array.from(Array(BILDANZ), x => new BMP());
 let Wav = Array.from(Array(WAVANZ), x => ({}));
 let AbspannListe = Array.from(Array(10), x => Array.from(Array(10), x => ({Aktiv:false,Bild:0})));	//Namenabfolge im Abspann
-
-/*
-bool LineIntersect(ZWEID LineStartPos, ZWEID Pos, bool store); //Für Pathfinding (Ist eine Gerade unterbrochen?)
-ZWEID GetKachel(short x,short y);		// Welche Kachel ist unter den angegebenen Koordinaten
-*/
-
 
 class SCAPE
 {
@@ -187,7 +163,6 @@ function createSurface(w, h)
 	off.height = h;
 	off.ctx = off.getContext("2d", {alpha: false});
 	return off;
-	//return off.getContext("2d", {alpha: false});
 }
 
 function LoadString(id)
@@ -198,7 +173,7 @@ function LoadString(id)
 function InitDDraw()
 {
 	console.log("InitDDraw");
-    // Set the video mode to 800x600x16
+    // Set the video mode to 800x600
 	canvas.width = MAXX;
 	canvas.height = MAXY;
 	ctx = canvas.getContext("2d");
@@ -260,7 +235,7 @@ function LoadSound(Sound)
 		.then(buffer => audioCtx.decodeAudioData(buffer))
 		.then(sound => lpdsbWav[Sound] = sound);
 
-	//Die Standardlautstärke festlegen
+	//TODO: Die Standardlautstärke festlegen
 	// lpdsbWav[Sound]->SetVolume((long)(-10000+100*Wav[Sound].Volume));
 }
 
@@ -343,6 +318,7 @@ function LoadGame()
 
 function Blitten(lpDDSVon, lpDDSNach, Transp)
 {
+	// TODO: handle transparency
 	lpDDSNach.ctx.drawImage(
 		lpDDSVon,
 		rcRectsrc.left,
@@ -410,18 +386,6 @@ function CheckMouse()
 	let xDiff,yDiff; //Die Differenz zur vorherigen Position ((Für Scrollen)
 
 	//Mausbewegung
-	/*
-	xDiff = MousePosition.x;
-	MousePosition.x += (short) dims.lX;
-	xDiff -= MousePosition.x;
-	if (MousePosition.x < 0) MousePosition.x = 0;
-	if (MousePosition.x > MAXX-2) MousePosition.x = MAXX-2;
-	yDiff =	MousePosition.y;
-	MousePosition.y += (short) dims.lY;
-	yDiff -= MousePosition.y;
-	if (MousePosition.y < 0) MousePosition.y = 0;
-	if (MousePosition.y > MAXY-2) MousePosition.y = MAXY-2;
-	*/
 	xDiff = dims.lX;
 	yDiff = dims.lY;
 	MousePosition.x = dims.x;
@@ -436,7 +400,7 @@ function CheckMouse()
 		if (Guy.Aktiv)
 		{
 			if (InRect(MousePosition.x,MousePosition.y,Bmp[BUTTSTOP].rcDes) &&
-				(Bmp[BUTTSTOP].Phase!=-1)) CursorTyp = CUPFEIL;
+				(Bmp[BUTTSTOP].Phase !== -1)) CursorTyp = CUPFEIL;
 			else CursorTyp = CUUHR;
 		}
 		else CursorTyp = CUPFEIL;
@@ -533,7 +497,7 @@ function CheckMouse()
 	if ((Guy.Aktiv) && (Button === 0))
 	{
 		if ((InRect(MousePosition.x,MousePosition.y,Bmp[BUTTSTOP].rcDes)) &&
-			(Bmp[BUTTSTOP].Phase!=-1)) ;
+			(Bmp[BUTTSTOP].Phase !== -1)) ;
 		else Button = -1;
 	}
 
@@ -543,21 +507,10 @@ function CheckMouse()
 	//die Maus ist im Panel ->
 	if (InRect(MousePosition.x,MousePosition.y,rcPanel))
 		MouseInPanel(Button,Push);
-	/*dims.lX, dims.lY, dims.lZ,
-                     (dims.rgbButtons[0] & 0x80) ? '0' : ' ',
-                     (dims.rgbButtons[1] & 0x80) ? '1' : ' ',
-                     (dims.rgbButtons[2] & 0x80) ? '2' : ' ',
-                     (dims.rgbButtons[3] & 0x80) ? '3' : ' ');*/
 }
 
 function CheckKey()
 {
-    //#define KEYDOWN(name,key) (name[key] & 0x80)
-    //char     buffer[256];
-	
-    //g_pKey->GetDeviceState(sizeof(buffer),(LPVOID)&buffer);
-   
-	
 	if (Spielzustand === SZLOGO)
 	{
 		if (keymap.Escape || keymap.Return || keymap[" "]) //Logo Abbrechen
@@ -635,51 +588,6 @@ function CheckKey()
 			LAnimation = !LAnimation;
 			Generate();
 		}
-		
-		/*if (KEYDOWN(buffer, DIK_C))	//Zum testen
-		{
-			short x,y;
-			for (y=0;y<MAXYKACH;y++)
-				for (x=0;x<MAXXKACH;x++)
-					Scape[x][y].Entdeckt = true;
-				Generate();
-		}
-		
-		if (KEYDOWN(buffer, DIK_I))	//Zum testen
-		{
-			Guy.Inventar[ROHAST] = 10;
-			Guy.Inventar[ROHSTEIN] = 10;
-			Guy.Inventar[ROHBLATT] = 10;
-			Guy.Inventar[ROHLIANE] = 10;
-			Guy.Inventar[ROHSTAMM] = 9;
-		}
-		if (KEYDOWN(buffer, DIK_W))	//Zum testen
-		{
-			Guy.Inventar[ROHAXT]   = 1;
-			Guy.Inventar[ROHEGGE]  = 1;
-			Guy.Inventar[ROHANGEL]  = 1;
-			Guy.Inventar[ROHHAMMER]   = 1;
-			Guy.Inventar[ROHFERNROHR] = 1; 
-			Guy.Inventar[ROHSTREICHHOLZ] = 1; 
-			Guy.Inventar[ROHSCHAUFEL] = 1; 
-			Guy.Inventar[ROHKARTE] = 1; 
-			Guy.Inventar[ROHSCHLEUDER] = 1; 
-
-			Bmp[BUTTFAELLEN].Phase  = 0;
-			Bmp[BUTTANGELN].Phase  = 0;
-			Bmp[BUTTANZUENDEN].Phase  = 0;
-			Bmp[BUTTAUSSCHAU].Phase = 0;
-			Bmp[BUTTSCHATZKARTE].Phase = 0;
-			Bmp[BUTTSCHATZ].Phase = 0;
-			Bmp[BUTTSCHLEUDER].Phase = 0;
-			Bmp[BUTTFELD].Phase  = 0; 
-			Bmp[BUTTBOOT].Phase  = 0; 
-			Bmp[BUTTROHR].Phase  = 0; 
-			Bmp[BUTTHAUS1].Phase = 0;
-			Bmp[BUTTHAUS2].Phase = 0;
-			Bmp[BUTTHAUS3].Phase = 0;
-		}*/
-
 		if (keymap.s) {	//Sound ausschalten
 			if (Soundzustand === 0) Soundzustand = 1;
 			else if (Soundzustand === 1) Soundzustand = 0; 
@@ -697,8 +605,6 @@ function CheckKey()
  
 function AddTime(h, m)
 {
-	//short x,y,i;
-
 	Stunden += h;
 	Minuten += m;
 	if (Minuten >= 60) {
@@ -724,7 +630,7 @@ function AddTime(h, m)
 				(Scape[x][y].Objekt !== BUSCH))) continue; //Wenn kein Fruchtobjekt weiter
 			if (Scape[x][y].Phase >= Bmp[Scape[x][y].Objekt].Anzahl) continue;
 			if (Scape[x][y].Objekt === FELD) Scape[x][y].Phase += ((60*h+m)*0.005);
-			else if (Scape[x][y].Objekt === BUSCH) Scape[x][y].Phase += ((60*h+m)*0.0005); //pro Minute Reifungsprozess fortf�hren
+			else if (Scape[x][y].Objekt === BUSCH) Scape[x][y].Phase += ((60*h+m)*0.0005); //pro Minute Reifungsprozess fortführen
 			if (Scape[x][y].Phase > Bmp[Scape[x][y].Objekt].Anzahl-1) 
 				Scape[x][y].Phase = Bmp[Scape[x][y].Objekt].Anzahl-1;
 		}
@@ -774,8 +680,6 @@ function LimitScroll()
 
 function GetKachel(PosX, PosY)
 {
-	//short				x,y;
-	//ZWEID				Erg;
 	let Erg = ZWEID();
 
 	for (let y=0; y<MAXYKACH; y++) {
@@ -814,7 +718,6 @@ function MakeRohString(x, y, Objekt)
 {
 	let TmpString = "";
 	let keinRohstoff = true;
-	//short i;
 
 	RohString = "";
 	if (Objekt === -1) {
@@ -854,8 +757,6 @@ function MakeRohString(x, y, Objekt)
 
 function MouseInSpielflaeche(Button, Push, xDiff, yDiff)
 {
-	//let Erg = ZWEID(); //Die angeklickte Kachel
-	//char			Text[1024],TextTmp[1024]; //Text f�r Infoleiste
 	let Text = "";
 	let TextTmp = "";
 	
@@ -934,7 +835,7 @@ function MouseInSpielflaeche(Button, Push, xDiff, yDiff)
 			(Erg.x > 0) && (Erg.x < MAXXKACH-1) &&
 			(Erg.y > 0) && (Erg.y < MAXYKACH-1))
 		{
-				//Klicksound abspielen
+			//Klicksound abspielen
 			PlaySound(WAVKLICK2, 100);
 			if ((Erg.x === RouteZiel.x) && (Erg.y === RouteZiel.y)) {
 				MarkRoute(false);
@@ -976,7 +877,7 @@ function MouseInPanel(Button, Push)
 	let mx,my;	//Mauskoordinaten in Minimap
 	
 	//wenn die Maus in der Minimap ist ->
-	if ((InRect(MousePosition.x,MousePosition.y,rcKarte)) && (Button ==0) && (Push !== -1))
+	if ((InRect(MousePosition.x,MousePosition.y,rcKarte)) && (Button === 0) && (Push !== -1))
 	{
 		mx = MousePosition.x-rcKarte.left;
 		my = MousePosition.y-rcKarte.top;
@@ -990,7 +891,7 @@ function MouseInPanel(Button, Push)
 		if (Gitter) DrawText(messages.GITTERAUS,TXTTEXTFELD,2);
 		else DrawText(messages.GITTERAN,TXTTEXTFELD,2);
 		
-		if ((Button==0) && (Push==1))
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Gitter = !Gitter;
@@ -1001,8 +902,8 @@ function MouseInPanel(Button, Push)
 	{	
 		if (LAnimation) DrawText(messages.ANIMATIONAUS,TXTTEXTFELD,2);
 		else DrawText(messages.ANIMATIONAN,TXTTEXTFELD,2);
-		
-		if ((Button==0) && (Push==1))
+
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			LAnimation = !LAnimation;
@@ -1014,8 +915,8 @@ function MouseInPanel(Button, Push)
 		if (Soundzustand === 1) DrawText(messages.SOUNDAUS,TXTTEXTFELD,2);
 		else if (Soundzustand === 0) DrawText(messages.SOUNDAN,TXTTEXTFELD,2);
 		else DrawText(messages.KEINSOUND,TXTTEXTFELD,2);
-		
-		if ((Button==0) && (Push==1))
+
+		if ((Button === 0) && (Push === 1))
 		{
 			if (Soundzustand === 1) 
 			{
@@ -1034,7 +935,7 @@ function MouseInPanel(Button, Push)
 	{	
 		DrawText(messages.BEENDEN,TXTTEXTFELD,2);
 		Bmp[BUTTBEENDEN].Animation = true;
-		if ((Button==0) && (Push==1))
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Guy.AkNummer = 0;
@@ -1046,7 +947,7 @@ function MouseInPanel(Button, Push)
 	{	
 		DrawText(messages.NEU,TXTTEXTFELD,2);
 		Bmp[BUTTNEU].Animation = true;
-		if ((Button==0) && (Push==1))
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Guy.AkNummer = 0;
@@ -1058,7 +959,7 @@ function MouseInPanel(Button, Push)
 	{	
 		DrawText(messages.TAGNEU2,TXTTEXTFELD,2);
 		Bmp[BUTTTAGNEU].Animation = true;
-		if ((Button==0) && (Push==1))
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Guy.AkNummer = 0;
@@ -1071,7 +972,7 @@ function MouseInPanel(Button, Push)
 		if (HauptMenue === MEAKTION) DrawText(messages.MEAKTIONZU,TXTTEXTFELD,2);
 		else DrawText(messages.MEAKTIONAUF,TXTTEXTFELD,2);
 		Bmp[BUTTAKTION].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if (HauptMenue === MEAKTION) HauptMenue = MEKEINS;
@@ -1084,7 +985,7 @@ function MouseInPanel(Button, Push)
 		if (HauptMenue === MEBAUEN) DrawText(messages.MEBAUENZU,TXTTEXTFELD,2);
 		else DrawText(messages.MEBAUENAUF,TXTTEXTFELD,2);
 		Bmp[BUTTBAUEN].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if (HauptMenue === MEBAUEN) HauptMenue = MEKEINS;
@@ -1096,7 +997,7 @@ function MouseInPanel(Button, Push)
 		if (HauptMenue === MEINVENTAR) DrawText(messages.MEINVENTARZU,TXTTEXTFELD,2);
 		else DrawText(messages.MEINVENTARAUF,TXTTEXTFELD,2);
 		Bmp[BUTTINVENTAR].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if (HauptMenue === MEINVENTAR) HauptMenue = MEKEINS;
@@ -1109,7 +1010,7 @@ function MouseInPanel(Button, Push)
 		DrawText(messages.WEITER,TXTTEXTFELD,2);
 	
 		Bmp[BUTTWEITER].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Bmp[BUTTSTOP].Phase = 0;
@@ -1139,7 +1040,7 @@ function MouseInPanel(Button, Push)
 		DrawText(messages.STOP,TXTTEXTFELD,2);
 	
 		Bmp[BUTTSTOP].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Guy.AkNummer = 0;
@@ -1153,7 +1054,7 @@ function MouseInPanel(Button, Push)
 	{
 		DrawText(messages.BEGINNABLEGEN,TXTTEXTFELD,2);
 		Bmp[BUTTABLEGEN].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Guy.AkNummer = 0;
@@ -1167,7 +1068,7 @@ function MouseInPanel(Button, Push)
 	{
 		DrawText(messages.BEGINNSUCHEN,TXTTEXTFELD,2);
 		Bmp[BUTTSUCHEN].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Guy.AkNummer = 0;
@@ -1179,7 +1080,7 @@ function MouseInPanel(Button, Push)
 	{
 		DrawText(messages.BEGINNESSEN,TXTTEXTFELD,2);
 		Bmp[BUTTESSEN].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Guy.AkNummer = 0;
@@ -1199,7 +1100,7 @@ function MouseInPanel(Button, Push)
 	{
 		DrawText(messages.BEGINNSCHLAFEN,TXTTEXTFELD,2);
 		Bmp[BUTTSCHLAFEN].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if (Scape[Guy.Pos.x][Guy.Pos.y].Art !== 1)
@@ -1215,7 +1116,7 @@ function MouseInPanel(Button, Push)
 	{
 		DrawText(messages.BEGINNFAELLEN,TXTTEXTFELD,2);
 		Bmp[BUTTFAELLEN].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Guy.AkNummer = 0;
@@ -1240,7 +1141,7 @@ function MouseInPanel(Button, Push)
 	{
 		DrawText(messages.BEGINNANGELN,TXTTEXTFELD,2);
 		Bmp[BUTTANGELN].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Guy.AkNummer = 0;
@@ -1255,7 +1156,7 @@ function MouseInPanel(Button, Push)
 	{
 		DrawText(messages.BEGINNANZUENDEN,TXTTEXTFELD,2);
 		Bmp[BUTTANZUENDEN].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Guy.AkNummer = 0;
@@ -1270,7 +1171,7 @@ function MouseInPanel(Button, Push)
 	{
 		DrawText(messages.BEGINNAUSSCHAU,TXTTEXTFELD,2);
 		Bmp[BUTTAUSSCHAU].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Guy.AkNummer = 0;
@@ -1287,7 +1188,7 @@ function MouseInPanel(Button, Push)
 	{
 		DrawText(messages.BEGINNSCHATZ,TXTTEXTFELD,2);
 		Bmp[BUTTSCHATZ].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Guy.AkNummer = 0;
@@ -1306,7 +1207,7 @@ function MouseInPanel(Button, Push)
 	{
 		DrawText(messages.BEGINNSCHLEUDER,TXTTEXTFELD,2);
 		Bmp[BUTTSCHLEUDER].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			Guy.AkNummer = 0;
@@ -1328,7 +1229,7 @@ function MouseInPanel(Button, Push)
 	{
 		DrawText(messages.BEGINNSCHATZKARTE,TXTTEXTFELD,2);
 		Bmp[BUTTSCHATZKARTE].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			DrawSchatzkarte();
@@ -1345,7 +1246,7 @@ function MouseInPanel(Button, Push)
 						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTFELD].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === -1) &&
@@ -1378,7 +1279,7 @@ function MouseInPanel(Button, Push)
 						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTZELT].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === -1) &&
@@ -1412,7 +1313,7 @@ function MouseInPanel(Button, Push)
 						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTBOOT].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === -1) &&
@@ -1449,7 +1350,7 @@ function MouseInPanel(Button, Push)
 						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTROHR].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === -1) &&
@@ -1482,7 +1383,7 @@ function MouseInPanel(Button, Push)
 						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTSOS].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === -1) &&
@@ -1515,7 +1416,7 @@ function MouseInPanel(Button, Push)
 						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTHAUS1].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= BAUM1) &&
@@ -1550,7 +1451,7 @@ function MouseInPanel(Button, Push)
 						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTHAUS2].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= BAUM1) &&
@@ -1587,7 +1488,7 @@ function MouseInPanel(Button, Push)
 						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTHAUS3].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= BAUM1) &&
@@ -1625,7 +1526,7 @@ function MouseInPanel(Button, Push)
 						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTFEUERST].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === -1) &&
@@ -1652,7 +1553,7 @@ function MouseInPanel(Button, Push)
 	{
 		DrawText(messages.BEGINNDESTROY,TXTTEXTFELD,2);
 		Bmp[BUTTDESTROY].Animation = true;
-		if ((Button==0) && (Push==1)) 
+		if ((Button === 0) && (Push === 1))
 		{
 			PlaySound(WAVKLICK2, 100);
 			if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= FELD) &&
@@ -1669,7 +1570,7 @@ function MouseInPanel(Button, Push)
 		for (let i=ROHAST; i<=ROHSCHLEUDER; i++) {
 			if	(InRect(MousePosition.x,MousePosition.y,Bmp[i].rcDes) && (Guy.Inventar[i]>0))
 			{
-				if	((Button==0) && (Push==1)) 
+				if ((Button === 0) && (Push === 1))
 				{
 					if (TwoClicks === -1) 
 					{
@@ -1704,9 +1605,9 @@ function MouseInPanel(Button, Push)
 			DrawText(messages.SOSPAET,TXTTEXTFELD,2);
 	else if (InRect(MousePosition.x,MousePosition.y,TextBereich[TXTCHANCE].rcText)) 
 			DrawText(messages.CHANCETEXT,TXTTEXTFELD,2);
-	else //TwoClicks l�schen
+	else //TwoClicks löschen
 	{
-		if	((Button==0) && (Push==1)) PlaySound(WAVKLICK, 100);
+		if ((Button === 0) && (Push === 1)) PlaySound(WAVKLICK, 100);
 		TwoClicks = -1;
 	}
 }
@@ -1735,58 +1636,9 @@ function InDreieck(X, Y, X0, Y0, X1, Y1, X3, Y3)
 
 function InRect(x, y, rcRect)
 {
-	if  ((x <= rcRect.right) &&	(x >= rcRect.left) &&
-		 (y <= rcRect.bottom) && (y >= rcRect.top))	return true;
-	return false;
+	return (x <= rcRect.right) && (x >= rcRect.left) &&
+		 (y <= rcRect.bottom) && (y >= rcRect.top)	;
 }
-
-/*
-inline DWORD RGB2DWORD(BYTE r, BYTE g, BYTE b)
-{
-	DWORD Erg = 0;
-	
-	if (ddpf.dwRBitMask === 63488)
-	{
-		Erg = (DWORD)((r & 0xF8) >> 3);
-		Erg = Erg << 6;
-		Erg = Erg | (DWORD)((g & 0xFC) >> 2);
-		Erg = Erg << 5;
-		Erg = Erg | (DWORD)((b & 0xF8) >> 3);
-	}
-	else if (ddpf.dwRBitMask === 31744)
-	{
-		Erg = (DWORD)((r & 0xF8) >> 3);
-		Erg = Erg << 5;
-		Erg = Erg | (DWORD)((g & 0xF8) >> 3);
-		Erg = Erg << 5;
-		Erg = Erg | (DWORD)((b & 0xF8) >> 3);
-	}
-	else 
-	{
-		Erg = 0;
-		MessageBeep(MB_OK);
-	}
-	return Erg;
-}
-*/
-
-	/*
-inline void DWORD2RGB(DWORD color)
-{
-	if (ddpf.dwRBitMask === 63488)
-	{
-		rgbStruct.r = (byte)((color & 0xF800) >> 8);
-		rgbStruct.g = (byte)((color & 0x07E0) >> 3);
-		rgbStruct.b = (byte)((color & 0x001F) << 3);
-	}
-	else if (ddpf.dwRBitMask === 31744)
-	{
-		rgbStruct.r = (byte)((color & 0x7C00) >> 7);
-		rgbStruct.g = (byte)((color & 0x03E0) >> 2);
-		rgbStruct.b = (byte)((color & 0x001F) << 3);
-	}
-}
-*/
 
 function PutPixel(x, y, color, dest)
 {
@@ -1816,11 +1668,17 @@ function GetPixel(x, y, src)
 function fill_dest(color, dest = null)
 {
 	if(dest === null) dest = lpDDSBack;
+	ctx.fillStyle = "rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")";
+	dest.ctx.fillRect(
+		rcRectdes.left,
+		rcRectdes.top,
+		rcRectdes.right - rcRectdes.left,
+		rcRectdes.bottom - rcRectdes.top,
+	);
 }
 
 function NeuesSpiel(neu)
 {
-	//short x,y;
 	let LoadOK = false;
 
 	InitStructs();
@@ -1934,9 +1792,6 @@ function NeuesSpiel(neu)
 
 function Generate()
 {
-	//short				x,y;
-	//short				i;
-	
 	//Die Kartehintergrundfarbe
 	rcRectdes.left		= 0;
 	rcRectdes.top		= 0;
@@ -2065,12 +1920,6 @@ function Generate()
 
 function Zeige()
 {
-	//HRESULT				ddrval;
-	//short				i;
-	//char Stringsave1[128],Stringsave2[128]; //F�r die Zeitausgabe
-	let Stringsave1 = "";
-	let Stringsave2 = "";
-	
 	rcRectsrc.left		= Camera.x+rcSpielflaeche.left;
 	rcRectsrc.top		= Camera.y+rcSpielflaeche.top;
 	rcRectsrc.right		= Camera.x+rcSpielflaeche.right;
@@ -2089,8 +1938,8 @@ function Zeige()
 	//Die TagesZeit ausgeben
 	Textloeschen(TXTTAGESZEIT);
 	TextBereich[TXTTAGESZEIT].Aktiv = true;
-	Stringsave1 = "" + Stunden+6;
-	Stringsave1 = "" + Minuten;
+	let Stringsave1 = "" + Stunden+6;
+	let Stringsave1 = "" + Minuten;
 	StdString = "";
 	if (Stunden+6 < 10) StdString += "0";
 	StdString += Stringsave1;
@@ -2137,37 +1986,11 @@ function Zeige()
 					   MousePosition.y-Bmp[CursorTyp].Hoehe/2, 
 					   CursorTyp, rcGesamt, false,-1);
 
-	/*
- 	//Flippen
-	while(1) 
-	{ 
-		ddrval = lpDDSPrimary->Flip(null, 0);
-		if(ddrval === DD_OK) 
-		{ 
-			break; 
-		} 
-		if(ddrval === DDERR_SURFACELOST) 
-		{ 
-			ddrval = lpDDSPrimary->Restore(); 
-			if(ddrval !== DD_OK) 
-			{ 
-				break; 
-			} 
-		} 
-		if(ddrval !== DDERR_WASSTILLDRAWING) 
-		{ 
-			break; 
-		} 
-	} */
-
 	if (Nacht) Fade(100,100,100); //Das muss hier stehen, damit man die Textnachricht in der Nacht lesen kann
 }
 
 function ZeigeIntro()
 {
-	//HRESULT				ddrval;
-	//short				i,z;
-	
 	rcRectdes.left = 0;
 	rcRectdes.top  = 0;
 	rcRectdes.right= MAXX;
@@ -2196,30 +2019,6 @@ function ZeigeIntro()
 		rcRectdes   = 	TextBereich[i].rcText;
 		Blitten(lpDDSSchrift,lpDDSBack,true);
 	}
-
-	/*
-	//Flippen
-	while(1) 
-	{ 
-		ddrval = lpDDSPrimary->Flip(null, 0);
-		if(ddrval === DD_OK) 
-		{ 
-			break; 
-		} 
-		if(ddrval === DDERR_SURFACELOST) 
-		{ 
-			ddrval = lpDDSPrimary->Restore(); 
-			if(ddrval !== DD_OK) 
-			{ 
-				break; 
-			} 
-		} 
-		if(ddrval !== DDERR_WASSTILLDRAWING) 
-		{ 
-			break; 
-		} 
-	}
-	 */
 }
 
 function ZeigeAbspann()
@@ -2291,29 +2090,6 @@ function ZeigeAbspann()
 
 		Blitten(lpDDSBack,lpDDSBack,false);
 	}
-	/*
-	//Flippen
-	while(1) 
-	{ 
-		ddrval = lpDDSPrimary->Flip(null, 0);
-		if(ddrval === DD_OK) 
-		{ 
-			break; 
-		} 
-		if(ddrval === DDERR_SURFACELOST) 
-		{ 
-			ddrval = lpDDSPrimary->Restore(); 
-			if(ddrval !== DD_OK) 
-			{ 
-				break; 
-			} 
-		} 
-		if(ddrval !== DDERR_WASSTILLDRAWING) 
-		{ 
-			break; 
-		} 
-	}
-	 */
 }
 
 function ZeigeLogo()
@@ -2344,11 +2120,6 @@ function ZeigeLogo()
 
 function AbspannBlt(Bild, Prozent)
 {
-	//short				x,y;
-
-	//Bmp[Bild].Surface->Lock(null,&ddsd,DDLOCK_WAIT,null);
-	//lpDDSBack->Lock(null,&ddsd2,DDLOCK_WAIT,null);
-
 	lock_canvas(lpDDSBack);
 	
 	for (let x=0; x<Bmp[Bild].Breite; x++) {
@@ -2378,8 +2149,6 @@ function AbspannBlt(Bild, Prozent)
 
 function AbspannCalc()
 {
-	//short i,k;
-	
 	if (AbspannZustand === 0)
 	{
 		for (let k=1; k<10; k++) {
@@ -2454,9 +2223,6 @@ function ZeichneBilder(x, y, i, Ziel, Reverse, Frucht)
 
 function ZeichneObjekte()
 {
-	//short				x,y;
-	//bool				Guyzeichnen;
-
 	for (let y=0; y<MAXYKACH; y++) {
 		for (let x=0; x<MAXXKACH; x++) {
 			let Guyzeichnen = false;
@@ -2582,7 +2348,6 @@ function ZeichnePapier()
 	Blitten(lpDDSPapier,lpDDSBack,true);
 	rcRectdes.left		= rcRectdes.left+34;
 	rcRectdes.top		= rcRectdes.top+77;
-	rcRectdes.right		= rcRectdes.right;
 	rcRectdes.bottom	= TextBereich[TXTPAPIER].rcText.top+PapierText;
 	fill_dest([236,215,179], lpDDSBack);
 	rcRectsrc.left		= 0;
@@ -2763,7 +2528,7 @@ function ZeichnePanel()
 						Bmp[ROEMISCH1].rcDes.top,
 						ROEMISCH1, rcPanel, false,-1);
 				}
-				else if (j==5) ZeichneBilder(Bmp[i].rcDes.left+23,
+				else if (j === 5) ZeichneBilder(Bmp[i].rcDes.left+23,
 					Bmp[ROEMISCH2].rcDes.top,
 					ROEMISCH2, rcPanel, false,-1);
 				else if ((j>5)&&(j<10))
@@ -2772,7 +2537,7 @@ function ZeichnePanel()
 						Bmp[ROEMISCH1].rcDes.top,
 						ROEMISCH1, rcPanel, false,-1);
 				}
-				else if (j==10)
+				else if (j === 10)
 					ZeichneBilder(Bmp[i].rcDes.left+43,
 					Bmp[ROEMISCH2].rcDes.top,
 					ROEMISCH2, rcPanel, false,-1);
@@ -2845,12 +2610,12 @@ function DrawString(string, x, y, Art)
 {
 	let Breite,Hoehe;
 	
-	if (Art==1)
+	if (Art === 1)
 	{
 		Breite = S1XPIXEL;
 		Hoehe  = S1YPIXEL;
 	}
-	if (Art==2)
+	else if (Art === 2)
 	{
 		Breite = S2XPIXEL;
 		Hoehe  = S2YPIXEL;
@@ -2922,24 +2687,22 @@ function DrawString(string, x, y, Art)
 function DrawText(Text, Bereich, Art)
 {
 	let BBreite,BHoehe;
-	let strend = 0x0;
 	let StdString2;//Zur Variablenausgabe
 	let Anzahl; //Zur Variablenausgabe
 
 	Textloeschen(Bereich);
 	TextBereich[Bereich].Aktiv = true;
 
-	if (Art==1)
+	if (Art === 1)
 	{
 		BBreite = S1ABSTAND;
 		BHoehe  = S1YPIXEL;
 	}
-	if (Art==2)
+	else if (Art === 2)
 	{
 		BBreite = S2ABSTAND;
 		BHoehe  = S2YPIXEL;
 	}
-	// let Text = LoadString(TEXT);
 	let Posx = TextBereich[Bereich].rcText.left;
 	let Posy = TextBereich[Bereich].rcText.top;
 	let Pos  = 0;
@@ -4048,7 +3811,7 @@ function Fluss() //Anzahl der Flüsse und der minimale Länge
 		}
 		
 		//Die richtigen Wasserkacheln auswählen
-		//x0, y0, x1, y1, x2; y2 = -1;
+		//x0, y0, x1, y1, x2, y2 = -1;
 		for (let m=0; m<FLUSSANZAHL; m++)
 		{	
 			for (i=0; i<=Flusslaenge[m]; i++)
@@ -4113,12 +3876,12 @@ function Fluss() //Anzahl der Flüsse und der minimale Länge
 				
 				//Alle Möglichkeiten durchgehen
 				
-				if (Scape[x1][y1].Typ ==1) Scape[x1][y1].Objekt = FLUSS1;
-				if (Scape[x1][y1].Typ ==2) Scape[x1][y1].Objekt = FLUSS2;
-				if (Scape[x1][y1].Typ ==3) Scape[x1][y1].Objekt = FLUSS3;
-				if (Scape[x1][y1].Typ ==4) Scape[x1][y1].Objekt = FLUSS4;
+				if (Scape[x1][y1].Typ === 1) Scape[x1][y1].Objekt = FLUSS1;
+				if (Scape[x1][y1].Typ === 2) Scape[x1][y1].Objekt = FLUSS2;
+				if (Scape[x1][y1].Typ === 3) Scape[x1][y1].Objekt = FLUSS3;
+				if (Scape[x1][y1].Typ === 4) Scape[x1][y1].Objekt = FLUSS4;
 				
-				if (Scape[x1][y1].Typ ==0)
+				if (Scape[x1][y1].Typ === 0)
 				{
 					if ((x0 < x1) && (y0 === y1))
 					{
@@ -4188,7 +3951,7 @@ function Baeume(Prozent)
 	for (let y=0; y < MAXYKACH; y++) {//Alle Kacheln durchgehen
 		for (let x=0; x < MAXXKACH; x++) {
 			if ((Scape[x][y].Objekt !== -1) || 
-				((Scape[x][y].Art === 3) && (Scape[x][y].Typ ==0))) continue;
+				((Scape[x][y].Art === 3) && (Scape[x][y].Typ === 0))) continue;
 				//Wenn schon ein Objekt da ist oder Treibsand ist, dann mit nächsten Teil weitermachen
 			if (rand()%(100/Prozent) !== 0) continue; //Die Wahrscheinlichkeit für einen Baum bestimmen
 			while(1)
@@ -4198,7 +3961,7 @@ function Baeume(Prozent)
 				let Erg = GetKachel(Scape[x][y].xScreen+Pos.x,Scape[x][y].yScreen+Pos.y);
 				if ((Erg.x === x) && (Erg.y === y)) break;
 			}
-			if ((Scape[x][y].Art === 2) && (Scape[x][y].Typ ==0))//Bei Strand nur Palmen nehmen
+			if ((Scape[x][y].Art === 2) && (Scape[x][y].Typ === 0))//Bei Strand nur Palmen nehmen
 			{
 				Scape[x][y].Objekt  = BAUM2;
 			}
@@ -4285,10 +4048,6 @@ function Schatz()
 				SchatzPos.y = y;
 			}
 
-			/*
-			lpDDSScape->Lock(null,&ddsd,DDLOCK_WAIT,null);
-			lpDDSSchatzkarte->Lock(null,&ddsd2,DDLOCK_WAIT,null);
-			*/
 			lock_canvas(lpDDSScape);
 			lock_canvas(lpDDSSchatzkarte);
 
@@ -4311,10 +4070,6 @@ function Schatz()
 				}
 			}
 			upload_canvas(lpDDSSchatzkarte);
-			/*
-			lpDDSScape->Unlock(null);
-			lpDDSSchatzkarte->Unlock(null);
-			*/
 
 			rcRectsrc  = Bmp[KREUZ].rcSrc;
 			rcRectdes.left = SKARTEX/2-Bmp[KREUZ].Breite/2;
@@ -4323,8 +4078,7 @@ function Schatz()
 			rcRectdes.bottom= rcRectdes.top+Bmp[KREUZ].Hoehe;
 			Blitten(Bmp[KREUZ].Surface,lpDDSSchatzkarte,true);
  			
-			
-			// lpDDSSchatzkarte->Lock(null,&ddsd2,DDLOCK_WAIT,null);
+
 			lock_canvas(lpDDSSchatzkarte);
 			
 			//Weichzeichnen
@@ -4349,7 +4103,6 @@ function Schatz()
 				}
 			}
 			upload_canvas(lpDDSSchatzkarte);
-			// lpDDSSchatzkarte->Unlock(null);
 			break;
 		}
     }
@@ -4363,7 +4116,7 @@ function RotateRight(Dir)	//Richtungskoordinate rechtsrum umrechnen
 	case 4 : { NewPos.x--;      NewPos.y++;     Dir=8; break; }
 	case 8:  { NewPos.x--;      NewPos.y--;     Dir=1; break; }
 	case 1 : { NewPos.x++;	    NewPos.y--;     Dir=2; break; }
-	};
+	}
 	return Dir;
 }
  
@@ -4381,13 +4134,13 @@ function LineIntersect(LineStartPos, Pos, store)
 	if (Math.abs(Dx) > Math.abs(Dy))
 	{
 		if (Dx>0)  Sx = -1; else Sx = 1;
-		if (Dx==0)  Sy = 0; else Sy = Dy/(Dx*Sx);
+		if (Dx === 0)  Sy = 0; else Sy = Dy/(Dx*Sx);
 		Steps = Math.abs(Dx);
 	} 
 	else
 	{
 		if (Dy>0)  Sy = -1; else Sy = 1;
-		if (Dy==0)  Sx = 0; else Sx = Dx/(Dy*Sy);
+		if (Dy === 0)  Sx = 0; else Sx = Dx/(Dy*Sy);
 		Steps = Math.abs(Dy);
 	}
 		 
@@ -4400,7 +4153,7 @@ function LineIntersect(LineStartPos, Pos, store)
 		}
 		let Nextx = x + Sx;
 		let Nexty = y + Sy;
-		if ((ROUND(y)!=ROUND(Nexty)) && (ROUND(x)!=ROUND(Nextx))) {
+		if ((ROUND(y) !== ROUND(Nexty)) && (ROUND(x) !== ROUND(Nextx))) {
 			if (Scape[ROUND(x)][ROUND(Nexty)].Begehbar) {
 				if (store) {
 					Route[RouteLaenge].x = ROUND(x);
@@ -4487,7 +4240,7 @@ function FindTheWay()
 		for (let BI = 0; BI<=3; BI++) //In jede Richtung schauen
 		{
 			//ist das Feld noch nicht besucht und frei?
-			if ((LenMap[NewPos.x][NewPos.y]==65535) &&
+			if ((LenMap[NewPos.x][NewPos.y] === 65535) &&
 				(Scape[NewPos.x][NewPos.y].Begehbar)) 
 			{
 				// Wieviele Schritte braucht man um zu diesem Feld zu kommen 
@@ -4501,7 +4254,7 @@ function FindTheWay()
 				PCnt++;
 			}
 			//Ziel erreicht?
-			if ((NewPos.x==RouteZiel.x) && (NewPos.y==RouteZiel.y)) 
+			if ((NewPos.x === RouteZiel.x) && (NewPos.y === RouteZiel.y))
 			{
 				GoalReached = true;
 				BI=3;
@@ -4543,7 +4296,7 @@ function FindTheWay()
 				BestLine = Pos;
 			}
 			
-			if ((Pos.x==RouteStart.x) && (Pos.y==RouteStart.y))  
+			if ((Pos.x === RouteStart.x) && (Pos.y === RouteStart.y))
 			{
 				Pos = BestLine;
 				LineIntersect(LineStartPos,Pos,true);	
@@ -4748,11 +4501,11 @@ function Animationen()
 	for (let y=0; y<MAXYKACH; y++) {
 		for (let x=0; x<MAXXKACH; x++) {
 			let j = Scape[x][y].Objekt;
-			if ((j==-1) || (!Bmp[j].Animation)) continue;
+			if ((j === -1) || (!Bmp[j].Animation)) continue;
 			let i = LastBild/Bmp[j].Geschwindigkeit;
 			if (i<1) i = 1;
 			if (Bild%i === 0) {
-				if ((j>=BAUM1DOWN) && (j<=BAUM4DOWN) &&  //Die Baumf�llenanimation nur ein mal abspielen
+				if ((j>=BAUM1DOWN) && (j<=BAUM4DOWN) &&  //Die Baumfällenanimation nur ein mal abspielen
 					(Scape[x][y].Phase === Bmp[j].Anzahl-1));
 				else Scape[x][y].Phase++;
 				if (Scape[x][y].Phase>=Bmp[j].Anzahl) Scape[x][y].Phase = 0;
@@ -4863,14 +4616,14 @@ function CalcGuyKoor()
 		if (abs(Dx)>abs(Dy)) 
 		{
 			if (Dx>0)  Schrittx = 1; else Schrittx = -1;
-			if (Dx==0)  Schritty = 0; else Schritty = Dy/(Dx*Schrittx);
+			if (Dx === 0)  Schritty = 0; else Schritty = Dy/(Dx*Schrittx);
 			Steps = Math.abs(Dx);
 			
 		} 
 		else
 		{
 			if (Dy>0)  Schritty = 1; else Schritty = -1;
-			if (Dy==0)  Schrittx = 0; else Schrittx = Dx/(Dy*Schritty);
+			if (Dy === 0)  Schrittx = 0; else Schrittx = Dx/(Dy*Schritty);
 			Steps = Math.abs(Dy);
 		}
 	
@@ -4924,10 +4677,10 @@ function CalcKoor()
 			Scape[x][y].yScreen	=
 				x * KXPIXEL /2  + y * KYPIXEL / 2-16*Scape[x][y].Hoehe +
 				(-13*x) + (-8*y); //seltsame Korrekturen
-			if ((x==0)		  && (y==0))				ScapeGrenze.top		= Scape[x][y].yScreen;
-			if ((x==0)		  && (y==MAXYKACH-1))		ScapeGrenze.left	= Scape[x][y].xScreen;
-			if ((x==MAXXKACH-1) && (y==MAXYKACH-1))		ScapeGrenze.bottom	= Scape[x][y].yScreen+KYPIXEL;
-			if ((x==MAXXKACH-1) && (y==0))				ScapeGrenze.right	= Scape[x][y].xScreen+KXPIXEL;
+			if ((x === 0)		  && (y === 0))				ScapeGrenze.top		= Scape[x][y].yScreen;
+			if ((x === 0)		  && (y === MAXYKACH-1))		ScapeGrenze.left	= Scape[x][y].xScreen;
+			if ((x === MAXXKACH-1) && (y === MAXYKACH-1))		ScapeGrenze.bottom	= Scape[x][y].yScreen+KYPIXEL;
+			if ((x === MAXXKACH-1) && (y === 0))				ScapeGrenze.right	= Scape[x][y].xScreen+KXPIXEL;
 		}
 	}
 }
@@ -4951,24 +4704,17 @@ function Refresh()
 			Zeit = Zeitsave;
 			LastBild = (LastBild+Bild/5)/2;
 			Bild = 0;
-			if (LastBild===0) LastBild = 50;
-			
-			//BilderproSec ausgeben
-			/*Textloeschen(TXTFPS);
-			TextBereich[TXTFPS].Aktiv = true;
-			sprintf(StdString, "%d", LastBild);
-			DrawString(StdString,(short)TextBereich[TXTFPS].rcText.left,(short)TextBereich[TXTFPS].rcText.top,1);
-			*/
+			if (LastBild === 0) LastBild = 50;
 		}
 		if (Spielzustand === SZLOGO)
 		{
-			if (CheckKey()===2) return;		//Das Keyboard abfragen
+			if (CheckKey() === 2) return;		//Das Keyboard abfragen
 			ZeigeLogo(); //Bild auffrischen
 						
 		}
 		else if ((Spielzustand === SZINTRO) || (Spielzustand === SZGERETTET))
 		{
-			if (CheckKey()===0) return 0;		//Das Keyboard abfragen
+			if (CheckKey() === 0) return 0;		//Das Keyboard abfragen
 
 			Animationen();  //Animationen weiterschalten
 			if (!Guy.Aktiv) Event(Guy.Aktion); //Aktionen starten
@@ -4987,7 +4733,7 @@ function Refresh()
 			
 			CheckSpzButton();					//Die Spezialknöpfe umschalten
 			if (MouseAktiv) CheckMouse();		//Den MouseZustand abchecken
-			if (CheckKey()===0) return 0;		//Das Keyboard abfragen
+			if (CheckKey() === 0) return 0;		//Das Keyboard abfragen
 			LimitScroll();						//Das Scrollen an die Grenzen der Landschaft anpassen
 			Animationen();						//Die Animationsphasen weiterschalten
 			if (!Guy.Aktiv) Event(Guy.Aktion);  //Die Aktionen starten
@@ -4997,45 +4743,13 @@ function Refresh()
 		}
 		else if (Spielzustand === SZABSPANN)
 		{
-			if (CheckKey()===0) return 0;
+			if (CheckKey() === 0) return 0;
 			AbspannCalc();
 			ZeigeAbspann();
 		}
 	}
 	return 1;
 }
-
-/*
-function WindowProc( HWND hWnd, UINT message,
-                            WPARAM wParam, LPARAM lParam )
-{
-		static BYTE phase = 0;
-    
-    switch( message )
-    {
-    case WM_ACTIVATEAPP:
-        bActive = wParam;
-		break;
-    
-	case WM_ACTIVATE:   // sent when window changes active state
-        bActive=wParam; 
-        SetAcquire();
-		break;
-		
-    case WM_CREATE:
-        break;
-    case WM_TIMER:
-		if (Refresh()==0) PostMessage(hwnd, WM_DESTROY,0,0);
-		break;
-	case WM_DESTROY:
-       	finiObjects();
-        PostQuitMessage( 0 );
-        break;
-    }
-
-    return DefWindowProc(hWnd, message, wParam, lParam);
-
-} /* WindowProc */
 
 /*
  * doInit - do work required for every instance of the application:
@@ -5051,10 +4765,8 @@ function doInit(hInstance, nCmdShow)
 	InitDSound();
 
 	setInterval(() => {
-		if (Refresh()==0) ; // destroy
+		Refresh(); // if return value is 0, then destroy
 	}, 1000); //Provisorisch
-
-	//srand( (unsigned)time(null)); //Random initialisieren
 }
 
 /*

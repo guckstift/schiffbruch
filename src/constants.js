@@ -602,3 +602,18 @@ const TerrainInfoLabels = [
 	"WIESETEXT", "MEERTEXT", "STRANDTEXT", "TREIBSANDTEXT",
 	"FEUCHTEWIESETEXT", "BAUMTEXT", "FELDTEXT", "ZELTTEXT", "BUSCHTEXT"
 ];
+
+let RECT = (left = 0, top = 0, right = 0, bottom = 0) => ({
+	left, top, right, bottom,
+	copy: function() {
+		return RECT(this.left, this.top, this.right, this.bottom);
+	},
+});
+
+//Bereiche
+//								links,		oben,		rechts,				unten
+const    rcGesamt	    = RECT(0,			0,			MAXX,				MAXY);
+const    rcSpielflaeche	= RECT(0,			0,			MAXX-195,			MAXY-20);
+const    rcPanel		= RECT(MAXX-205,	0,			MAXX,				MAXY);
+const    rcKarte		= RECT(MAXX-158,	23,			MAXX-158+MAXXKACH*2,23+MAXYKACH*2);
+const    rcTextFeld1    = RECT(0,			MAXY-20,	MAXX-195,			MAXY);
