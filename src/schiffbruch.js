@@ -1,3 +1,20 @@
+const BMP_FILENAMES = {
+	MISC                    :     "gfx/terrain.png",
+	PANEL                   :     "gfx/gui.png",
+	GUYANI                  :     "gfx/player.png",
+	ANIMATION               :     "gfx/animations.png",
+	BAUM                    :     "gfx/trees.png",
+	CURSORBMP               :     "gfx/cursors.png",
+	BUTTONS                 :     "gfx/buttons.png",
+	SCHRIFT2                :     "gfx/font2.png",
+	SCHRIFT1                :     "gfx/font1.png",
+	TEXTFELD                :     "gfx/statusbar.png",
+	PAPIER                  :     "gfx/paper.png",
+	INVENTARBMP             :     "gfx/inventory.png",
+	BAU                     :     "gfx/buildings.png",
+	CREDITS                 :     "gfx/credits.png",
+	LOGO                    :     "gfx/logo.png",
+};
 const KXPIXEL = 54; //Breite der Kacheln
 const KYPIXEL = 44; //Hoehe der Kacheln
 const S1XPIXEL = 20; //Breite der Schrift1
@@ -397,7 +414,9 @@ void AkTagNeubeginnen();				//Fragt, ob man den Tag neu beginnen will
 void AkTod();							//Sterben
 */
 
-let RECT = (left = 0, top = 0, right = 0, bottom = 0) => ({left, top, right, bottom});
+let RECT = (left = 0, top = 0, right = 0, bottom = 0) => ({left, top, right, bottom,
+	copy: (src) => RECT(src.left, src.top, src.right, src.bottom),
+});
 
 //ddraw
 let            lpDD = null;           // DirectDraw object
@@ -444,7 +463,7 @@ IDirectInputDevice*     g_pKey          = null;
 HANDLE                  g_hMouseEvent   = null;
 HINSTANCE				g_hInst			= null;
  */
-BOOL					MouseInit		= false;
+//let					MouseInit		= false;
 
 // DirectSound
 /*
@@ -524,7 +543,8 @@ let NewPos = ZWEID();					// Nur innerhalb des Pathfindings benutzt
 let GuyPosScreenStart = ZWEID();	    // Absolute StartPosition bei einem Schritt (Für CalcGuyKoor)
 let SchatzPos = ZWEID();				//Hier ist der Schatz vergraben
 
-let RGBSTRUCT = (r=0, g=0, b=0) => ({r,g,b});
+let RGBSTRUCT = (r=0, g=0, b=0) => ({r,g,b,
+	copy: (src) => RGBSTRUCT(src.r, src.g, src.b)});
 let rgbStruct = RGBSTRUCT(); //Hier werden die Farben eines Pixels zwischengespeichert
 
 // inline void DWORD2RGB(DWORD color,RGBSTRUCT *PrgbStruct);
@@ -551,9 +571,9 @@ class BMP
 	}
 }
 
-let Bmp = Array.from(Array(BILDANZ), x => BMP());
+let Bmp = Array.from(Array(BILDANZ), x => new BMP());
 let Wav = Array.from(Array(WAVANZ), x => ({}));
-let AbspannListe = Array.from(Array(10), x => Array(10));	//Namenabfolge im Abspann
+let AbspannListe = Array.from(Array(10), x => Array.from(Array(10), x => ({Aktiv:false,Bild:0})));	//Namenabfolge im Abspann
 
 /*
 bool LineIntersect(ZWEID LineStartPos, ZWEID Pos, bool store); //Für Pathfinding (Ist eine Gerade unterbrochen?)
@@ -655,10 +675,11 @@ class SCAPE
 	{
 		this.ObPos = ZWEID();		//Die Koordinaten des Objekts (relativ zu xScreen und yScreen)
 		this.GPosAlt = ZWEID();		// Damit der Guy an der richtigen Stelle (x,y) weiterbaut
+		this.Rohstoff = Array.from(BILDANZ, x => 0); //Anzahl des i.Rohstoffs, den man noch zum bauen braucht
 	}
 }
 
-let Scape = Array.from(Array(MAXYKACH), x => Array.from(Array(MAXXKACH), x => SCAPE()));
+let Scape = Array.from(Array(MAXYKACH), x => Array.from(Array(MAXXKACH), x => new SCAPE()));
 let Flusslauf = Array.from(Array(FLUSSANZAHL), x => Array.from(Array(MAXFLUSS), x => ({x:0,y:0})));
 
 //Bilder
@@ -691,8 +712,14 @@ let cur_mouse_state = {
 };
 let keymap = {};
 
-function loadImage(url)
+function rand()
 {
+	return Math.floor(Math.random() * 0xffFFffFF);
+}
+
+function loadImage(alias)
+{
+	let url = BMP_FILENAMES[alias];
 	let img = document.createElement("img");
 	img.is_ready = false;
 	img.onload = () => {
@@ -714,6 +741,7 @@ function createSurface(w, h)
 
 function InitDDraw()
 {
+	console.log("InitDDraw");
     // Set the video mode to 800x600x16
 	canvas.width = MAXX;
 	canvas.height = MAXY;
@@ -729,9 +757,9 @@ function InitDDraw()
 	//In diese Surface sollen die Landschaftsanimationen gespeichert werden
 	lpDDSAnimation = loadImage(Animation);
 	//In diese Surface soll die Schrift1 gespeichert werden
-	lpDDSSchrift1 = DDLoadBitmap(lpDD, Schrift1, 0, 0);
+	lpDDSSchrift1 = loadImage(Schrift1);
 	//In diese Surface soll die Schrift2 gespeichert werden
-	lpDDSSchrift2 = DDLoadBitmap(lpDD, Schrift2, 0, 0);
+	lpDDSSchrift2 = loadImage(Schrift2);
 	//In diese Surface soll das Papier gespeichert werden
 	lpDDSPapier = loadImage(Papier);
 	//In diese Surface solln die B�ume gespeichert werden
@@ -759,11 +787,14 @@ function InitDDraw()
 	lpDDSSchrift = createSurface(MAXX, MAXY);
 	//In diese Surface soll die Schatzkarte gespeichert werden
 	lpDDSSchatzkarte = createSurface(SKARTEX, SKARTEY);
+	console.log("...done");
 }
 
 function InitDSound()
 {
+	console.log("InitDSound");
 	audioCtx = new AudioContext();
+	console.log("...done");
 }
 
 function LoadSound(Sound)
@@ -779,6 +810,8 @@ function LoadSound(Sound)
 
 function PlaySound(Sound, Volume)
 {
+	//console.log("play sound ", Sound, " volume ", Volume);
+	return;
 	if (lpdsbWav[Sound]) {
 		const source = audioCtx.createBufferSource();
 		source.buffer = lpdsbWav[Sound];
@@ -801,6 +834,7 @@ function PlaySound(Sound, Volume)
 
 function StopSound(Sound)
 {
+	return;
 	if (lpdsbWav[Sound]) {
 		let src = lpdsbWav[Sound].src;
 		if(src) {
@@ -3112,8 +3146,24 @@ function Blitten(lpDDSVon, lpDDSNach, Transp)
 	);
 }
 
+function Blit_destrect(lpDDSVon, lpDDSNach)
+{
+	lpDDSNach.ctx.drawImage(
+		lpDDSVon,
+		rcRectdes.left,
+		rcRectdes.top,
+		rcRectdes.right - rcRectdes.left,
+		rcRectdes.bottom - rcRectdes.top,
+		rcRectdes.left,
+		rcRectdes.top,
+		rcRectdes.right - rcRectdes.left,
+		rcRectdes.bottom - rcRectdes.top
+	);
+}
+
 function InitDInput()
 {
+	console.log("InitDInput");
 	canvas.onmousemove = e => {
 		cur_mouse_state.lX = e.clientX - cur_mouse_state.x;
 		cur_mouse_state.lY = e.clientY - cur_mouse_state.y;
@@ -3132,12 +3182,14 @@ function InitDInput()
 	};
 
 	canvas.onkeydown = e => {
+		console.log("keydown ", e.key)
 		keymap[e.key] = true;
 	};
 
 	canvas.onkeyup = e => {
 		keymap[e.key] = false;
 	};
+	console.log("...done");
 }
 
 function CheckMouse()
@@ -3296,7 +3348,7 @@ function CheckKey()
     //g_pKey->GetDeviceState(sizeof(buffer),(LPVOID)&buffer);
    
 	
-	if (Spielzustand == SZLOGO)
+	if (Spielzustand === SZLOGO)
 	{
 		if (keymap.Escape || keymap.Return || keymap[" "]) //Logo Abbrechen
 		{
@@ -3305,7 +3357,7 @@ function CheckKey()
 			return 2;
 		}
 	}
-	else if (Spielzustand == SZINTRO)
+	else if (Spielzustand === SZINTRO)
 	{
 		if (keymap.Escape || keymap.Return || keymap[" "]) //Intro Abbrechen
 		{
@@ -3419,7 +3471,6 @@ function CheckKey()
 		}*/
 
 		if (keymap.s) {	//Sound ausschalten
-		{
 			if (Soundzustand == 0) Soundzustand = 1;
 			else if (Soundzustand == 1) Soundzustand = 0; 
 		}
@@ -4543,6 +4594,11 @@ function GetPixel(x, y, src)
 	return data.data;
 }
 
+function fill_dest(color, dest = null)
+{
+	if(dest === null) dest = lpDDSBack;
+}
+
 function NeuesSpiel(neu)
 {
 	//short x,y;
@@ -4569,8 +4625,7 @@ function NeuesSpiel(neu)
 		rcRectdes.top		= 0;
 		rcRectdes.right		= MAXX;
 		rcRectdes.bottom	= MAXY;
-		// TODO: here
-		lpDDSPrimary->Blt(&rcRectdes,lpDDSSchrift,&rcRectdes,DDBLT_KEYSRC | DDBLT_WAIT,null);
+		Blit_destrect(lpDDSSchrift, lpDDSPrimary);
 		Compute(200,600);
 		
 		DrawString("Ueberflute Land...",5,35,2);
@@ -4578,7 +4633,7 @@ function NeuesSpiel(neu)
 		rcRectdes.top		= 0;
 		rcRectdes.right		= MAXX;
 		rcRectdes.bottom	= MAXY;
-		lpDDSPrimary->Blt(&rcRectdes,lpDDSSchrift,&rcRectdes,DDBLT_KEYSRC | DDBLT_WAIT,null);
+		Blit_destrect(lpDDSSchrift, lpDDSPrimary);
 		Meer();
 		
 		DrawString("Lege Fluss fest...",5,65,2);
@@ -4586,7 +4641,7 @@ function NeuesSpiel(neu)
 		rcRectdes.top		= 0;
 		rcRectdes.right		= MAXX;
 		rcRectdes.bottom	= MAXY;
-		lpDDSPrimary->Blt(&rcRectdes,lpDDSSchrift,&rcRectdes,DDBLT_KEYSRC | DDBLT_WAIT,null);
+		Blit_destrect(lpDDSSchrift, lpDDSPrimary);
 		Fluss(); 
 		CalcKoor();
 		
@@ -4595,7 +4650,7 @@ function NeuesSpiel(neu)
 		rcRectdes.top		= 0;
 		rcRectdes.right		= MAXX;
 		rcRectdes.bottom	= MAXY;
-		lpDDSPrimary->Blt(&rcRectdes,lpDDSSchrift,&rcRectdes,DDBLT_KEYSRC | DDBLT_WAIT,null);
+		Blit_destrect(lpDDSSchrift, lpDDSPrimary);
 		Baeume(30);
 		
 		Piratenwrack();
@@ -4627,58 +4682,58 @@ function NeuesSpiel(neu)
 		Guy.Aktion = AKINTRO;
 	}
 
-	//SchriftSurface l�schen
+	//SchriftSurface löschen
 	rcRectdes.left = 0;
 	rcRectdes.top = 0;
 	rcRectdes.right = MAXX;
 	rcRectdes.bottom = MAXY;
-	ddbltfx.dwFillColor = RGB2DWORD(255,0,255);
-	lpDDSSchrift->Blt(&rcRectdes, null,null,DDBLT_COLORFILL, &ddbltfx);
+	fill_dest([255,0,255], lpDDSSchrift);
 	
-	BOOL Anitmp = LAnimation;
-	bool Entdeckttmp[MAXXKACH][MAXYKACH];
+	let Anitmp = LAnimation;
+	let Entdeckttmp = Array.from(Array(MAXXKACH), x => Array(MAXYKACH));
 
 	LAnimation = false;
 	//Schatzvergraben und Schatzkarte malen
-	for (y=0;y<MAXYKACH;y++) for (x=0;x<MAXXKACH;x++) 
-	{
-		Entdeckttmp[x][y] = Scape[x][y].Entdeckt;
-		Scape[x][y].Entdeckt = true;
+	for (let y=0; y<MAXYKACH; y++) {
+		for (let x=0; x<MAXXKACH; x++) {
+			Entdeckttmp[x][y] = Scape[x][y].Entdeckt;
+			Scape[x][y].Entdeckt = true;
+		}
 	}
 	Generate();//Einmal vor dem Schatz schon entdeckt malen
 	Schatz();
-	for (y=0;y<MAXYKACH;y++) for (x=0;x<MAXXKACH;x++) Scape[x][y].Entdeckt = Entdeckttmp[x][y];
+	for (let y=0; y<MAXYKACH; y++) {
+		for (let x=0; x<MAXXKACH; x++) {
+			Scape[x][y].Entdeckt = Entdeckttmp[x][y];
+		}
+	}
 	Entdecken();
 	LAnimation = Anitmp;
 	Generate(); //Und nochmal ohne das die Gegend entdeckt ist
 	Guy.PosAlt = Guy.PosScreen;
 }
 
-void Generate()
+function Generate()
 {
-	
-	short				x,y;
-	short				i;
+	//short				x,y;
+	//short				i;
 	
 	//Die Kartehintergrundfarbe
 	rcRectdes.left		= 0;
 	rcRectdes.top		= 0;
 	rcRectdes.right     = 2*MAXXKACH;
 	rcRectdes.bottom	= 2*MAXYKACH;
-	ddbltfx.dwFillColor = RGB2DWORD(247,222,191);
-	lpDDSKarte->Blt(&rcRectdes, null,null,DDBLT_COLORFILL, &ddbltfx);
+	fill_dest([247,222,191], lpDDSKarte);
 
 	//Die Landschaftshintergrundfarbe
 	rcRectdes.left		= 0;
 	rcRectdes.top		= 0;
 	rcRectdes.right     = MAXSCAPEX;
 	rcRectdes.bottom	= MAXSCAPEY;
-	ddbltfx.dwFillColor = RGB2DWORD(0,0,0);
-	lpDDSScape->Blt(&rcRectdes, null,null,DDBLT_COLORFILL, &ddbltfx);
+	fill_dest([0,0,0], lpDDSScape);
 
-	for (y=0;y<MAXYKACH;y++)
-		for (x=0;x<MAXXKACH;x++)
-		{
+	for (let y=0; y<MAXYKACH; y++) {
+		for (let x=0; x<MAXXKACH; x++) {
 			if	(!Scape[x][y].Entdeckt) continue; //Nicht entdeckte Felder nicht malen
 
 			rcRectdes.left = Scape[x][y].xScreen;
@@ -4726,7 +4781,7 @@ void Generate()
 			//Landschaftskacheln zeichnen
 			Blitten(lpDDSMisc,lpDDSScape,true);
 						
-			//Gitter dr�berlegen
+			//Gitter drüberlegen
 			if (Gitter)
 			{
 				rcRectsrc.left		= KXPIXEL * Scape[x][y].Typ;
@@ -4754,12 +4809,12 @@ void Generate()
 						rcRectsrc.top		= Bmp[Scape[x][y].Objekt].rcSrc.top;
 						rcRectsrc.bottom	= Bmp[Scape[x][y].Objekt].rcSrc.bottom;
 					}
-				rcRectdes.left		= Scape[x][y].xScreen+Bmp[Scape[x][y].Objekt].rcDes.left;
-				rcRectdes.right		= Scape[x][y].xScreen+Bmp[Scape[x][y].Objekt].rcDes.right;
-				rcRectdes.top		= Scape[x][y].yScreen+Bmp[Scape[x][y].Objekt].rcDes.top;
-				rcRectdes.bottom	= Scape[x][y].yScreen+Bmp[Scape[x][y].Objekt].rcDes.bottom;
-				//Landschaftsobjekt zeichnen
-				Blitten(lpDDSAnimation,lpDDSScape,true);
+					rcRectdes.left		= Scape[x][y].xScreen+Bmp[Scape[x][y].Objekt].rcDes.left;
+					rcRectdes.right		= Scape[x][y].xScreen+Bmp[Scape[x][y].Objekt].rcDes.right;
+					rcRectdes.top		= Scape[x][y].yScreen+Bmp[Scape[x][y].Objekt].rcDes.top;
+					rcRectdes.bottom	= Scape[x][y].yScreen+Bmp[Scape[x][y].Objekt].rcDes.bottom;
+					//Landschaftsobjekt zeichnen
+					Blitten(lpDDSAnimation,lpDDSScape,true);
 				}
 			}
 
@@ -4770,27 +4825,32 @@ void Generate()
 			rcRectdes.bottom	= rcRectdes.top+2;
 			
 			if ((Scape[x][y].Art == 1) && (Scape[x][y].Typ == 0))	//Meer
-				ddbltfx.dwFillColor = RGB2DWORD(228,207,182);
+				fill_dest([228,207,182], lpDDSKarte);
 			else
 			{
 				if ((Scape[x][y].Typ == 0) && 
 					((Scape[x][y].Art == 2) ||
 					 (Scape[x][y].Art == 3)))	//Strand
-					ddbltfx.dwFillColor = RGB2DWORD(112,103,93);
+					fill_dest([112,103,93], lpDDSKarte);
 				else
 					//Land
-					ddbltfx.dwFillColor = RGB2DWORD(139+Scape[x][y].Hoehe*20,128+Scape[x][y].Hoehe*20,115+Scape[x][y].Hoehe*20);
+					fill_dest([
+						139+Scape[x][y].Hoehe*20,
+						128+Scape[x][y].Hoehe*20,
+						115+Scape[x][y].Hoehe*20],
+						lpDDSKarte);
 			}
-			lpDDSKarte->Blt(&rcRectdes, null,null,DDBLT_COLORFILL, &ddbltfx);
 		}
-		
+	}
 }
 
-void Zeige()
+function Zeige()
 {
-	HRESULT				ddrval;
-	short				i;
-	char Stringsave1[128],Stringsave2[128]; //F�r die Zeitausgabe
+	//HRESULT				ddrval;
+	//short				i;
+	//char Stringsave1[128],Stringsave2[128]; //F�r die Zeitausgabe
+	let Stringsave1 = "";
+	let Stringsave2 = "";
 	
 	rcRectsrc.left		= Camera.x+rcSpielflaeche.left;
 	rcRectsrc.top		= Camera.y+rcSpielflaeche.top;
@@ -4810,39 +4870,39 @@ void Zeige()
 	//Die TagesZeit ausgeben
 	Textloeschen(TXTTAGESZEIT);
 	TextBereich[TXTTAGESZEIT].Aktiv = true;
-	sprintf(Stringsave1, "%d", Stunden+6);
-	sprintf(Stringsave2, "%d", Minuten);
-	strcpy(StdString, "");
-	if (Stunden+6 < 10) strcat( StdString, "0"); 
-	strcat( StdString, Stringsave1);
-	strcat( StdString, ":" );
-	if (Minuten < 10) strcat( StdString, "0"); 
-	strcat( StdString, Stringsave2);
-	DrawString(StdString,(short)(TextBereich[TXTTAGESZEIT].rcText.left),
-		(short)(TextBereich[TXTTAGESZEIT].rcText.top),2);
+	Stringsave1 = "" + Stunden+6;
+	Stringsave1 = "" + Minuten;
+	StdString = "";
+	if (Stunden+6 < 10) StdString += "0";
+	StdString += Stringsave1;
+	StdString += ":";
+	if (Minuten < 10) StdString += "0";
+	StdString += Stringsave2;
+	DrawString(
+		StdString,
+		(TextBereich[TXTTAGESZEIT].rcText.left),
+		(TextBereich[TXTTAGESZEIT].rcText.top),
+		2
+	);
 	
 	if (PapierText != -1) ZeichnePapier();
 	
 	//Die Textsurface blitten
-	for (i=0;i<TEXTANZ;i++)
-	{
+	for (let i=0; i<TEXTANZ; i++) {
 		if (!TextBereich[i].Aktiv) continue; //Die nicht aktiven Felder auslassen
 		rcRectsrc	= 	TextBereich[i].rcText;
 		rcRectdes   = 	TextBereich[i].rcText;
 		Blitten(lpDDSSchrift,lpDDSBack,true);
 	}
-	//Alles schwarz �bermalen und nur das Papier mit Text anzeigen
-	if (Nacht)
-	{
+	//Alles schwarz übermalen und nur das Papier mit Text anzeigen
+	if (Nacht) {
 		rcRectdes.left = 0;
 		rcRectdes.top = 0;
 		rcRectdes.right = MAXX;
 		rcRectdes.bottom = MAXY;
-		ddbltfx.dwFillColor = RGB2DWORD(0,0,0);
-		lpDDSBack->Blt(&rcRectdes, null,null,DDBLT_COLORFILL, &ddbltfx);
+		fill_dest([0,0,0], lpDDSBack);
 		
-		if (PapierText != -1) 
-		{	
+		if (PapierText != -1) {
 			ZeichnePapier();
 			rcRectsrc	= 	TextBereich[TXTPAPIER].rcText;
 			rcRectdes   = 	TextBereich[TXTPAPIER].rcText;
@@ -4857,6 +4917,8 @@ void Zeige()
 	else ZeichneBilder(MousePosition.x-Bmp[CursorTyp].Breite/2, 
 					   MousePosition.y-Bmp[CursorTyp].Hoehe/2, 
 					   CursorTyp, rcGesamt, false,-1);
+
+	/*
  	//Flippen
 	while(1) 
 	{ 
@@ -4877,35 +4939,22 @@ void Zeige()
 		{ 
 			break; 
 		} 
-	} 
-	
+	} */
 
-	if (Nacht) Fade(100,100,100); //Das mu� hier stehen, damit man die Textnachricht in der Nacht lesen kann
-	
+	if (Nacht) Fade(100,100,100); //Das muss hier stehen, damit man die Textnachricht in der Nacht lesen kann
 }
 
-void ZeigeIntro()
+function ZeigeIntro()
 {
-	HRESULT				ddrval;
-	short				i,z;
+	//HRESULT				ddrval;
+	//short				i,z;
 	
 	rcRectdes.left = 0;
 	rcRectdes.top  = 0;
 	rcRectdes.right= MAXX;
 	rcRectdes.bottom = MAXY;
 	ddbltfx.dwFillColor = RGB2DWORD(0,0,0);
-	z=0;
-	while(1)
-	{
-		z++;
-		ddrval = lpDDSBack->Blt(&rcRectdes,null,null,DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
-		if (ddrval!=DDERR_WASSTILLDRAWING) break;
-		if (z==1000) 
-		{
-			MessageBeep(MB_OK);
-			break;
-		}
-	}
+	fill_dest([0,0,0], lpDDSBack);
 
 	rcRectsrc.left		= Camera.x+rcSpielflaeche.left;
 	rcRectsrc.top		= Camera.y+rcSpielflaeche.top;
@@ -4923,14 +4972,14 @@ void ZeigeIntro()
 	if (PapierText != -1) ZeichnePapier();
 	
 	//Die Textsurface blitten
-	for (i=0;i<TEXTANZ;i++)
-	{
+	for (let i=0; i<TEXTANZ; i++) {
 		if (!TextBereich[i].Aktiv) continue; //Die nicht aktiven Felder auslassen
 		rcRectsrc	= 	TextBereich[i].rcText;
 		rcRectdes   = 	TextBereich[i].rcText;
 		Blitten(lpDDSSchrift,lpDDSBack,true);
 	}
-	
+
+	/*
 	//Flippen
 	while(1) 
 	{ 
@@ -4951,14 +5000,14 @@ void ZeigeIntro()
 		{ 
 			break; 
 		} 
-	} 
-	
+	}
+	 */
 }
 
-void ZeigeAbspann()
+function ZeigeAbspann()
 {
-	HRESULT				ddrval;
-	short				z;
+	//HRESULT				ddrval;
+	//short				z;
 	
 	PlaySound(WAVABSPANN,100);
 
@@ -4967,28 +5016,25 @@ void ZeigeAbspann()
 	rcRectdes.right = MAXX;
 	rcRectdes.bottom = MAXY;
 	ddbltfx.dwFillColor = RGB2DWORD(0,0,0);
-	z=0;
-	while(1)
-	{
-		z++;
-		ddrval = lpDDSBack->Blt(&rcRectdes,null,null,DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
-		if (ddrval!=DDERR_WASSTILLDRAWING) break;
-		if (z==1000) 
-		{
-			MessageBeep(MB_OK);
-			break;
-		}
-	}
+	fill_dest([0,0,0], lpDDSBack);
+
 	if (AbspannZustand == 0)
 	{
-		ZeichneBilder((short)MAXX/2-Bmp[AbspannListe[AbspannNr][0].Bild].Breite/2,100,
-			AbspannListe[AbspannNr][0].Bild,rcGesamt,false,-1);
-		for(z=1;z<10;z++)
-		{
+		ZeichneBilder(
+			MAXX/2-Bmp[AbspannListe[AbspannNr][0].Bild].Breite/2,
+			100,
+			AbspannListe[AbspannNr][0].Bild,
+			rcGesamt,
+			false,
+			-1
+		);
+		for(let z=1; z<10; z++) {
 			if (AbspannListe[AbspannNr][z].Aktiv)
-				AbspannBlt(AbspannListe[AbspannNr][z].Bild,
-				(short)(100*sin(pi/MAXY*(Bmp[AbspannListe[AbspannNr][z].Bild].rcDes.top+
-				Bmp[AbspannListe[AbspannNr][z].Aktiv].Hoehe/2))));
+				AbspannBlt(
+					AbspannListe[AbspannNr][z].Bild,
+					(100*sin(pi/MAXY*(Bmp[AbspannListe[AbspannNr][z].Bild].rcDes.top+
+					Bmp[AbspannListe[AbspannNr][z].Aktiv].Hoehe/2)))
+				);
 		}
 	}
 	else if (AbspannZustand == 1)
@@ -5009,8 +5055,8 @@ void ZeigeAbspann()
 		rcRectsrc.right = Bmp[AbspannNr].Breite+4;
 		rcRectsrc.bottom = Bmp[AbspannNr].Hoehe+4;
 
-		rcRectdes.left = (short)MAXX/2-rcRectsrc.right*10/2;
-		rcRectdes.top = (short)MAXY/2-rcRectsrc.bottom*10/2;
+		rcRectdes.left = MAXX/2-rcRectsrc.right*10/2;
+		rcRectdes.top = MAXY/2-rcRectsrc.bottom*10/2;
 		rcRectdes.right = rcRectdes.left+rcRectsrc.right*10;
 		rcRectdes.bottom = rcRectdes.top+rcRectsrc.bottom*10;
 		
@@ -5028,6 +5074,7 @@ void ZeigeAbspann()
 
 		Blitten(lpDDSBack,lpDDSBack,false);
 	}
+	/*
 	//Flippen
 	while(1) 
 	{ 
@@ -5048,32 +5095,21 @@ void ZeigeAbspann()
 		{ 
 			break; 
 		} 
-	} 
+	}
+	 */
 }
 
-void ZeigeLogo()
+function ZeigeLogo()
 {
-	HRESULT				ddrval;
-	short				z;
+	//HRESULT				ddrval;
+	//short				z;
 	
 	rcRectdes.left = 0;
 	rcRectdes.top = 0;
 	rcRectdes.right = MAXX;
 	rcRectdes.bottom = MAXY;
-	ddbltfx.dwFillColor = RGB2DWORD(0,0,0);
-	z=0;
-	while(1)
-	{
-		z++;
-		ddrval = lpDDSBack->Blt(&rcRectdes,null,null,DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
-		if (ddrval!=DDERR_WASSTILLDRAWING) break;
-		if (z==1000) 
-		{
-			MessageBeep(MB_OK);
-			break;
-		}
-	}
-	
+	fill_dest([0,0,0], lpDDSBack);
+
 	rcRectsrc.left = 0;
 	rcRectsrc.right = 500;
 	rcRectsrc.top  = 0;
@@ -5087,73 +5123,48 @@ void ZeigeLogo()
 	Blitten(lpDDSLogo,lpDDSBack,false);
 	
 	PlaySound(WAVLOGO,100);
-
-	//Flippen
-	while(1) 
-	{ 
-		ddrval = lpDDSPrimary->Flip(null, 0);
-		if(ddrval == DD_OK) 
-		{ 
-			break; 
-		} 
-		if(ddrval == DDERR_SURFACELOST) 
-		{ 
-			ddrval = lpDDSPrimary->Restore(); 
-			if(ddrval != DD_OK) 
-			{ 
-				break; 
-			} 
-		} 
-		if(ddrval != DDERR_WASSTILLDRAWING) 
-		{ 
-			break; 
-		} 
-	} 
 }
 
-void AbspannBlt(short Bild, short Prozent)
+function AbspannBlt(Bild, Prozent)
 {
-	short				x,y;
-	RGBSTRUCT			rgbalt;
+	//short				x,y;
 
-	Bmp[Bild].Surface->Lock(null,&ddsd,DDLOCK_WAIT,null);
-	lpDDSBack->Lock(null,&ddsd2,DDLOCK_WAIT,null);
+	//Bmp[Bild].Surface->Lock(null,&ddsd,DDLOCK_WAIT,null);
+	//lpDDSBack->Lock(null,&ddsd2,DDLOCK_WAIT,null);
 	
-	for (x=0;x<Bmp[Bild].Breite;x++)
-		for (y=0;y<Bmp[Bild].Hoehe;y++)
-		{
+	for (let x=0; x<Bmp[Bild].Breite; x++) {
+		for (let y=0; y<Bmp[Bild].Hoehe; y++) {
 			if ((x+Bmp[Bild].rcDes.left>=MAXX) || (x+Bmp[Bild].rcDes.left<=0) || 
 				(y+Bmp[Bild].rcDes.top>=MAXY) || (y+Bmp[Bild].rcDes.top<=0)) continue;
-			GetPixel((short)(x+Bmp[Bild].rcDes.left),
-					 (short)(y+Bmp[Bild].rcDes.top),&ddsd2);
-			rgbalt = rgbStruct;
-			GetPixel((short)(x+Bmp[Bild].rcSrc.left),
-					 (short)(y+Bmp[Bild].rcSrc.top),&ddsd);
-			if ((rgbStruct.r == 0) && (rgbStruct.g == 0) && (rgbStruct.b == 0)) continue;
-			PutPixel((short)(x+Bmp[Bild].rcDes.left),
-					 (short)(y+Bmp[Bild].rcDes.top),
-				RGB2DWORD(rgbalt.r+(rgbStruct.r-rgbalt.r)*Prozent/100,
-						  rgbalt.g+(rgbStruct.g-rgbalt.g)*Prozent/100,
-						  rgbalt.b+(rgbStruct.b-rgbalt.b)*Prozent/100), 
-				&ddsd2);
+			let rgbalt = GetPixel((x+Bmp[Bild].rcDes.left),
+					 (y+Bmp[Bild].rcDes.top), lpDDSBack);
+			let rgbStruct = GetPixel((short)(x+Bmp[Bild].rcSrc.left),
+					 (y+Bmp[Bild].rcSrc.top), lpDDSBack);
+			if ((rgbalt[0] == 0) && (rgbalt[1] == 0) && (rgbalt[2] == 0)) continue;
+			PutPixel(
+				(x+Bmp[Bild].rcDes.left),
+				(y+Bmp[Bild].rcDes.top),
+				[
+					rgbalt[0]+(rgbStruct[0]-rgbalt[0])*Prozent/100,
+					rgbalt[1]+(rgbStruct[1]-rgbalt[1])*Prozent/100,
+					rgbalt[2]+(rgbStruct[2]-rgbalt[2])*Prozent/100
+				],
+				lpDDSBack
+			);
 		}
-		
-	Bmp[Bild].Surface->Unlock(null);
-	lpDDSBack->Unlock(null);
-		
+	}
 }
 
-void AbspannCalc()
+function AbspannCalc()
 {
-	short i,k;
+	//short i,k;
 	
 	if (AbspannZustand == 0)
 	{
-		for (k=1;k<10;k++)
-		{
+		for (let k=1; k<10; k++) {
 			if (AbspannListe[AbspannNr][k].Bild == -1) break;
 			if (!AbspannListe[AbspannNr][k].Aktiv) continue;
-			i = 150/LastBild;
+			let i = 150/LastBild;
 			Bmp[AbspannListe[AbspannNr][k].Bild].rcDes.top -= i;
 			
 			if (Bmp[AbspannListe[AbspannNr][k].Bild].rcDes.top<MAXY-400)
@@ -5184,7 +5195,7 @@ void AbspannCalc()
 	}
 	else if (AbspannZustand == 1)
 	{
-		i = LastBild/Bmp[AbspannNr].Geschwindigkeit;
+		let i = LastBild/Bmp[AbspannNr].Geschwindigkeit;
 		if (i<1) i = 1;
 		if (Bild%i == 0)
 		{
@@ -5199,18 +5210,16 @@ void AbspannCalc()
 	}
 }
 
-void ZeichneBilder(short x, short y, short i, RECT Ziel, bool Reverse, short Frucht)
+function ZeichneBilder(x, y, i, Ziel, Reverse, Frucht)
 {
-	short Phase;
+	let Phase;
 
 	if (Frucht == -1) Phase = Bmp[i].Phase; else Phase = Frucht;
-	rcRectsrc = Bmp[i].rcSrc;
-	if (!Reverse)
-	{
+	rcRectsrc = Bmp[i].rcSrc.copy();
+	if (!Reverse) {
 	   rcRectsrc.top += Phase*(Bmp[i].Hoehe);
 	}
-	else
-	{
+	else {
 		rcRectsrc.top = Bmp[i].rcSrc.top+(Bmp[i].Anzahl-1)*Bmp[i].Hoehe-Phase*Bmp[i].Hoehe;
 	}
 	rcRectsrc.bottom = rcRectsrc.top + (Bmp[i].Hoehe);
@@ -5222,15 +5231,14 @@ void ZeichneBilder(short x, short y, short i, RECT Ziel, bool Reverse, short Fru
 	Blitten(Bmp[i].Surface,lpDDSBack,true);
 }
 
-void ZeichneObjekte()
+function ZeichneObjekte()
 {
-	short				x,y;
-	bool				Guyzeichnen;
+	//short				x,y;
+	//bool				Guyzeichnen;
 
-	for (y=0;y<MAXYKACH;y++)
-		for (x=0;x<MAXXKACH;x++)
-		{
-			Guyzeichnen = false;
+	for (let y=0; y<MAXYKACH; y++) {
+		for (let x=0; x<MAXXKACH; x++) {
+			let Guyzeichnen = false;
 			if ((Guy.Pos.x == x) && (Guy.Pos.y == y)) Guyzeichnen = true;
 			//Die nichtsichbaren Kacheln (oder nicht betroffenen) ausfiltern
 			
@@ -5274,7 +5282,7 @@ void ZeichneObjekte()
 				ZeichneBilder(Scape[x][y].xScreen+Scape[x][y].ObPos.x-Camera.x,
 					Scape[x][y].yScreen+Scape[x][y].ObPos.y-Camera.y,
 					Scape[x][y].Objekt, rcSpielflaeche, Scape[x][y].Reverse,
-							  (short)Scape[x][y].Phase);
+							  Scape[x][y].Phase);
 			}
 			else 
 			{
@@ -5282,7 +5290,7 @@ void ZeichneObjekte()
 				if (((Scape[x][y].Objekt >= BAUM1) && (Scape[x][y].Objekt <=BAUM4DOWN)) ||
 					(Scape[x][y].Objekt == BAUMGROSS) || (Scape[x][y].Objekt == FEUER) ||
 					(Scape[x][y].Objekt == WRACK) || (Scape[x][y].Objekt == WRACK2) ||
-					(Scape[x][y].Objekt >= ZELT)) //B�ume und Fr�chte (und alle anderen Objekte) malen
+					(Scape[x][y].Objekt >= ZELT)) //Bäume und Früchte (und alle anderen Objekte) malen
 				{
 					//Sound abspielen
 					if (((Guy.Pos.x -1 <= x) && (x <= Guy.Pos.x +1)) &&
@@ -5306,14 +5314,15 @@ void ZeichneObjekte()
 					ZeichneBilder(Scape[x][y].xScreen+Scape[x][y].ObPos.x-Camera.x,
 								  Scape[x][y].yScreen+Scape[x][y].ObPos.y-Camera.y,
 								  Scape[x][y].Objekt, rcSpielflaeche, false,
-								  (short)Scape[x][y].Phase);
+								  Scape[x][y].Phase);
 				}
 			}
 			if (Guyzeichnen) ZeichneGuy();
+		}
 	}
 }
 
-void ZeichneGuy()
+function ZeichneGuy()
 {
 	if (BootsFahrt)
 	{
@@ -5321,23 +5330,23 @@ void ZeichneGuy()
 		{
 			ZeichneBilder(Guy.PosScreen.x-30-Camera.x,
 				Guy.PosScreen.y-28-Camera.y,
-				Guy.Zustand, rcSpielflaeche, false,-1);
+				Guy.Zustand, rcSpielflaeche.copy(), false,-1);
 		}
 		else
 		{
 			ZeichneBilder(Guy.PosScreen.x-(Bmp[Guy.Zustand].Breite)/2-Camera.x,
 				Guy.PosScreen.y-(Bmp[Guy.Zustand].Hoehe )/2-Camera.y,
-				Guy.Zustand, rcSpielflaeche, false,-1);
+				Guy.Zustand, rcSpielflaeche.copy(), false,-1);
 		}
 	}
 	else ZeichneBilder(Guy.PosScreen.x-(Bmp[Guy.Zustand].Breite)/2-Camera.x,
 					   Guy.PosScreen.y-(Bmp[Guy.Zustand].Hoehe )  -Camera.y,
-					   Guy.Zustand, rcSpielflaeche, false,-1);
+					   Guy.Zustand, rcSpielflaeche.copy(), false,-1);
 	//Sound abspielen
 	if (Guy.Aktiv) PlaySound(Bmp[Guy.Zustand].Sound,100);
 }
 
-void ZeichnePapier()
+function ZeichnePapier()
 {
 	rcRectsrc.left		= 0;
 	rcRectsrc.top		= 0;
@@ -5352,8 +5361,7 @@ void ZeichnePapier()
 	rcRectdes.top		= rcRectdes.top+77;
 	rcRectdes.right		= rcRectdes.right;
 	rcRectdes.bottom	= TextBereich[TXTPAPIER].rcText.top+PapierText;
-	ddbltfx.dwFillColor = RGB2DWORD(236,215,179);
-	lpDDSBack->Blt(&rcRectdes, null,null,DDBLT_COLORFILL, &ddbltfx);
+	fill_dest([236,215,179], lpDDSBack);
 	rcRectsrc.left		= 0;
 	rcRectsrc.top		= 77;
 	rcRectsrc.right		= 464;
@@ -5365,9 +5373,9 @@ void ZeichnePapier()
 	Blitten(lpDDSPapier,lpDDSBack,true);
 }
 
-void ZeichnePanel()
+function ZeichnePanel()
 {
-	short diffx,diffy,TagesZeit,i,j,Ringtmp;	//f�r die Sonnenanzeige
+	let Ringtmp;	//für die Sonnenanzeige
 	
 	//Karte
 	rcRectsrc.left		= 0;		
@@ -5385,8 +5393,7 @@ void ZeichnePanel()
 	rcRectdes.top		= rcKarte.top+2*Guy.Pos.y;
 	rcRectdes.right     = rcRectdes.left+2;
 	rcRectdes.bottom	= rcRectdes.top+2;
-	ddbltfx.dwFillColor = RGB2DWORD(255,0,0);
-	lpDDSBack->Blt(&rcRectdes, null,null,DDBLT_COLORFILL, &ddbltfx);
+	fill_dest([255,0,0], lpDDSBack);
 	
 	//Position einmalen
 	rcRectsrc.left		= 205;		
@@ -5413,138 +5420,138 @@ void ZeichnePanel()
 
 	//Gitternetzknopf
 	if (Gitter) Bmp[BUTTGITTER].Phase = 1; else Bmp[BUTTGITTER].Phase = 0;
-	ZeichneBilder((short)Bmp[BUTTGITTER].rcDes.left,
-				  (short)Bmp[BUTTGITTER].rcDes.top,
+	ZeichneBilder(Bmp[BUTTGITTER].rcDes.left,
+				  Bmp[BUTTGITTER].rcDes.top,
 				  BUTTGITTER, rcPanel, false,-1);
 
 	//SOUNDknopf
 	if ((Soundzustand == 0) || (Soundzustand == -1)) Bmp[BUTTSOUND].Phase = 1; else Bmp[BUTTSOUND].Phase = 0;
-	ZeichneBilder((short)Bmp[BUTTSOUND].rcDes.left,
-				  (short)Bmp[BUTTSOUND].rcDes.top,
+	ZeichneBilder(Bmp[BUTTSOUND].rcDes.left,
+				  Bmp[BUTTSOUND].rcDes.top,
 				  BUTTSOUND, rcPanel, false,-1);
 
 	//ANIMATIONknopf
 	if (!LAnimation) Bmp[BUTTANIMATION].Phase = 1; else Bmp[BUTTANIMATION].Phase = 0;
-	ZeichneBilder((short)Bmp[BUTTANIMATION].rcDes.left,
-				  (short)Bmp[BUTTANIMATION].rcDes.top,
+	ZeichneBilder(Bmp[BUTTANIMATION].rcDes.left,
+				  Bmp[BUTTANIMATION].rcDes.top,
 				  BUTTANIMATION, rcPanel, false,-1);
 
 	//BEENDENknopf
-	ZeichneBilder((short)Bmp[BUTTBEENDEN].rcDes.left,
-				  (short)Bmp[BUTTBEENDEN].rcDes.top,
+	ZeichneBilder(Bmp[BUTTBEENDEN].rcDes.left,
+				  Bmp[BUTTBEENDEN].rcDes.top,
 				  BUTTBEENDEN, rcPanel, false,-1);
 
 	//NEUknopf
-	ZeichneBilder((short)Bmp[BUTTNEU].rcDes.left,
-				  (short)Bmp[BUTTNEU].rcDes.top,
+	ZeichneBilder(Bmp[BUTTNEU].rcDes.left,
+				  Bmp[BUTTNEU].rcDes.top,
 				  BUTTNEU, rcPanel, false,-1);
 	
 	//TAGNEUknopf
-	ZeichneBilder((short)Bmp[BUTTTAGNEU].rcDes.left,
-				  (short)Bmp[BUTTTAGNEU].rcDes.top,
+	ZeichneBilder(Bmp[BUTTTAGNEU].rcDes.left,
+				  Bmp[BUTTTAGNEU].rcDes.top,
 				  BUTTTAGNEU, rcPanel, false,-1);
 
 	//Aktionsknopf
 	if (HauptMenue == MEAKTION) Bmp[BUTTAKTION].Phase = Bmp[BUTTAKTION].Anzahl;
 	else if (Bmp[BUTTAKTION].Phase == Bmp[BUTTAKTION].Anzahl) Bmp[BUTTAKTION].Phase = 0;
-	ZeichneBilder((short)Bmp[BUTTAKTION].rcDes.left,
-				  (short)Bmp[BUTTAKTION].rcDes.top,
+	ZeichneBilder(Bmp[BUTTAKTION].rcDes.left,
+				  Bmp[BUTTAKTION].rcDes.top,
 				  BUTTAKTION, rcPanel, false,-1);
 	
 	//BauKnopf
 	if (HauptMenue == MEBAUEN) Bmp[BUTTBAUEN].Phase = Bmp[BUTTBAUEN].Anzahl;
 	else if (Bmp[BUTTBAUEN].Phase == Bmp[BUTTBAUEN].Anzahl) Bmp[BUTTBAUEN].Phase = 0;
-	ZeichneBilder((short)Bmp[BUTTBAUEN].rcDes.left,
-				  (short)Bmp[BUTTBAUEN].rcDes.top,
+	ZeichneBilder(Bmp[BUTTBAUEN].rcDes.left,
+				  Bmp[BUTTBAUEN].rcDes.top,
 				  BUTTBAUEN, rcPanel, false,-1);
 
 	//Inventarknopf
 	if (HauptMenue == MEINVENTAR) Bmp[BUTTINVENTAR].Phase = Bmp[BUTTINVENTAR].Anzahl; 
 	else if (Bmp[BUTTINVENTAR].Phase == Bmp[BUTTINVENTAR].Anzahl) Bmp[BUTTINVENTAR].Phase = 0;
-	ZeichneBilder((short)Bmp[BUTTINVENTAR].rcDes.left,
-				  (short)Bmp[BUTTINVENTAR].rcDes.top,
+	ZeichneBilder(Bmp[BUTTINVENTAR].rcDes.left,
+				  Bmp[BUTTINVENTAR].rcDes.top,
 				  BUTTINVENTAR, rcPanel, false,-1);
 
 	//WEITERknopf
-	if (Bmp[BUTTWEITER].Phase != -1) ZeichneBilder((short)Bmp[BUTTWEITER].rcDes.left,
-												   (short)Bmp[BUTTWEITER].rcDes.top,
+	if (Bmp[BUTTWEITER].Phase != -1) ZeichneBilder(Bmp[BUTTWEITER].rcDes.left,
+												   Bmp[BUTTWEITER].rcDes.top,
 													BUTTWEITER, rcPanel, false,-1);
 
 	//STOPknopf
-	if (Bmp[BUTTSTOP].Phase != -1) ZeichneBilder((short)Bmp[BUTTSTOP].rcDes.left,
-												   (short)Bmp[BUTTSTOP].rcDes.top,
+	if (Bmp[BUTTSTOP].Phase != -1) ZeichneBilder(Bmp[BUTTSTOP].rcDes.left,
+												   Bmp[BUTTSTOP].rcDes.top,
 													BUTTSTOP, rcPanel, false,-1);
 	
 	//ABLEGENknopf
-	if (Bmp[BUTTABLEGEN].Phase != -1) ZeichneBilder((short)Bmp[BUTTABLEGEN].rcDes.left,
-												   (short)Bmp[BUTTABLEGEN].rcDes.top,
+	if (Bmp[BUTTABLEGEN].Phase != -1) ZeichneBilder(Bmp[BUTTABLEGEN].rcDes.left,
+												   Bmp[BUTTABLEGEN].rcDes.top,
 													BUTTABLEGEN, rcPanel, false,-1);
 	
 	//Welches Men� zeichnen?
 	switch (HauptMenue)
 	{
 	case MEAKTION:
-		for (i=BUTTSUCHEN;i<=BUTTSCHLEUDER;i++)
+		for (let i=BUTTSUCHEN; i<=BUTTSCHLEUDER; i++)
 		{
 			if (Bmp[i].Phase == -1) 
 			{
-				ZeichneBilder((short)Bmp[i].rcDes.left,
-					(short)Bmp[i].rcDes.top,
+				ZeichneBilder(Bmp[i].rcDes.left,
+					Bmp[i].rcDes.top,
 					BUTTFRAGEZ, rcPanel, false,-1);
 				continue;
 			}
-			ZeichneBilder((short)Bmp[i].rcDes.left,
-				(short)Bmp[i].rcDes.top,
+			ZeichneBilder(Bmp[i].rcDes.left,
+				Bmp[i].rcDes.top,
 				i, rcPanel, false,-1);
 		}
 		break;
 	case MEBAUEN:
-		for (i=BUTTZELT;i<=BUTTDESTROY;i++)
+		for (let i=BUTTZELT; i<=BUTTDESTROY; i++)
 		{
 			if (Bmp[i].Phase == -1) 
 			{
-				ZeichneBilder((short)Bmp[i].rcDes.left,
-					(short)Bmp[i].rcDes.top,
+				ZeichneBilder(Bmp[i].rcDes.left,
+					Bmp[i].rcDes.top,
 					BUTTFRAGEZ, rcPanel, false,-1);
 				continue;
 			}
-			ZeichneBilder((short)Bmp[i].rcDes.left,
-				(short)Bmp[i].rcDes.top,
+			ZeichneBilder(Bmp[i].rcDes.left,
+				Bmp[i].rcDes.top,
 				i, rcPanel, false,-1);
 		}
 		break;
 	case MEINVENTAR:
-		ZeichneBilder((short)Bmp[INVPAPIER].rcDes.left,
-				(short)Bmp[INVPAPIER].rcDes.top,
+		ZeichneBilder(Bmp[INVPAPIER].rcDes.left,
+				Bmp[INVPAPIER].rcDes.top,
 				INVPAPIER, rcPanel, false,-1);
-		for (i=ROHAST;i<=ROHSCHLEUDER;i++)
+		for (let i=ROHAST; i<=ROHSCHLEUDER; i++)
 		{
 			if (Guy.Inventar[i] <= 0) continue;
-			ZeichneBilder((short)Bmp[i].rcDes.left,
-				(short)Bmp[i].rcDes.top,
+			ZeichneBilder(Bmp[i].rcDes.left,
+				Bmp[i].rcDes.top,
 				i, rcPanel, false,-1);
 			Bmp[ROEMISCH1].rcDes.top    = Bmp[i].rcDes.top;
 			Bmp[ROEMISCH2].rcDes.top    = Bmp[i].rcDes.top;
-			for(j=1;j<=Guy.Inventar[i];j++)
+			for(let j=1; j<=Guy.Inventar[i]; j++)
 			{
 				if (j<5)
 				{
-					ZeichneBilder((short)Bmp[i].rcDes.left+20+j*4,
-						(short)Bmp[ROEMISCH1].rcDes.top,
+					ZeichneBilder(Bmp[i].rcDes.left+20+j*4,
+						Bmp[ROEMISCH1].rcDes.top,
 						ROEMISCH1, rcPanel, false,-1);
 				}
-				else if (j==5) ZeichneBilder((short)Bmp[i].rcDes.left+23,
-					(short)Bmp[ROEMISCH2].rcDes.top,
+				else if (j==5) ZeichneBilder(Bmp[i].rcDes.left+23,
+					Bmp[ROEMISCH2].rcDes.top,
 					ROEMISCH2, rcPanel, false,-1);
 				else if ((j>5)&&(j<10))
 				{
-					ZeichneBilder((short)Bmp[i].rcDes.left+20+j*4,
-						(short)Bmp[ROEMISCH1].rcDes.top,
+					ZeichneBilder(Bmp[i].rcDes.left+20+j*4,
+						Bmp[ROEMISCH1].rcDes.top,
 						ROEMISCH1, rcPanel, false,-1);
 				}
 				else if (j==10)
-					ZeichneBilder((short)Bmp[i].rcDes.left+43,
-					(short)Bmp[ROEMISCH2].rcDes.top,
+					ZeichneBilder(Bmp[i].rcDes.left+43,
+					Bmp[ROEMISCH2].rcDes.top,
 					ROEMISCH2, rcPanel, false,-1);
 			}
 		}
@@ -5552,24 +5559,24 @@ void ZeichnePanel()
 
 	}
 
-	//S�ule1
-	i = Bmp[SAEULE1].Hoehe-(short)Guy.Resource[WASSER]*Bmp[SAEULE1].Hoehe/100;
+	//Säule1
+	i = Bmp[SAEULE1].Hoehe-Guy.Resource[WASSER]*Bmp[SAEULE1].Hoehe/100;
 	rcRectsrc = Bmp[SAEULE1].rcSrc;
 	rcRectsrc.top += i;
 	rcRectdes = Bmp[SAEULE1].rcDes;
 	rcRectdes.top += i;
 	Blitten(Bmp[SAEULE1].Surface,lpDDSBack,true);
 
-	//S�ule2
-	i = Bmp[SAEULE2].Hoehe-(short)Guy.Resource[NAHRUNG]*Bmp[SAEULE2].Hoehe/100;
+	//Säule2
+	i = Bmp[SAEULE2].Hoehe-Guy.Resource[NAHRUNG]*Bmp[SAEULE2].Hoehe/100;
 	rcRectsrc = Bmp[SAEULE2].rcSrc;
 	rcRectsrc.top += i;
 	rcRectdes = Bmp[SAEULE2].rcDes;
 	rcRectdes.top += i;
 	Blitten(Bmp[SAEULE2].Surface,lpDDSBack,true);
 	
-	//S�ule3
-	i = Bmp[SAEULE3].Hoehe-(short)Guy.Resource[GESUNDHEIT]*Bmp[SAEULE3].Hoehe/100;
+	//Säule3
+	i = Bmp[SAEULE3].Hoehe-Guy.Resource[GESUNDHEIT]*Bmp[SAEULE3].Hoehe/100;
 	rcRectsrc = Bmp[SAEULE3].rcSrc;
 	rcRectsrc.top += i;
 	rcRectdes = Bmp[SAEULE3].rcDes;
@@ -5577,16 +5584,16 @@ void ZeichnePanel()
 	Blitten(Bmp[SAEULE3].Surface,lpDDSBack,true);
 	
 	//Sonnenanzeige
-	diffx = ((short)Bmp[SONNE].rcDes.right-(short)Bmp[SONNE].rcDes.left-Bmp[SONNE].Breite)/2;
-	diffy = (short)Bmp[SONNE].rcDes.bottom-(short)Bmp[SONNE].rcDes.top-Bmp[SONNE].Hoehe/2;
-	TagesZeit = (Stunden*10+Minuten*10/60);
+	let diffx = (Bmp[SONNE].rcDes.right-Bmp[SONNE].rcDes.left-Bmp[SONNE].Breite)/2;
+	let diffy = Bmp[SONNE].rcDes.bottom-Bmp[SONNE].rcDes.top-Bmp[SONNE].Hoehe/2;
+	let TagesZeit = (Stunden*10+Minuten*10/60);
 	
-	ZeichneBilder((short)(Bmp[SONNE].rcDes.left+diffx * cos(pi-pi*TagesZeit/120)+diffx),
-				  (short)(Bmp[SONNE].rcDes.top+(-diffy * sin(pi-pi*TagesZeit/120)+diffy)),
+	ZeichneBilder((Bmp[SONNE].rcDes.left+diffx * Math.cos(pi-pi*TagesZeit/120)+diffx),
+				  (Bmp[SONNE].rcDes.top+(-diffy * Math.sin(pi-pi*TagesZeit/120)+diffy)),
 				  SONNE, Bmp[SONNE].rcDes, false,-1);
 	
 	//Rettungsring 
-	if (Chance < 100) Ringtmp = (short)(100*sin(pi/200*Chance));
+	if (Chance < 100) Ringtmp = Math.floor(100*Math.sin(pi/200*Chance));
 	else Ringtmp = 100;
 	if (Ringtmp > 100) Ringtmp = 100;
 	ZeichneBilder((short)(Bmp[RING].rcDes.left),
@@ -5598,22 +5605,22 @@ void ZeichnePanel()
 	TextBereich[TXTCHANCE].Aktiv = true;
 	TextBereich[TXTCHANCE].rcText.top	= Bmp[RING].rcDes.top+Ringtmp+Bmp[RING].Hoehe;
 	TextBereich[TXTCHANCE].rcText.bottom= TextBereich[TXTCHANCE].rcText.top +  S2YPIXEL;
-	sprintf(StdString, "%.1f", Chance);
-	DrawString(StdString,(short)(TextBereich[TXTCHANCE].rcText.left),
-		(short)(TextBereich[TXTCHANCE].rcText.top),2);
+	StdString = "" + Chance;
+	DrawString(StdString,(TextBereich[TXTCHANCE].rcText.left),
+		(TextBereich[TXTCHANCE].rcText.top),2);
 
 	//TextFeld malen
 	rcRectsrc.left		= 0;
 	rcRectsrc.top		= 0;
 	rcRectsrc.right		= 605;
 	rcRectsrc.bottom	= 20;
-	rcRectdes	= rcTextFeld1;
+	rcRectdes	= rcTextFeld1.copy();
 	Blitten(lpDDSTextFeld,lpDDSBack,false);
 }
 
-void DrawString(char *string, short x, short y, short Art)
+function DrawString(string, x, y, Art)
 {
-	short length, index, cindex,Breite,Hoehe;
+	let Breite,Hoehe;
 	
 	if (Art==1)
 	{
@@ -5626,44 +5633,45 @@ void DrawString(char *string, short x, short y, short Art)
 		Hoehe  = S2YPIXEL;
 	}
 	
-	// L�nge der Schrift ermitteln
-    length = strlen(string);
+	// Länge der Schrift ermitteln
+    let length = string.length;
 	
 	// Alle Zeichen durchgehen
-	for (index=0; index<length; index++)
+	for (let index=0; index<length; index++)
 	{
 		//Korrekte indexNummer ermitteln
-		cindex = string[index] - ' ';
+		let ccode  = string.charCodeAt(index);
+		let cindex = ccode - ' '.charCodeAt(0);
 		
 		if ((string[index]>=' ')&& (string[index] <= '/'))
 		{
-		rcRectsrc.left		= cindex*Breite;		
-		rcRectsrc.top		= 0;
+			rcRectsrc.left		= cindex*Breite;
+			rcRectsrc.top		= 0;
 		}
 		if ((string[index]>='0')&& (string[index] <= '?'))
 		{
-		rcRectsrc.left		= (cindex-16)*Breite;		
-		rcRectsrc.top		= Hoehe;
+			rcRectsrc.left		= (cindex-16)*Breite;
+			rcRectsrc.top		= Hoehe;
 		}
 		if ((string[index]>='@')&& (string[index] <= 'O'))
 		{
-		rcRectsrc.left		= (cindex-16*2)*Breite;		
-		rcRectsrc.top		= 2*Hoehe;
+			rcRectsrc.left		= (cindex-16*2)*Breite;
+			rcRectsrc.top		= 2*Hoehe;
 		}
 		if ((string[index]>='P')&& (string[index] <= '_'))
 		{
-		rcRectsrc.left		= (cindex-16*3)*Breite;		
-		rcRectsrc.top		= 3*Hoehe;
+			rcRectsrc.left		= (cindex-16*3)*Breite;
+			rcRectsrc.top		= 3*Hoehe;
 		}
 		if ((string[index]>'_')&& (string[index] <= 'o'))
 		{
-		rcRectsrc.left		= (cindex-16*4)*Breite;		
-		rcRectsrc.top		= 4*Hoehe;
+			rcRectsrc.left		= (cindex-16*4)*Breite;
+			rcRectsrc.top		= 4*Hoehe;
 		}
 		if ((string[index]>='p')&& (string[index] <= '~'))
 		{
-		rcRectsrc.left		= (cindex-16*5)*Breite;		
-		rcRectsrc.top		= 5*Hoehe;
+			rcRectsrc.left		= (cindex-16*5)*Breite;
+			rcRectsrc.top		= 5*Hoehe;
 		}
 
 		rcRectsrc.right		= rcRectsrc.left + Breite;
@@ -5688,18 +5696,12 @@ void DrawString(char *string, short x, short y, short Art)
 	} 
 } 
 
-short DrawText(int TEXT,short Bereich, short Art)
+function DrawText(TEXT, Bereich, Art)
 {
-	short BBreite,BHoehe,Posx,Posy;
-	short Pos; char *Posnext, *Posnext2;
-	char Text[1024];
-	int	blank = ' ';
-	int slash = '/';
-	int strend = 0x0;
-	char scratch;//Zur Variablenausgabe
-	char StdString2[10];//Zur Variablenausgabe
-	short Anzahl; //Zur Variablenausgabe
-	short Erg;
+	let BBreite,BHoehe;
+	let strend = 0x0;
+	let StdString2;//Zur Variablenausgabe
+	let Anzahl; //Zur Variablenausgabe
 
 	Textloeschen(Bereich);
 	TextBereich[Bereich].Aktiv = true;
@@ -5714,42 +5716,43 @@ short DrawText(int TEXT,short Bereich, short Art)
 		BBreite = S2ABSTAND;
 		BHoehe  = S2YPIXEL;
 	}
-	LoadString(g_hInst,TEXT,Text,1024); 
-	Posx = (short)TextBereich[Bereich].rcText.left;
-	Posy = (short)TextBereich[Bereich].rcText.top;
-	Pos  = 0;
-	Posnext = Text;
+	let Text = LoadString(TEXT);
+	let Posx = TextBereich[Bereich].rcText.left;
+	let Posy = TextBereich[Bereich].rcText.top;
+	let Pos  = 0;
+	let Posnext = 0;
 	
-	while(1)
-	{
-		strcpy(StdString,"");
-		Pos = Posnext-Text;
-		Posnext = strchr(Text+Pos+1, blank);
-		Posnext2 = strchr(Text+Pos+1, slash);
-		if ((Posnext != null) && (Posnext2 != null) && (Posnext2 <= Posnext))
-		{
-			scratch = *(Posnext2+1);
+	while(1) {
+		StdString = "";
+		Pos = Posnext;
+		Posnext = Text.indexOf(" ", Pos+1);
+		let Posnext2 = Text.indexOf("/", Pos+1);
+		if (Posnext !== -1 && Posnext2 !== -1 && Posnext2 <= Posnext) {
+			let scratch = Text[Posnext2 + 1]; //Zur Variablenausgabe
 			switch (scratch)
 			{
 			case 'a':
-				Anzahl = sprintf(StdString2, " %d", Tag);
+				StdString2 = " " + Tag;
+				Anzahl = StdString2.length;
 				DrawString(StdString2,Posx,Posy,Art);
 				Posx += BBreite*(Anzahl);
 				break;
 			case 'b':
-				Anzahl = sprintf(StdString2, " %d", (short)Guy.Resource[GESUNDHEIT]);
+				StdString2 = " " + Guy.Resource[GESUNDHEIT];
+				Anzahl = StdString2.length;
 				DrawString(StdString2,Posx,Posy,Art);
 				Posx += BBreite*(Anzahl);
 				break;
 			case 'c':
-				Anzahl = sprintf(StdString2, " %.2f", Chance);
+				StdString2 = " " + Chance;
+				Anzahl = StdString2.length;
 				DrawString(StdString2,Posx,Posy,Art);
 				Posx += BBreite*(Anzahl);
 				break;
 			case 'd':
 				Frage = 0;
 				rcRectsrc = Bmp[JA].rcSrc;
-				rcRectdes.left = (short)TextBereich[Bereich].rcText.left+50;
+				rcRectdes.left = TextBereich[Bereich].rcText.left+50;
 				rcRectdes.top  = Posy + 50;
 				rcRectdes.right = rcRectdes.left + Bmp[JA].Breite;
 				rcRectdes.bottom = rcRectdes.top + Bmp[JA].Hoehe;
@@ -5757,7 +5760,7 @@ short DrawText(int TEXT,short Bereich, short Art)
 				Blitten(Bmp[JA].Surface,lpDDSSchrift,false);
 				
 				rcRectsrc = Bmp[NEIN].rcSrc;
-				rcRectdes.left = (short)TextBereich[Bereich].rcText.left+220;
+				rcRectdes.left = TextBereich[Bereich].rcText.left+220;
 				rcRectdes.top  = Posy + 50;
 				rcRectdes.right = rcRectdes.left + Bmp[NEIN].Breite;
 				rcRectdes.bottom = rcRectdes.top + Bmp[NEIN].Hoehe;
@@ -5766,38 +5769,37 @@ short DrawText(int TEXT,short Bereich, short Art)
 				Posy += 115;
 				break;
 			case 'z':
-				Posx = (short)TextBereich[Bereich].rcText.left-BBreite;
+				Posx = TextBereich[Bereich].rcText.left-BBreite;
 				Posy += BHoehe+3;
 				break;
 			}
 			Pos = Pos+3;
 			Posnext = Posnext2+2;
 		}
-		if (Posnext == null) Posnext = strchr(Text+Pos+1, strend);
-		strncpy(StdString, Text+Pos, (Posnext-Text)-Pos);
+		if (Posnext === -1) Posnext = Text.length;
+		StdString = Text.slice(Pos, Posnext);
 		if (Posx + BBreite*((Posnext-Text)-Pos) > TextBereich[Bereich].rcText.right) 
 		{
-			Posx = (short)TextBereich[Bereich].rcText.left-BBreite;
+			Posx = TextBereich[Bereich].rcText.left-BBreite;
 			Posy += BHoehe+3;
 		}
-		StdString[(Posnext-Text)-Pos] = (char)0;
+		StdString = StdString.slice(0, Posnext - Pos);
 		DrawString(StdString,Posx,Posy,Art);
-		if (Posnext[0] == (char)0) break;
-		Posx += BBreite*((Posnext-Text)-Pos);
+		if (Posnext.length === 0) break;
+		Posx += BBreite*(Posnext-Pos);
 	}
-	Erg = (short)(Posy+BHoehe-TextBereich[Bereich].rcText.top);
+	let Erg = (Posy+BHoehe-TextBereich[Bereich].rcText.top);
 	if (Erg < 100) Erg = 100;
 	return Erg;
 }
 
-void Textloeschen(short Bereich)
+function Textloeschen(Bereich)
 {
 	TextBereich[Bereich].Aktiv = false;
-	ddbltfx.dwFillColor = RGB2DWORD(255,0,255);
-	lpDDSSchrift->Blt(&TextBereich[Bereich].rcText, null,null,DDBLT_COLORFILL, &ddbltfx);
+	fill_dest([255,0,255], lpDDSSchrift);
 }
 
-void DrawSchatzkarte()
+function DrawSchatzkarte()
 {
     Textloeschen(TXTPAPIER);
 	TextBereich[TXTPAPIER].Aktiv = true;
@@ -5815,7 +5817,7 @@ void DrawSchatzkarte()
 	Blitten(lpDDSSchatzkarte,lpDDSSchrift,false);
 }
 
-void CalcRect(RECT rcBereich)
+function CalcRect(rcBereich)
 {	
 	if (rcRectdes.left< rcBereich.left)
 	{
@@ -5839,17 +5841,15 @@ void CalcRect(RECT rcBereich)
 	}
 }
 
-void MarkRoute(bool Mark)
+function MarkRoute(Mark)
 {
-	short i;
-
-	for (i = 0; i < RouteLaenge; i++) 
+	for (let i = 0; i < RouteLaenge; i++)
 	{
 		Scape[Route[i].x][Route[i].y].Markiert = Mark;
 	}
 }
 
-void CheckSpzButton()
+function CheckSpzButton()
 {
 	if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= FELD) && (Scape[Guy.Pos.x][Guy.Pos.y].Objekt <= FEUERSTELLE) &&
 		(Scape[Guy.Pos.x][Guy.Pos.y].Phase >=  Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Anzahl) &&
@@ -5872,26 +5872,22 @@ void CheckSpzButton()
 	else Bmp[BUTTABLEGEN].Phase = -1;
 }
 
-bool CheckRohstoff()
+function CheckRohstoff()
 {
-	short i;
-	short Benoetigt; //Anzahl der Gesamtben�tigten Rohstoffe
-	float GebrauchtTmp; //Soviel Rohstoffe werden f�r diesen Schritt ben�tigt
-	short Gebraucht; //Soviel Rohstoffe werden f�r diesen Schritt ben�tigt
-	bool Check;		 //Wenn kein Rohstoff mehr vorhanden nur noch einmal die While-Schleife
-
-	Benoetigt = 0;
+	let Benoetigt = 0; //Anzahl der Gesamtbenötigten Rohstoffe
 	for (i=0;i<BILDANZ;i++) Benoetigt += Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Rohstoff[i];
-		
-	GebrauchtTmp = Benoetigt/(float)Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].AkAnzahl;
-	Gebraucht = (short)(GebrauchtTmp * Scape[Guy.Pos.x][Guy.Pos.y].AkNummer-
-						(short)(GebrauchtTmp * (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer-1)));
 
-	
+	//Soviel Rohstoffe werden für diesen Schritt benötigt
+	let GebrauchtTmp = Benoetigt/Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].AkAnzahl;
+	//Soviel Rohstoffe werden für diesen Schritt benötigt
+	let Gebraucht = (GebrauchtTmp * Scape[Guy.Pos.x][Guy.Pos.y].AkNummer-
+					(GebrauchtTmp * (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer-1)));
+
 	while(1)
 	{
-		Check = false;
-		for (i=0;i<BILDANZ;i++)
+		//Wenn kein Rohstoff mehr vorhanden nur noch einmal die While-Schleife
+		let Check = false;
+		for (let i=0; i<BILDANZ; i++)
 		{
 			if (Gebraucht == 0) return true;
 			if ((Scape[Guy.Pos.x][Guy.Pos.y].Rohstoff[i] > 0) &&
@@ -5913,7 +5909,7 @@ bool CheckRohstoff()
 	return false;
 }
 
-void Event(short Eventnr)
+function Event(Eventnr)
 {
 	if (Eventnr != AKNICHTS)
 	{
@@ -6018,10 +6014,8 @@ void Event(short Eventnr)
 	}
 }
 
-void AkIntro()
+function AkIntro()
 {
-	short x;
-
 	Guy.AkNummer++;
 	switch(Guy.AkNummer)
 	{
@@ -6034,7 +6028,7 @@ void AkIntro()
 		RouteStart.x = Guy.Pos.x;
 		RouteStart.y = Guy.Pos.y;
 		RouteZiel.y  = Guy.Pos.y;
-		for (x=Guy.Pos.x;x<MAXXKACH;x++)//Zielkoordinate f�r Introroute finden
+		for (let x=Guy.Pos.x; x<MAXXKACH; x++) //Zielkoordinate für Introroute finden
 		{
 			if (Scape[x][Guy.Pos.y].Art != 1) break;
 			RouteZiel.x = x-1;
@@ -6050,8 +6044,8 @@ void AkIntro()
 		break;
 	case 3:
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = WRACK;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = (short)Bmp[WRACK].rcDes.left;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = (short)Bmp[WRACK].rcDes.top;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = Bmp[WRACK].rcDes.left;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = Bmp[WRACK].rcDes.top;
 
 		ChangeBootsFahrt();
 		Guy.Pos.x += 2;
@@ -6080,18 +6074,18 @@ void AkIntro()
 	}
 }
 
-void AkNeubeginnen()
+function AkNeubeginnen()
 {
-	ZWEID Erg;
 	Guy.AkNummer++;
 	switch(Guy.AkNummer)
 	{
 	case 1:
-		Erg = GetKachel(Guy.PosAlt.x,Guy.PosAlt.y);
+		let Erg = GetKachel(Guy.PosAlt.x,Guy.PosAlt.y);
 		if ((Erg.x == Guy.Pos.x) && (Erg.y == Guy.Pos.y)) ShortRoute(Guy.PosAlt.x,Guy.PosAlt.y);
-		else if (RoutePunkt%2 == 0) ShortRoute(RouteKoor[RoutePunkt].x, RouteKoor[RoutePunkt].y); //Nur bis zur Mitte der aktuellen Kacheln laufen
+		//Nur bis zur Mitte der aktuellen Kacheln laufen
+		else if (RoutePunkt%2 == 0) ShortRoute(RouteKoor[RoutePunkt].x, RouteKoor[RoutePunkt].y);
 		else ShortRoute(RouteKoor[RoutePunkt+1].x, RouteKoor[RoutePunkt+1].y);
-		TwoClicks = -1; //Keine Ahnung warum ich das hier machen mu�
+		TwoClicks = -1; //Keine Ahnung warum ich das hier machen muss
 		break;
 	case 2:
 	 	Guy.Aktiv = true;
@@ -6113,18 +6107,18 @@ void AkNeubeginnen()
 	}
 }
 
-void AkTagNeubeginnen()
+function AkTagNeubeginnen()
 {
-	ZWEID Erg;
 	Guy.AkNummer++;
 	switch(Guy.AkNummer)
 	{
 	case 1:
-		Erg = GetKachel(Guy.PosAlt.x,Guy.PosAlt.y);
+		let Erg = GetKachel(Guy.PosAlt.x,Guy.PosAlt.y);
 		if ((Erg.x == Guy.Pos.x) && (Erg.y == Guy.Pos.y)) ShortRoute(Guy.PosAlt.x,Guy.PosAlt.y);
-		else if (RoutePunkt%2 == 0) ShortRoute(RouteKoor[RoutePunkt].x, RouteKoor[RoutePunkt].y); //Nur bis zur Mitte der aktuellen Kacheln laufen
+		//Nur bis zur Mitte der aktuellen Kacheln laufen
+		else if (RoutePunkt%2 == 0) ShortRoute(RouteKoor[RoutePunkt].x, RouteKoor[RoutePunkt].y);
 		else ShortRoute(RouteKoor[RoutePunkt+1].x, RouteKoor[RoutePunkt+1].y);
-		TwoClicks = -1; //Keine Ahnung warum ich das hier machen mu�
+		TwoClicks = -1; //Keine Ahnung warum ich das hier machen muss
 		break;
 	case 2:
 	 	Guy.Aktiv = true;
@@ -6146,18 +6140,18 @@ void AkTagNeubeginnen()
 	}
 }
 
-void AkSpielverlassen()
+function AkSpielverlassen()
 {
-	ZWEID Erg;
 	Guy.AkNummer++;
 	switch(Guy.AkNummer)
 	{
 	case 1:
-		Erg = GetKachel(Guy.PosAlt.x,Guy.PosAlt.y);
+		let Erg = GetKachel(Guy.PosAlt.x,Guy.PosAlt.y);
 		if ((Erg.x == Guy.Pos.x) && (Erg.y == Guy.Pos.y)) ShortRoute(Guy.PosAlt.x,Guy.PosAlt.y);
-		else if (RoutePunkt%2 == 0) ShortRoute(RouteKoor[RoutePunkt].x, RouteKoor[RoutePunkt].y); //Nur bis zur Mitte der aktuellen Kacheln laufen
+		//Nur bis zur Mitte der aktuellen Kacheln laufen
+		else if (RoutePunkt%2 == 0) ShortRoute(RouteKoor[RoutePunkt].x, RouteKoor[RoutePunkt].y);
 		else ShortRoute(RouteKoor[RoutePunkt+1].x, RouteKoor[RoutePunkt+1].y);
-		TwoClicks = -1; //Keine Ahnung warum ich das hier machen mu�
+		TwoClicks = -1; //Keine Ahnung warum ich das hier machen muss
 		break;
 	case 2:
 	 	Guy.Aktiv = true;
@@ -6179,7 +6173,7 @@ void AkSpielverlassen()
 	}
 }
 
-void AkTod()
+function AkTod()
 {
 	Guy.AkNummer++;
 	switch(Guy.AkNummer)
@@ -6225,7 +6219,7 @@ void AkTod()
 	}
 }
 
-void AkAbbruch()
+function AkAbbruch()
 {
 	Guy.AkNummer++;
 	switch(Guy.AkNummer)
@@ -6245,11 +6239,8 @@ void AkAbbruch()
 	}
 }
 
-
-void AkDestroy()
+function AkDestroy()
 {
-	short i; //Um sich kurz das Objekt zu merken 
-
 	if (Guy.AkNummer == 0)
 	{
 		Guy.PosAlt = Guy.PosScreen;	//Die Originalposition merken
@@ -6278,8 +6269,9 @@ void AkDestroy()
 		AddTime(0,5);
 		break;
 	case 6:
-		if (Scape[Guy.Pos.x][Guy.Pos.y].Objekt == SOS) Chance -= 0.1f;
-		i = Scape[Guy.Pos.x][Guy.Pos.y].Objekt;
+		if (Scape[Guy.Pos.x][Guy.Pos.y].Objekt == SOS) Chance -= 0.1;
+		//Um sich kurz das Objekt zu merken
+		let i = Scape[Guy.Pos.x][Guy.Pos.y].Objekt;
 		if ((i>= HAUS1) && (i<=HAUS3)) Scape[Guy.Pos.x][Guy.Pos.y].Objekt = BAUMGROSS;
 		else 
 		{
@@ -6298,12 +6290,10 @@ void AkDestroy()
 	}
 }
 
-void AkSuchen()
+function AkSuchen()
 {
-	ZWEID Ziel;
-	ZWEID Erg;
-	short i;
-	
+	let Ziel = ZWEID();
+
 	if (Guy.AkNummer == 0)
 	{
 		Guy.PosAlt = Guy.PosScreen;	//Die Originalposition merken
@@ -6312,7 +6302,7 @@ void AkSuchen()
 	{
 		Ziel.x = Scape[Guy.Pos.x][Guy.Pos.y].xScreen+rand()%KXPIXEL; 
 		Ziel.y = Scape[Guy.Pos.x][Guy.Pos.y].yScreen+rand()%KYPIXEL;
-		Erg = GetKachel(Ziel.x,Ziel.y);
+		let Erg = GetKachel(Ziel.x,Ziel.y);
 		if ((Erg.x == Guy.Pos.x) && (Erg.y == Guy.Pos.y)) break; //Wenn das gefundene Ziel in der Kachel, dann fertig
 	}
 	Guy.AkNummer++;
@@ -6375,7 +6365,7 @@ void AkSuchen()
 		}
 		else if (Scape[Guy.Pos.x][Guy.Pos.y].Objekt == BUSCH) 
 		{
-			i = rand()%2;
+			let i = rand()%2;
 			switch(i)
 			{
 			case 0:
@@ -6401,7 +6391,7 @@ void AkSuchen()
 				 ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= HAUS1) && 
 				  (Scape[Guy.Pos.x][Guy.Pos.y].Objekt <= HAUS3)))
 		{
-			i = rand()%3;
+			let i = rand()%3;
 			switch(i)
 			{
 			case 0:
@@ -6471,7 +6461,7 @@ void AkSuchen()
 	}
 }
 
-void AkEssen()
+function AkEssen()
 {
 	if (Guy.AkNummer == 0)
 	{
@@ -6502,7 +6492,7 @@ void AkEssen()
 	}
 }
 
-void AkSchleuder()
+function AkSchleuder()
 {
 	if (Guy.AkNummer == 0)
 	{
@@ -6546,7 +6536,7 @@ void AkSchleuder()
 	}
 }
 
-void AkTrinken()
+function AkTrinken()
 {
 	if (Guy.AkNummer == 0)
 	{
@@ -6574,10 +6564,8 @@ void AkTrinken()
 	}
 }
 
-void AkFaellen()
+function AkFaellen()
 {
-	short i;
-
 	if (Guy.AkNummer == 0)
 	{
 		Guy.PosAlt = Guy.PosScreen;	//Die Originalposition merken
@@ -6601,7 +6589,7 @@ void AkFaellen()
 	case 7:
 		Guy.Aktiv = true;
 		Guy.Zustand = GUYWARTEN;
-		i = Scape[Guy.Pos.x][Guy.Pos.y].Objekt+(BAUM1DOWN-BAUM1);
+		let i = Scape[Guy.Pos.x][Guy.Pos.y].Objekt+(BAUM1DOWN-BAUM1);
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = i;	
 		Scape[Guy.Pos.x][Guy.Pos.y].Phase = 0;
 		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x -= 17;
@@ -6625,9 +6613,8 @@ void AkFaellen()
 	}
 }
 
-void AkAngeln()
+function AkAngeln()
 {
-	
 	if (Guy.AkNummer == 0)
 	{
 		Guy.PosAlt = Guy.PosScreen;	//Die Originalposition merken
@@ -6748,7 +6735,7 @@ void AkAngeln()
 	}
 }
 
-void AkAnzuenden()
+function AkAnzuenden()
 {
 	if (Guy.AkNummer == 0)
 	{
@@ -6773,8 +6760,8 @@ void AkAnzuenden()
 		Guy.Aktiv   = true;
 		Guy.Zustand = GUYWARTEN;
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = FEUER;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = (short)Bmp[FEUER].rcDes.left;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = (short)Bmp[FEUER].rcDes.top;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = Bmp[FEUER].rcDes.left;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = Bmp[FEUER].rcDes.top;
 		Chance += 2+2*Scape[Guy.Pos.x][Guy.Pos.y].Hoehe;
 		AddTime(0,2);
 		Guy.PosScreen.x -= 5;
@@ -6788,7 +6775,7 @@ void AkAnzuenden()
 	}
 }
 
-void AkAusschau()
+function AkAusschau()
 {
 	if (Guy.AkNummer == 0)
 	{
@@ -6823,7 +6810,7 @@ void AkAusschau()
 	}
 }
 
-void AkSchatz()
+function AkSchatz()
 {
 	if (Guy.AkNummer == 0)
 	{
@@ -6862,18 +6849,16 @@ void AkSchatz()
 	}
 }
 
-void AkFeld()
+function AkFeld()
 {
-	short i;
-	
 	if (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer == 0)
 	{
 		Guy.PosAlt = Guy.PosScreen;	//Die Originalposition merken
-		for (i=0;i<BILDANZ;i++)	
+		for (let i=0; i<BILDANZ; i++)
 			Scape[Guy.Pos.x][Guy.Pos.y].Rohstoff[i] = Bmp[FELD].Rohstoff[i];
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = FELD;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = (short)Bmp[FELD].rcDes.left;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = (short)Bmp[FELD].rcDes.top;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = Bmp[FELD].rcDes.left;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = Bmp[FELD].rcDes.top;
 		Scape[Guy.Pos.x][Guy.Pos.y].Phase = Bmp[FELD].Anzahl;
 	}
 	Scape[Guy.Pos.x][Guy.Pos.y].AkNummer++;
@@ -6935,8 +6920,8 @@ void AkFeld()
 	case 19:
 		ShortRoute(Guy.PosAlt.x,Guy.PosAlt.y);
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = FELD;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = (short)Bmp[FELD].rcDes.left;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = (short)Bmp[FELD].rcDes.top;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = Bmp[FELD].rcDes.left;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = Bmp[FELD].rcDes.top;
 		break;
 	case 20:
 		Scape[Guy.Pos.x][Guy.Pos.y].Phase = 0;
@@ -6951,9 +6936,9 @@ void AkFeld()
 	}
 }
 
-void AkTagEnde()
+function AkTagEnde()
 {
-	ZWEID Erg;
+	let Erg;
 
 	Guy.AkNummer++;
 	switch(Guy.AkNummer)
@@ -6979,7 +6964,8 @@ void AkTagEnde()
 		Minuten = 0;
 		if ((Guy.Zustand == GUYSCHLAFZELT) || (Guy.Zustand == GUYSCHLAFEN) || 
 			(Guy.Zustand == GUYSCHLAFHAUS) || (BootsFahrt)) break; 
-		//Wohnbare Objekte in der Umgebung suchen 
+		//Wohnbare Objekte in der Umgebung suchen
+		Erg = ZWEID();
 		Erg.x = -1;
 		Erg.y = -1;
 		if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt == ZELT) || (Scape[Guy.Pos.x][Guy.Pos.y].Objekt == HAUS3))
@@ -7116,12 +7102,12 @@ void AkTagEnde()
 		else Guy.Zustand = GUYSCHLAFEN;
 		break;
 	case 7:
-		Fade(0,0,0); // Nicht verwirren lassen, da das Bild in Zeige() schwarz �bermalt wird
+		Fade(0,0,0); // Nicht verwirren lassen, da das Bild in Zeige() schwarz übermalt wird
 		Nacht	= true;
 		Stunden = 12;
 		Minuten = 0;
 		PlaySound(WAVWOLF,100);
-		//Falsche Objekte L�schen
+		//Falsche Objekte Löschen
 		if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= BAUM1DOWN) && 
 			(Scape[Guy.Pos.x][Guy.Pos.y].Objekt <= BAUM4DOWN))
 		{
@@ -7130,7 +7116,7 @@ void AkTagEnde()
 			if (Guy.Inventar[ROHSTAMM] > 10) Guy.Inventar[ROHSTAMM] = 10;
 		}
 		
-		//Je nach Schlafort Zustand ver�ndern
+		//Je nach Schlafort Zustand verändern
 		if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt == ZELT) && 
 			(Scape[Guy.Pos.x][Guy.Pos.y].Phase < Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Anzahl))
 		{
@@ -7192,7 +7178,7 @@ void AkTagEnde()
 		Tag++;
 		Stunden = 0;
 		Minuten = 0;
-		//if (BootsFahrt) NeuesSpiel(true); //Sp�ter hier tot!!
+		//if (BootsFahrt) NeuesSpiel(true); //Später hier tot!!
 			
 		Guy.Aktiv   = true;
 		if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt == ZELT) && 
@@ -7254,16 +7240,13 @@ void AkTagEnde()
 	}
 }
 
-void AkGerettet()
+function AkGerettet()
 {
-	ZWEID Erg;
-	short x;
-
 	Guy.AkNummer++;
 	switch(Guy.AkNummer)
 	{
 	case 1:
-		Erg = GetKachel(Guy.PosAlt.x,Guy.PosAlt.y);
+		let Erg = GetKachel(Guy.PosAlt.x,Guy.PosAlt.y);
 		if ((Erg.x == Guy.Pos.x) && (Erg.y == Guy.Pos.y)) ShortRoute(Guy.PosAlt.x,Guy.PosAlt.y);
 		else if (RoutePunkt%2 == 0) ShortRoute(RouteKoor[RoutePunkt].x, RouteKoor[RoutePunkt].y); //Nur bis zur Mitte der aktuellen Kacheln laufen
 		else ShortRoute(RouteKoor[RoutePunkt+1].x, RouteKoor[RoutePunkt+1].y);
@@ -7294,7 +7277,7 @@ void AkGerettet()
 		RouteStart.x = Guy.Pos.x;
 		RouteStart.y = Guy.Pos.y;
 		RouteZiel.y  = Guy.Pos.y;
-		for (x=MAXXKACH-1;x>1;x--)//Position des Rettungsschiffs festlegen
+		for (let x=MAXXKACH-1; x>1; x--)//Position des Rettungsschiffs festlegen
 		{
 			if (Scape[x][Guy.Pos.y].Art != 1) break;
 			RouteZiel.x = x+1;
@@ -7336,8 +7319,8 @@ void AkGerettet()
 		RouteZiel.y  = Guy.Pos.y;
 		RouteZiel.x = MAXXKACH-2;
 		FindTheWay();
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = (short)Bmp[MEERWELLEN].rcDes.left;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = (short)Bmp[MEERWELLEN].rcDes.top;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = Bmp[MEERWELLEN].rcDes.left;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = Bmp[MEERWELLEN].rcDes.top;
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = MEERWELLEN;
 		break;
 	case 8:
@@ -7352,19 +7335,17 @@ void AkGerettet()
 	}
 }
 
-void AkZelt()
+function AkZelt()
 {
-	short i;
-
 	if (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer == 0)
 	{
 		Guy.PosAlt = Guy.PosScreen;	//Die Originalposition merken
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = ZELT;
-		for (i=0;i<BILDANZ;i++)	
+		for (let i=0; i<BILDANZ; i++)
 			Scape[Guy.Pos.x][Guy.Pos.y].Rohstoff[i] = Bmp[ZELT].Rohstoff[i];
 		Scape[Guy.Pos.x][Guy.Pos.y].Phase = Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Anzahl;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = (short)Bmp[ZELT].rcDes.left;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = (short)Bmp[ZELT].rcDes.top;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = Bmp[ZELT].rcDes.left;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = Bmp[ZELT].rcDes.top;
 	}
 	Scape[Guy.Pos.x][Guy.Pos.y].AkNummer++;
 	if (!CheckRohstoff())
@@ -7439,19 +7420,17 @@ void AkZelt()
 	}
 }
 
-void AkBoot()
+function AkBoot()
 {
-	short i;
-
 	if (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer == 0)
 	{
 		Guy.PosAlt = Guy.PosScreen;	//Die Originalposition merken
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = BOOT;
-		for (i=0;i<BILDANZ;i++)	
+		for (let i=0; i<BILDANZ; i++)
 			Scape[Guy.Pos.x][Guy.Pos.y].Rohstoff[i] = Bmp[BOOT].Rohstoff[i];
 		Scape[Guy.Pos.x][Guy.Pos.y].Phase = Bmp[BOOT].Anzahl;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = (short)Bmp[BOOT].rcDes.left;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = (short)Bmp[BOOT].rcDes.top;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = Bmp[BOOT].rcDes.left;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = Bmp[BOOT].rcDes.top;
 	}
 	Scape[Guy.Pos.x][Guy.Pos.y].AkNummer++;
 	if (!CheckRohstoff())
@@ -7530,19 +7509,17 @@ void AkBoot()
 	}
 }
 
-void AkRohr()
+function AkRohr()
 {
-	short i;
-
 	if (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer == 0)
 	{
 		Guy.PosAlt = Guy.PosScreen;	//Die Originalposition merken
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = ROHR;
-		for (i=0;i<BILDANZ;i++)	
+		for (let i=0; i<BILDANZ; i++)
 			Scape[Guy.Pos.x][Guy.Pos.y].Rohstoff[i] = Bmp[ROHR].Rohstoff[i];
 		Scape[Guy.Pos.x][Guy.Pos.y].Phase = Bmp[ROHR].Anzahl;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = (short)Bmp[ROHR].rcDes.left;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = (short)Bmp[ROHR].rcDes.top;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = Bmp[ROHR].rcDes.left;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = Bmp[ROHR].rcDes.top;
 	}
 	Scape[Guy.Pos.x][Guy.Pos.y].AkNummer++;
 	if (!CheckRohstoff())
@@ -7563,7 +7540,7 @@ void AkRohr()
 	case 3: 
 		ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+28,
 			       Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+15);
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[ROHR].Anzahl+1);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[ROHR].Anzahl+1);
 		break;
 	case 4: case 5: case 6: case 11: case 12: case 13: 
 		Guy.Aktiv   = true;
@@ -7582,7 +7559,7 @@ void AkRohr()
 	case 10: 
 		ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+17,
 			       Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+13);
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[ROHR].Anzahl+2);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[ROHR].Anzahl+2);
 		break;
 	case 17:
 		ShortRoute(Guy.PosAlt.x,Guy.PosAlt.y);
@@ -7601,19 +7578,17 @@ void AkRohr()
 	}
 }
 
-void AkSOS()
+function AkSOS()
 {
-	short i;
-
 	if (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer == 0)
 	{
 		Guy.PosAlt = Guy.PosScreen;	//Die Originalposition merken
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = SOS;
-		for (i=0;i<BILDANZ;i++)	
+		for (let i=0; i<BILDANZ; i++)
 			Scape[Guy.Pos.x][Guy.Pos.y].Rohstoff[i] = Bmp[SOS].Rohstoff[i];
 		Scape[Guy.Pos.x][Guy.Pos.y].Phase = Bmp[SOS].Anzahl;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = (short)Bmp[SOS].rcDes.left;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = (short)Bmp[SOS].rcDes.top;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = Bmp[SOS].rcDes.left;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = Bmp[SOS].rcDes.top;
 	}
 	Scape[Guy.Pos.x][Guy.Pos.y].AkNummer++;
 	if (!CheckRohstoff())
@@ -7630,27 +7605,27 @@ void AkSOS()
 	case 4: 
 		ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+12,
 			       Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+17);
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[SOS].Anzahl+1);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[SOS].Anzahl+1);
 		break;
 	case 7: 
 		ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+12,
 			       Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+9);
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[SOS].Anzahl+2);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[SOS].Anzahl+2);
 		break;
 	case 10: 
 		ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+19,
 			       Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+12);
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[SOS].Anzahl+3);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[SOS].Anzahl+3);
 		break;
 	case 13: 
 		ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+21,
 			       Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+5);
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[SOS].Anzahl+4);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[SOS].Anzahl+4);
 		break;
 	case 16: 
 		ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+28,
 			       Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+8);
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[SOS].Anzahl+5);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[SOS].Anzahl+5);
 		break;
 	case 2: case 5: case 8: case 11: case 14: case 17: 
 		Guy.Aktiv   = true;
@@ -7675,7 +7650,7 @@ void AkSOS()
 		Scape[Guy.Pos.x][Guy.Pos.y].Phase = 0;
 		if ((Scape[Guy.Pos.x][Guy.Pos.y].Art == 0) || (Scape[Guy.Pos.x][Guy.Pos.y].Art == 4))
 			Chance += 1;
-		else Chance += 2; //D�rfte nur noch der Strand �brig sein
+		else Chance += 2; //Dürfte nur noch der Strand übrig sein
 		Bmp[BUTTSTOP].Phase = -1;
 		if (Bmp[SOS].First)
 		{
@@ -7687,19 +7662,17 @@ void AkSOS()
 	}
 }
 
-void AkFeuerstelle()
+function AkFeuerstelle()
 {
-	short i;
-
 	if (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer == 0)
 	{
 		Guy.PosAlt = Guy.PosScreen;	//Die Originalposition merken
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = FEUERSTELLE;
-		for (i=0;i<BILDANZ;i++)	
+		for (let i=0; i<BILDANZ; i++)
 			Scape[Guy.Pos.x][Guy.Pos.y].Rohstoff[i] = Bmp[FEUERSTELLE].Rohstoff[i];
 		Scape[Guy.Pos.x][Guy.Pos.y].Phase = Bmp[FEUERSTELLE].Anzahl;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = (short)Bmp[FEUERSTELLE].rcDes.left;
-		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = (short)Bmp[FEUERSTELLE].rcDes.top;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x = Bmp[FEUERSTELLE].rcDes.left;
+		Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y = Bmp[FEUERSTELLE].rcDes.top;
 	}
 	Scape[Guy.Pos.x][Guy.Pos.y].AkNummer++;
 	if (!CheckRohstoff())
@@ -7728,7 +7701,7 @@ void AkFeuerstelle()
 		AddResource(WASSER,-1);
 		AddResource(NAHRUNG,-1);
 		AddTime(0,1);
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[FEUERSTELLE].Anzahl+1);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[FEUERSTELLE].Anzahl+1);
 		break;
 	case 4: 
 		ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x,
@@ -7742,7 +7715,7 @@ void AkFeuerstelle()
 		AddTime(0,1);
 		if (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer != 5)
 			Scape[Guy.Pos.x][Guy.Pos.y].Phase = 
-			  (short)(Bmp[FEUERSTELLE].Anzahl+Scape[Guy.Pos.x][Guy.Pos.y].AkNummer-4);
+			  (Bmp[FEUERSTELLE].Anzahl+Scape[Guy.Pos.x][Guy.Pos.y].AkNummer-4);
 		break;
 	case 8:
 		ShortRoute(Guy.PosAlt.x,Guy.PosAlt.y);
@@ -7760,14 +7733,12 @@ void AkFeuerstelle()
 	}
 }
 
-void AkHaus1()
+function AkHaus1()
 {
-	short i;
-
 	if (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer == 0)
 	{
 		Guy.PosAlt = Guy.PosScreen;	//Die Originalposition merken
-		for (i=0;i<BILDANZ;i++)	
+		for (let i=0; i<BILDANZ; i++)
 			Scape[Guy.Pos.x][Guy.Pos.y].Rohstoff[i] = Bmp[HAUS1].Rohstoff[i];
 		Scape[Guy.Pos.x][Guy.Pos.y].Phase = Bmp[HAUS1].Anzahl;
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = HAUS1;
@@ -7796,7 +7767,7 @@ void AkHaus1()
 	case 6: case 7: case 8: case 9: 
 		Guy.Aktiv   = true;
 		Guy.Zustand = GUYHAMMER;
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[HAUS1].Anzahl+1);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS1].Anzahl+1);
 		AddResource(NAHRUNG,-0.5);
 		AddResource(WASSER,-0.5);
 		AddTime(0,1);
@@ -7804,7 +7775,7 @@ void AkHaus1()
 	case 10: case 11: case 12: case 13: 
 		Guy.Aktiv   = true;
 		Guy.Zustand = GUYHAMMER;
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[HAUS1].Anzahl+2);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS1].Anzahl+2);
 		AddResource(NAHRUNG,-0.5);
 		AddResource(WASSER,-0.5);
 		AddTime(0,1);
@@ -7812,7 +7783,7 @@ void AkHaus1()
 	case 14: case 15: case 16: case 17: 
 		Guy.Aktiv   = true;
 		Guy.Zustand = GUYHAMMER;
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[HAUS1].Anzahl+3);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS1].Anzahl+3);
 		AddResource(NAHRUNG,-0.5);
 		AddResource(WASSER,-0.5);
 		AddTime(0,1);
@@ -7828,14 +7799,12 @@ void AkHaus1()
 	}
 }
 
-void AkHaus2()
+function AkHaus2()
 {
-	short i;
-
 	if (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer == 0)
 	{
 		Guy.PosAlt = Guy.PosScreen;	//Die Originalposition merken
-		for (i=0;i<BILDANZ;i++)	
+		for (let i=0; i<BILDANZ; i++)
 			Scape[Guy.Pos.x][Guy.Pos.y].Rohstoff[i] = Bmp[HAUS2].Rohstoff[i];
 		Scape[Guy.Pos.x][Guy.Pos.y].Phase = Bmp[HAUS2].Anzahl;
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = HAUS2;
@@ -7871,7 +7840,7 @@ void AkHaus2()
 	case 7: case 8: case 9: case 10:
 		Guy.Aktiv   = true;
 		Guy.Zustand = GUYHAMMER2;
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[HAUS2].Anzahl+1);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS2].Anzahl+1);
 		AddResource(NAHRUNG,-0.5);
 		AddResource(WASSER,-0.5);
 		AddTime(0,1);
@@ -7879,7 +7848,7 @@ void AkHaus2()
 	case 11: case 12: case 13: case 14:
 		Guy.Aktiv   = true;
 		Guy.Zustand = GUYHAMMER2;
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[HAUS2].Anzahl+2);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS2].Anzahl+2);
 		AddResource(NAHRUNG,-0.5);
 		AddResource(WASSER,-0.5);
 		AddTime(0,1);
@@ -7887,7 +7856,7 @@ void AkHaus2()
 	case 15: case 16: case 17: case 18:
 		Guy.Aktiv   = true;
 		Guy.Zustand = GUYHAMMER2;
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[HAUS2].Anzahl+3);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS2].Anzahl+3);
 		AddResource(NAHRUNG,-0.5);
 		AddResource(WASSER,-0.5);
 		AddTime(0,1);
@@ -7895,7 +7864,7 @@ void AkHaus2()
 	case 19:
 		Guy.Aktiv   = true;
 		Guy.Zustand = GUYKLETTERN2;
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[HAUS2].Anzahl+4);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS2].Anzahl+4);
 		AddResource(NAHRUNG,-1);
 		AddResource(WASSER,-1);
 		AddTime(0,1);
@@ -7911,14 +7880,12 @@ void AkHaus2()
 	}
 }
 
-void AkHaus3()
+function AkHaus3()
 {
-	short i;
-
 	if (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer == 0)
 	{
 		Guy.PosAlt = Guy.PosScreen;	//Die Originalposition merken
-		for (i=0;i<BILDANZ;i++)	
+		for (let i=0; i<BILDANZ; i++)
 			Scape[Guy.Pos.x][Guy.Pos.y].Rohstoff[i] = Bmp[HAUS3].Rohstoff[i];
 		Scape[Guy.Pos.x][Guy.Pos.y].Phase = Bmp[HAUS3].Anzahl;
 		Scape[Guy.Pos.x][Guy.Pos.y].Objekt = HAUS3;
@@ -7954,7 +7921,7 @@ void AkHaus3()
 	case 7: case 8: case 9: case 10:
 		Guy.Aktiv   = true;
 		Guy.Zustand = GUYHAMMER2;
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[HAUS3].Anzahl+1);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS3].Anzahl+1);
 		AddResource(NAHRUNG,-0.5);
 		AddResource(WASSER,-0.5);
 		AddTime(0,1);
@@ -7962,7 +7929,7 @@ void AkHaus3()
 	case 11: case 12: case 13: case 14:
 		Guy.Aktiv   = true;
 		Guy.Zustand = GUYHAMMER2;
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[HAUS3].Anzahl+2);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS3].Anzahl+2);
 		AddResource(NAHRUNG,-0.5);
 		AddResource(WASSER,-0.5);
 		AddTime(0,1);
@@ -7970,7 +7937,7 @@ void AkHaus3()
 	case 15: case 16: case 17: case 18:
 		Guy.Aktiv   = true;
 		Guy.Zustand = GUYHAMMER2;
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[HAUS3].Anzahl+3);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS3].Anzahl+3);
 		AddResource(NAHRUNG,-0.5);
 		AddResource(WASSER,-0.5);
 		AddTime(0,1);
@@ -7978,7 +7945,7 @@ void AkHaus3()
 	case 19:
 		Guy.Aktiv   = true;
 		Guy.Zustand = GUYKLETTERN2;
-		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[HAUS3].Anzahl+4);
+		Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS3].Anzahl+4);
 		AddResource(NAHRUNG,-1);
 		AddResource(WASSER,-1);
 		AddTime(0,1);
@@ -7999,7 +7966,7 @@ void AkHaus3()
 	}
 }
 
-void AkSchlafen()
+function AkSchlafen()
 {
 	if (Guy.AkNummer == 0)
 	{
@@ -8096,7 +8063,7 @@ void AkSchlafen()
 	}
 }
 
-void AkAblegen()
+function AkAblegen()
 {
 	Guy.AkNummer++;
 	switch(Guy.AkNummer)
@@ -8132,7 +8099,7 @@ void AkAblegen()
 	}
 }
 
-void AkAnlegen()
+function AkAnlegen()
 {
 	Guy.AkNummer++;
 	switch(Guy.AkNummer)
@@ -8214,23 +8181,17 @@ void AkAnlegen()
 	}	
 }
 
-void Compute(short MinGroesse, short MaxGroesse) //Groesse der Insel in Anzahl der Landkacheln
+function Compute(MinGroesse, MaxGroesse) //Groesse der Insel in Anzahl der Landkacheln
 {
-	short				x,y;
-	short				Mittex,Mittey;
-	short				l,i,j,m;	// l: Spiralring von Innen aus gez�hlt
-	short				Anzahl;		//Anzahl der Landst�cke							
-	bool				gefunden;
-	bool				CheckRand; //Reicht die Insel bis zum Rand?
+	let gefunden;
 	
-	Mittex = MAXXKACH / 2-1;
-	Mittey = MAXYKACH / 2-1;
+	let Mittex = MAXXKACH / 2-1;
+	let Mittey = MAXYKACH / 2-1;
 
-	for(m=0;m<1000;m++)	//100mal wiederholen, oder bis eine geeignete Insel gefunden ist
+	for(let m=0; m<1000; m++)	//100mal wiederholen, oder bis eine geeignete Insel gefunden ist
 	{
-		for (y=0;y<MAXYKACH;y++)
-			for (x=0;x<MAXXKACH;x++)
-			{
+		for (let y=0; y<MAXYKACH; y++) {
+			for (let x=0; x<MAXXKACH; x++) {
 				Scape[x][y].Typ		 = 0;
 				Scape[x][y].Art		 = 0;
 				Scape[x][y].Hoehe	 = 0;
@@ -8246,466 +8207,465 @@ void Compute(short MinGroesse, short MaxGroesse) //Groesse der Insel in Anzahl d
 				Scape[x][y].AkNummer = 0;
 				Scape[x][y].GPosAlt.x= 0;
 				Scape[x][y].GPosAlt.y= 0;
-				for (i=0;i<BILDANZ;i++) Scape[x][y].Rohstoff[i] = 0;
+				for (let i=0; i<BILDANZ; i++) Scape[x][y].Rohstoff[i] = 0;
 				Scape[x][y].Timer    = 0;
-
-			};
+			}
+		}
 		
-		x = Mittex;		//Startposition der Berechnung
-		y = Mittey;
+		let x = Mittex;		//Startposition der Berechnung
+		let y = Mittey;
 		Scape[Mittex][Mittey].Typ   = 0;		//Gipfel festlegen (Flach)	
 		Scape[Mittex][Mittey].Hoehe = GIPFEL;	// und mit der Hoehe 
-		
-		for (l=0;l<=Mittey-1;l++)
-			{
-				if (l >= Mittex) break;
-				y = Mittey-l-1;
-				//Als erstes den oberen Bereich von links nach rechts durchgehen 
-				for (x=Mittex-l;x<=Mittex+l;x++)
-				{
-					gefunden = false;
-					i=0;
-					while (! gefunden)		//Passendes Teil finden und Hoehe festlegen
-					{
-						i+=1;
-						if (i==1000) {gefunden=true;}
-						
-						Scape[x][y].Typ = rand()%13;
-						for (j=0;j<10;j++)
-						{
-							if (! ((Scape[x][y].Typ == 0) || (Scape[x][y].Typ == 1)))
-							{
-								Scape[x][y].Typ = rand()%13;
-							}
-						}
-						
-						if	((x == Mittex-l) || ((x != Mittex-l) 
-							&& ((Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] != 0) 
-							&& (Vierecke[Scape[x-1][y].Typ][2][Scape[x][y].Typ] != 0))))
-						{
-							if (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] == 1) 
-							{
-								Scape[x][y].Hoehe = Scape[x][y+1].Hoehe - 1;
-								if (Scape[x][y].Hoehe < 0)
-								{
-									Scape[x][y].Typ = 0;
-									Scape[x][y].Hoehe = 0;
-								}
-								gefunden = true;
-							}
-							if (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] == 2)
-							{
-								Scape[x][y].Hoehe = Scape[x][y+1].Hoehe;
-								gefunden = true;
-							}
-							if (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] == 3)
-							{
-								Scape[x][y].Hoehe = Scape[x][y+1].Hoehe + 1;
-								gefunden = true;
-							}
-						}
-						//Verzwickte F�lle ausfiltern
-						if (((Vierecke[Scape[x][y].Typ][2][3] == 2) && (Vierecke[Scape[x+1][y+1].Typ][1][4] == 2)) ||
-							((Vierecke[Scape[x][y].Typ][2][1] == 2) && (Vierecke[Scape[x+1][y+1].Typ][1][2] == 2)))
-						{
-							gefunden = false;
-						}
-						//Nebeninseln vermeiden
-						if (((Scape[x-1][y].Typ == 0) && (Scape[x-1][y].Hoehe == 0)) &&
-							((Scape[x][y+1].Typ == 0) && (Scape[x][y+1].Hoehe == 0)))
-						{
-							Scape[x][y].Typ		= 0;
-							Scape[x][y].Hoehe	= 0;
-						}
-						
-					}
-				}
-				
-				//Teil rechts-oben  
-				x =Mittex+l+1;
-				y =Mittey-l-1;
+
+		// l: Spiralring von Innen aus gezählt
+		for (let l=0; l<=Mittey-1; l++) {
+			let i;
+			if (l >= Mittex) break;
+			y = Mittey-l-1;
+			//Als erstes den oberen Bereich von links nach rechts durchgehen
+			for (x = Mittex-l; x <= Mittex+l; x++) {
 				gefunden = false;
-				i=0;
+				let i=0;
 				while (! gefunden)		//Passendes Teil finden und Hoehe festlegen
 				{
-					i+=1;
-					if (i==1000) {gefunden=true;}
-					
+					i ++;
+					if (i === 1000) gefunden=true;
+
 					Scape[x][y].Typ = rand()%13;
-					for (j=0;j<10;j++)
-					{
-						if (! ((Scape[x][y].Typ == 0) || (Scape[x][y].Typ == 5)))
+					for (let j=0; j<10; j++) {
+						if (! ((Scape[x][y].Typ === 0) || (Scape[x][y].Typ === 1)))
 						{
 							Scape[x][y].Typ = rand()%13;
 						}
 					}
-					
-					if (Vierecke[Scape[x-1][y].Typ][2][Scape[x][y].Typ] == 1) 
+
+					if	((x === Mittex-l) || ((x !== Mittex-l)
+						&& ((Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] !== 0)
+						&& (Vierecke[Scape[x-1][y].Typ][2][Scape[x][y].Typ] !== 0))))
 					{
-						Scape[x][y].Hoehe = Scape[x-1][y].Hoehe - 1;
-						if (Scape[x][y].Hoehe < 0)
+						if (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] === 1)
 						{
-							Scape[x][y].Typ = 0;
-							Scape[x][y].Hoehe = 0;
+							Scape[x][y].Hoehe = Scape[x][y+1].Hoehe - 1;
+							if (Scape[x][y].Hoehe < 0)
+							{
+								Scape[x][y].Typ = 0;
+								Scape[x][y].Hoehe = 0;
+							}
+							gefunden = true;
 						}
-						gefunden = true;
+						if (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] === 2)
+						{
+							Scape[x][y].Hoehe = Scape[x][y+1].Hoehe;
+							gefunden = true;
+						}
+						if (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] === 3)
+						{
+							Scape[x][y].Hoehe = Scape[x][y+1].Hoehe + 1;
+							gefunden = true;
+						}
 					}
-					if (Vierecke[Scape[x-1][y].Typ][2][Scape[x][y].Typ] == 2)
-					{
-						Scape[x][y].Hoehe = Scape[x-1][y].Hoehe;
-						gefunden = true;
-					}
-					if (Vierecke[Scape[x-1][y].Typ][2][Scape[x][y].Typ] == 3)
-					{
-						Scape[x][y].Hoehe = Scape[x-1][y].Hoehe + 1;
-						gefunden = true;
-					}
-					//Verzwickte F�lle ausfiltern
-					if (((Vierecke[Scape[x][y].Typ][3][2] == 2) && (Vierecke[Scape[x-1][y+1].Typ][2][3] == 2)) ||
-						((Vierecke[Scape[x][y].Typ][3][4] == 2) && (Vierecke[Scape[x-1][y+1].Typ][2][1] == 2)))
+					//Verzwickte Fälle ausfiltern
+					if (x+1 < MAXXKACH && y+1 < MAXYKACH && (
+						((Vierecke[Scape[x][y].Typ][2][3] === 2) && (Vierecke[Scape[x+1][y+1].Typ][1][4] === 2)) ||
+						((Vierecke[Scape[x][y].Typ][2][1] === 2) && (Vierecke[Scape[x+1][y+1].Typ][1][2] === 2)) )
+					)
 					{
 						gefunden = false;
 					}
 					//Nebeninseln vermeiden
-					if ((Scape[x-1][y].Typ == 0) && (Scape[x-1][y].Hoehe == 0))
+					if (((Scape[x-1][y].Typ === 0) && (Scape[x-1][y].Hoehe === 0)) &&
+						((Scape[x][y+1].Typ === 0) && (Scape[x][y+1].Hoehe === 0)))
 					{
 						Scape[x][y].Typ		= 0;
 						Scape[x][y].Hoehe	= 0;
 					}
+
 				}
-				
-				//Den rechten Bereich von oben nach unten durchgehen 
-				x= Mittex +l+1;
-				for (y=Mittey-l;y<=Mittey+l;y++)
-				{
-					gefunden = false;
-					i=0;
-					while (! gefunden)		//Passendes Teil finden und Hoehe festlegen
+			}
+
+			//Teil rechts-oben
+			x = Mittex+l+1;
+			y = Mittey-l-1;
+			gefunden = false;
+			i=0;
+			while (! gefunden)		//Passendes Teil finden und Hoehe festlegen
+			{
+				i ++;
+				if (i === 1000) gefunden=true;
+
+				Scape[x][y].Typ = rand()%13;
+				for (let j=0; j<10; j++) {
+					if (! ((Scape[x][y].Typ === 0) || (Scape[x][y].Typ === 5)))
 					{
-						i+=1;
-						if (i==1000) {gefunden=true;}
-						
 						Scape[x][y].Typ = rand()%13;
-						for (j=0;j<10;j++)
-						{	
-							if (! ((Scape[x][y].Typ == 0) || (Scape[x][y].Typ == 4)))
-							{
-								Scape[x][y].Typ = rand()%13;
-							}
-						}
-						
-						if	((Vierecke[Scape[x-1][y].Typ][2][Scape[x][y].Typ] != 0) 
-							&& (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] != 0))
-						{
-							if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] == 1) 
-							{
-								Scape[x][y].Hoehe = Scape[x][y-1].Hoehe - 1;
-								if (Scape[x][y].Hoehe < 0)
-								{
-									Scape[x][y].Typ = 0;
-									Scape[x][y].Hoehe = 0;
-								}
-								gefunden = true;
-							}
-							if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] == 2)
-							{
-								Scape[x][y].Hoehe = Scape[x][y-1].Hoehe;
-								gefunden = true;
-							}
-							if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] == 3)
-							{
-								Scape[x][y].Hoehe = Scape[x][y-1].Hoehe + 1;
-								gefunden = true;
-							}
-						}
-						//Verzwickte F�lle ausfiltern
-						if (((Vierecke[Scape[x][y].Typ][3][2] == 2) && (Vierecke[Scape[x-1][y+1].Typ][2][3] == 2)) ||
-							((Vierecke[Scape[x][y].Typ][3][4] == 2) && (Vierecke[Scape[x-1][y+1].Typ][2][1] == 2)))
-						{
-							gefunden = false;
-						}
-						//Nebeninseln vermeiden
-						if (((Scape[x-1][y].Typ == 0) && (Scape[x-1][y].Hoehe == 0)) &&
-							((Scape[x][y-1].Typ == 0) && (Scape[x][y-1].Hoehe == 0)))
-						{
-							Scape[x][y].Typ		= 0;
-							Scape[x][y].Hoehe	= 0;
-						}
 					}
 				}
-				
-				//Teil rechts-unten  
-				x = Mittex+l+1;
-				y = Mittey+l+1;
+
+				if (Vierecke[Scape[x-1][y].Typ][2][Scape[x][y].Typ] === 1)
+				{
+					Scape[x][y].Hoehe = Scape[x-1][y].Hoehe - 1;
+					if (Scape[x][y].Hoehe < 0)
+					{
+						Scape[x][y].Typ = 0;
+						Scape[x][y].Hoehe = 0;
+					}
+					gefunden = true;
+				}
+				if (Vierecke[Scape[x-1][y].Typ][2][Scape[x][y].Typ] === 2)
+				{
+					Scape[x][y].Hoehe = Scape[x-1][y].Hoehe;
+					gefunden = true;
+				}
+				if (Vierecke[Scape[x-1][y].Typ][2][Scape[x][y].Typ] === 3)
+				{
+					Scape[x][y].Hoehe = Scape[x-1][y].Hoehe + 1;
+					gefunden = true;
+				}
+				//Verzwickte Fälle ausfiltern
+				if (x-1 >= 0 && y+1 < MAXYKACH && (
+					((Vierecke[Scape[x][y].Typ][3][2] === 2) && (Vierecke[Scape[x-1][y+1].Typ][2][3] === 2)) ||
+					((Vierecke[Scape[x][y].Typ][3][4] === 2) && (Vierecke[Scape[x-1][y+1].Typ][2][1] === 2)) )
+				)
+				{
+					gefunden = false;
+				}
+				//Nebeninseln vermeiden
+				if ((Scape[x-1][y].Typ === 0) && (Scape[x-1][y].Hoehe === 0))
+				{
+					Scape[x][y].Typ		= 0;
+					Scape[x][y].Hoehe	= 0;
+				}
+			}
+
+			//Den rechten Bereich von oben nach unten durchgehen
+			x = Mittex +l+1;
+			for (y = Mittey-l; y <= Mittey+l; y++) {
 				gefunden = false;
-				i=0;
+				let i = 0;
 				while (! gefunden)		//Passendes Teil finden und Hoehe festlegen
 				{
-					i+=1;
-					if (i==1000) {gefunden=true;}
-					
+					i ++;
+					if (i === 1000) gefunden=true;
+
 					Scape[x][y].Typ = rand()%13;
-					for (j=0;j<10;j++)
-					{
-						if (! ((Scape[x][y].Typ == 0) || (Scape[x][y].Typ == 8)))
+					for (let j=0; j<10; j++) {
+						if (! ((Scape[x][y].Typ === 0) || (Scape[x][y].Typ === 4)))
 						{
 							Scape[x][y].Typ = rand()%13;
 						}
 					}
-					
-					if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] == 1) 
+
+					if	((Vierecke[Scape[x-1][y].Typ][2][Scape[x][y].Typ] !== 0)
+						&& (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] !== 0))
 					{
-						Scape[x][y].Hoehe = Scape[x][y-1].Hoehe - 1;
-						if (Scape[x][y].Hoehe < 0)
+						if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] === 1)
 						{
-							Scape[x][y].Typ = 0;
-							Scape[x][y].Hoehe = 0;
+							Scape[x][y].Hoehe = Scape[x][y-1].Hoehe - 1;
+							if (Scape[x][y].Hoehe < 0)
+							{
+								Scape[x][y].Typ = 0;
+								Scape[x][y].Hoehe = 0;
+							}
+							gefunden = true;
 						}
-						gefunden = true;
+						if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] === 2)
+						{
+							Scape[x][y].Hoehe = Scape[x][y-1].Hoehe;
+							gefunden = true;
+						}
+						if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] === 3)
+						{
+							Scape[x][y].Hoehe = Scape[x][y-1].Hoehe + 1;
+							gefunden = true;
+						}
 					}
-					if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] == 2)
-					{
-						Scape[x][y].Hoehe = Scape[x][y-1].Hoehe;
-						gefunden = true;
-					}
-					if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] == 3)
-					{
-						Scape[x][y].Hoehe = Scape[x][y-1].Hoehe + 1;
-						gefunden = true;
-					}
-					//Verzwickte F�lle ausfiltern
-					if (((Vierecke[Scape[x][y].Typ][0][1] == 2) && (Vierecke[Scape[x-1][y-1].Typ][3][2] == 2)) ||
-						((Vierecke[Scape[x][y].Typ][0][3] == 2) && (Vierecke[Scape[x-1][y-1].Typ][3][4] == 2)))
+					//Verzwickte Fälle ausfiltern
+					if (x-1 >= 0 && y+1 < MAXYKACH && (
+						((Vierecke[Scape[x][y].Typ][3][2] === 2) && (Vierecke[Scape[x-1][y+1].Typ][2][3] === 2)) ||
+						((Vierecke[Scape[x][y].Typ][3][4] === 2) && (Vierecke[Scape[x-1][y+1].Typ][2][1] === 2)) )
+					)
 					{
 						gefunden = false;
 					}
-					//Nebeninsel vermeiden
-					if ((Scape[x][y-1].Typ == 0) && (Scape[x][y-1].Hoehe == 0))
+					//Nebeninseln vermeiden
+					if (((Scape[x-1][y].Typ === 0) && (Scape[x-1][y].Hoehe === 0)) &&
+						((Scape[x][y-1].Typ === 0) && (Scape[x][y-1].Hoehe === 0)))
 					{
 						Scape[x][y].Typ		= 0;
 						Scape[x][y].Hoehe	= 0;
-					}
-				}
-				
-				//Den unteren Bereich von rechts nach links durchgehen 
-				y = Mittey+l+1;
-				for (x=Mittex+l;x>=Mittex-l;x--)
-				{
-					gefunden = false;
-					i=0;
-					while (! gefunden)		//Passendes Teil finden und Hoehe festlegen
-					{
-						i+=1;
-						if (i==1000) {gefunden=true;}
-						
-						Scape[x][y].Typ = rand()%13;
-						for (j=0;j<10;j++)
-						{
-							if (! ((Scape[x][y].Typ == 0) || (Scape[x][y].Typ == 3)))
-							{
-								Scape[x][y].Typ = rand()%13;
-							}
-						}
-						
-						if	((Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] != 0) 
-							&& (Vierecke[Scape[x+1][y].Typ][0][Scape[x][y].Typ] != 0))
-						{
-							if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] == 1) 
-							{
-								Scape[x][y].Hoehe = Scape[x][y-1].Hoehe - 1;
-								if (Scape[x][y].Hoehe < 0)
-								{
-									Scape[x][y].Typ = 0;
-									Scape[x][y].Hoehe = 0;
-								}
-								gefunden = true;
-							}
-							if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] == 2)
-							{
-								Scape[x][y].Hoehe = Scape[x][y-1].Hoehe;
-								gefunden = true;
-							}
-							if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] == 3)
-							{
-								Scape[x][y].Hoehe = Scape[x][y-1].Hoehe + 1;
-								gefunden = true;
-							}
-						}
-						//Verzwickte F�lle ausfiltern
-						if (((Vierecke[Scape[x][y].Typ][0][1] == 2) && (Vierecke[Scape[x-1][y-1].Typ][3][2] == 2)) ||
-							((Vierecke[Scape[x][y].Typ][0][3] == 2) && (Vierecke[Scape[x-1][y-1].Typ][3][4] == 2)))
-						{
-							gefunden = false;
-						}
-						//Nebeninseln vermeiden
-						if (((Scape[x+1][y].Typ == 0) && (Scape[x+1][y].Hoehe == 0)) &&
-							((Scape[x][y-1].Typ == 0) && (Scape[x][y-1].Hoehe == 0)))
-						{
-							Scape[x][y].Typ		= 0;
-							Scape[x][y].Hoehe	= 0;
-						}
-					}
-				}
-				
-				//Teil links-unten  
-				x = Mittex-l-1;
-				y = Mittey+l+1;
-				gefunden = false;
-				i=0;
-				while (! gefunden)		//Passendes Teil finden und Hoehe festlegen
-				{
-					i+=1;
-					if (i==1000) {gefunden=true;}
-					
-					Scape[x][y].Typ = rand()%13;
-					for (j=0;j<10;j++)
-					{
-						if (! ((Scape[x][y].Typ == 0) || (Scape[x][y].Typ == 7)))
-						{
-							Scape[x][y].Typ = rand()%13;
-						}
-					}
-					
-					if (Vierecke[Scape[x+1][y].Typ][0][Scape[x][y].Typ] == 1) 
-					{
-						Scape[x][y].Hoehe = Scape[x+1][y].Hoehe - 1;
-						if (Scape[x][y].Hoehe < 0)
-						{
-							Scape[x][y].Typ = 0;
-							Scape[x][y].Hoehe = 0;
-						}
-						gefunden = true;
-					}
-					if (Vierecke[Scape[x+1][y].Typ][0][Scape[x][y].Typ] == 2)
-					{
-						Scape[x][y].Hoehe = Scape[x+1][y].Hoehe;
-						gefunden = true;
-					}
-					if (Vierecke[Scape[x+1][y].Typ][0][Scape[x][y].Typ] == 3)
-					{
-						Scape[x][y].Hoehe = Scape[x+1][y].Hoehe + 1;
-						gefunden = true;
-					}
-					//Verzwickte F�lle ausfiltern
-					if (((Vierecke[Scape[x][y].Typ][1][2] == 2) && (Vierecke[Scape[x+1][y-1].Typ][0][3] == 2)) ||
-						((Vierecke[Scape[x][y].Typ][1][4] == 2) && (Vierecke[Scape[x+1][y-1].Typ][0][1] == 2)))
-					{
-						gefunden = false;
-					}
-					//Nebeninsel vermeiden
-					if ((Scape[x+1][y].Typ == 0) && (Scape[x+1][y].Hoehe == 0))
-					{
-						Scape[x][y].Typ		= 0;
-						Scape[x][y].Hoehe	= 0;
-					}
-				}
-				
-				//Den linken Bereich von unten nach oben durchgehen 
-				x = Mittex-l-1;
-				for (y=Mittey+l;y>=Mittey-l-1;y--)
-				{
-					gefunden = false;
-					i=0;
-					while (! gefunden)		//Passendes Teil finden und Hoehe festlegen
-					{
-						i+=1;
-						if (i==1000) {gefunden=true;}
-						Scape[x][y].Typ = rand()%13;
-						for (j=0;j<10;j++)
-						{
-							if (! ((Scape[x][y].Typ == 0) || (Scape[x][y].Typ == 2)))
-							{
-								Scape[x][y].Typ = rand()%13;
-							}
-						}
-						
-						if	((Vierecke[Scape[x+1][y].Typ][0][Scape[x][y].Typ] != 0) 
-							&& (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] != 0))
-						{
-							if (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] == 1) 
-							{
-								Scape[x][y].Hoehe = Scape[x][y+1].Hoehe - 1;
-								if (Scape[x][y].Hoehe < 0)
-								{
-									Scape[x][y].Typ = 0;
-									Scape[x][y].Hoehe = 0;
-								}
-								gefunden = true;
-							}
-							if (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] == 2)
-							{
-								Scape[x][y].Hoehe = Scape[x][y+1].Hoehe;
-								gefunden = true;
-							}
-							if (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] == 3)
-							{
-								Scape[x][y].Hoehe = Scape[x][y+1].Hoehe + 1;
-								gefunden = true;
-							}
-						}
-						//Verzwickte F�lle ausfiltern
-						if (((Vierecke[Scape[x][y].Typ][1][2] == 2) && (Vierecke[Scape[x+1][y-1].Typ][0][3] == 2)) ||
-							((Vierecke[Scape[x][y].Typ][1][4] == 2) && (Vierecke[Scape[x+1][y-1].Typ][0][1] == 2)))
-						{
-							gefunden = false;
-						}
-						//Nebeninseln vermeiden
-						if (((Scape[x+1][y].Typ == 0) && (Scape[x+1][y].Hoehe == 0)) &&
-							((Scape[x][y+1].Typ == 0) && (Scape[x][y+1].Hoehe == 0)))
-						{
-							Scape[x][y].Typ		= 0;
-							Scape[x][y].Hoehe	= 0;
-						}
 					}
 				}
 			}
-			Anzahl = 0;
-			CheckRand = true;
-			for (y=0;y<MAXYKACH;y++)		//Landfl�che z�hlen
-				for (x=0;x<MAXXKACH;x++)	
-				{
-					if (Scape[x][y].Hoehe > 0) Anzahl++;
-					
-					if (Scape[x][y].Typ == 0) Scape[x][y].LaufZeit = 1;
-					else Scape[x][y].LaufZeit = 2;
-					
-					if ((Scape[x][y].Typ != 0) && 
-						((x<=2) || (x>=MAXXKACH-2) || (y<=2) || (y>=MAXYKACH-2))) 
-						CheckRand=false; 
+
+			//Teil rechts-unten
+			x = Mittex+l+1;
+			y = Mittey+l+1;
+			gefunden = false;
+			i=0;
+			while (! gefunden)		//Passendes Teil finden und Hoehe festlegen
+			{
+				i ++;
+				if (i === 1000) gefunden=true;
+
+				Scape[x][y].Typ = rand()%13;
+				for (let j=0; j<10; j++) {
+					if (! ((Scape[x][y].Typ === 0) || (Scape[x][y].Typ === 8)))
+					{
+						Scape[x][y].Typ = rand()%13;
+					}
 				}
-			if ((Anzahl > MinGroesse) && (Anzahl < MaxGroesse) && (CheckRand)) break;
-		}	
+
+				if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] === 1)
+				{
+					Scape[x][y].Hoehe = Scape[x][y-1].Hoehe - 1;
+					if (Scape[x][y].Hoehe < 0)
+					{
+						Scape[x][y].Typ = 0;
+						Scape[x][y].Hoehe = 0;
+					}
+					gefunden = true;
+				}
+				if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] === 2)
+				{
+					Scape[x][y].Hoehe = Scape[x][y-1].Hoehe;
+					gefunden = true;
+				}
+				if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] === 3)
+				{
+					Scape[x][y].Hoehe = Scape[x][y-1].Hoehe + 1;
+					gefunden = true;
+				}
+				//Verzwickte Fälle ausfiltern
+
+				if (x-1 >= 0 && y-1 >= 0 && (
+					((Vierecke[Scape[x][y].Typ][0][1] === 2) && (Vierecke[Scape[x-1][y-1].Typ][3][2] === 2)) ||
+					((Vierecke[Scape[x][y].Typ][0][3] === 2) && (Vierecke[Scape[x-1][y-1].Typ][3][4] === 2)) )
+				)
+				{
+					gefunden = false;
+				}
+				//Nebeninsel vermeiden
+				if ((Scape[x][y-1].Typ === 0) && (Scape[x][y-1].Hoehe === 0))
+				{
+					Scape[x][y].Typ		= 0;
+					Scape[x][y].Hoehe	= 0;
+				}
+			}
+
+			//Den unteren Bereich von rechts nach links durchgehen
+			y = Mittey+l+1;
+			for (x = Mittex+l; x >= Mittex-l; x--) {
+				gefunden = false;
+				i=0;
+				while (! gefunden)		//Passendes Teil finden und Hoehe festlegen
+				{
+					i ++;
+					if (i === 1000) gefunden=true;
+
+					Scape[x][y].Typ = rand()%13;
+					for (let j=0; j<10; j++) {
+						if (! ((Scape[x][y].Typ === 0) || (Scape[x][y].Typ === 3)))
+						{
+							Scape[x][y].Typ = rand()%13;
+						}
+					}
+
+					if	((Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] !== 0)
+						&& (Vierecke[Scape[x+1][y].Typ][0][Scape[x][y].Typ] !== 0))
+					{
+						if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] === 1)
+						{
+							Scape[x][y].Hoehe = Scape[x][y-1].Hoehe - 1;
+							if (Scape[x][y].Hoehe < 0)
+							{
+								Scape[x][y].Typ = 0;
+								Scape[x][y].Hoehe = 0;
+							}
+							gefunden = true;
+						}
+						if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] === 2)
+						{
+							Scape[x][y].Hoehe = Scape[x][y-1].Hoehe;
+							gefunden = true;
+						}
+						if (Vierecke[Scape[x][y-1].Typ][3][Scape[x][y].Typ] === 3)
+						{
+							Scape[x][y].Hoehe = Scape[x][y-1].Hoehe + 1;
+							gefunden = true;
+						}
+					}
+					//Verzwickte Fälle ausfiltern
+					if (x-1 >= 0 && y-1 >= 0 && (
+						((Vierecke[Scape[x][y].Typ][0][1] === 2) && (Vierecke[Scape[x-1][y-1].Typ][3][2] === 2)) ||
+						((Vierecke[Scape[x][y].Typ][0][3] === 2) && (Vierecke[Scape[x-1][y-1].Typ][3][4] === 2)) )
+					) {
+						gefunden = false;
+					}
+					//Nebeninseln vermeiden
+					if (((Scape[x+1][y].Typ === 0) && (Scape[x+1][y].Hoehe === 0)) &&
+						((Scape[x][y-1].Typ === 0) && (Scape[x][y-1].Hoehe === 0)))
+					{
+						Scape[x][y].Typ		= 0;
+						Scape[x][y].Hoehe	= 0;
+					}
+				}
+			}
+
+			//Teil links-unten
+			x = Mittex-l-1;
+			y = Mittey+l+1;
+			gefunden = false;
+			i=0;
+			while (! gefunden)		//Passendes Teil finden und Hoehe festlegen
+			{
+				i ++;
+				if (i === 1000) gefunden=true;
+
+				Scape[x][y].Typ = rand()%13;
+				for (let j=0; j<10; j++) {
+					if (! ((Scape[x][y].Typ === 0) || (Scape[x][y].Typ === 7)))
+					{
+						Scape[x][y].Typ = rand()%13;
+					}
+				}
+
+				if (Vierecke[Scape[x+1][y].Typ][0][Scape[x][y].Typ] === 1)
+				{
+					Scape[x][y].Hoehe = Scape[x+1][y].Hoehe - 1;
+					if (Scape[x][y].Hoehe < 0)
+					{
+						Scape[x][y].Typ = 0;
+						Scape[x][y].Hoehe = 0;
+					}
+					gefunden = true;
+				}
+				if (Vierecke[Scape[x+1][y].Typ][0][Scape[x][y].Typ] === 2)
+				{
+					Scape[x][y].Hoehe = Scape[x+1][y].Hoehe;
+					gefunden = true;
+				}
+				if (Vierecke[Scape[x+1][y].Typ][0][Scape[x][y].Typ] === 3)
+				{
+					Scape[x][y].Hoehe = Scape[x+1][y].Hoehe + 1;
+					gefunden = true;
+				}
+				//Verzwickte Fälle ausfiltern
+				if (x+1 < MAXXKACH && y-1 >= 0 && (
+					((Vierecke[Scape[x][y].Typ][1][2] === 2) && (Vierecke[Scape[x+1][y-1].Typ][0][3] === 2)) ||
+					((Vierecke[Scape[x][y].Typ][1][4] === 2) && (Vierecke[Scape[x+1][y-1].Typ][0][1] === 2)) )
+				) {
+					gefunden = false;
+				}
+				//Nebeninsel vermeiden
+				if ((Scape[x+1][y].Typ === 0) && (Scape[x+1][y].Hoehe === 0))
+				{
+					Scape[x][y].Typ		= 0;
+					Scape[x][y].Hoehe	= 0;
+				}
+			}
+
+			//Den linken Bereich von unten nach oben durchgehen
+			x = Mittex-l-1;
+			for (y = Mittey+l; y >= Mittey-l-1; y--) {
+				gefunden = false;
+				i=0;
+				while (! gefunden)		//Passendes Teil finden und Hoehe festlegen
+				{
+					i ++;
+					if (i === 1000) gefunden=true;
+					Scape[x][y].Typ = rand()%13;
+					for (let j=0; j<10; j++) {
+						if (! ((Scape[x][y].Typ === 0) || (Scape[x][y].Typ === 2)))
+						{
+							Scape[x][y].Typ = rand()%13;
+						}
+					}
+
+					if	((Vierecke[Scape[x+1][y].Typ][0][Scape[x][y].Typ] !== 0)
+						&& (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] !== 0))
+					{
+						if (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] === 1)
+						{
+							Scape[x][y].Hoehe = Scape[x][y+1].Hoehe - 1;
+							if (Scape[x][y].Hoehe < 0)
+							{
+								Scape[x][y].Typ = 0;
+								Scape[x][y].Hoehe = 0;
+							}
+							gefunden = true;
+						}
+						if (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] === 2)
+						{
+							Scape[x][y].Hoehe = Scape[x][y+1].Hoehe;
+							gefunden = true;
+						}
+						if (Vierecke[Scape[x][y+1].Typ][1][Scape[x][y].Typ] === 3)
+						{
+							Scape[x][y].Hoehe = Scape[x][y+1].Hoehe + 1;
+							gefunden = true;
+						}
+					}
+					//Verzwickte Fälle ausfiltern
+					if (x+1 < MAXXKACH && y-1 >= 0 && (
+						((Vierecke[Scape[x][y].Typ][1][2] === 2) && (Vierecke[Scape[x+1][y-1].Typ][0][3] === 2)) ||
+						((Vierecke[Scape[x][y].Typ][1][4] === 2) && (Vierecke[Scape[x+1][y-1].Typ][0][1] === 2)) )
+					) {
+						gefunden = false;
+					}
+					//Nebeninseln vermeiden
+					if (((Scape[x+1][y].Typ === 0) && (Scape[x+1][y].Hoehe === 0)) &&
+						((Scape[x][y+1].Typ === 0) && (Scape[x][y+1].Hoehe === 0)))
+					{
+						Scape[x][y].Typ		= 0;
+						Scape[x][y].Hoehe	= 0;
+					}
+				}
+			}
+		}
+		let Anzahl = 0; 		//Anzahl der Landstücke
+		let CheckRand = true; //Reicht die Insel bis zum Rand?
+		for (y=0; y<MAXYKACH; y++) {		//Landfläche zählen
+			for (x=0; x<MAXXKACH; x++) {
+				if (Scape[x][y].Hoehe > 0) Anzahl++;
+
+				if (Scape[x][y].Typ === 0) Scape[x][y].LaufZeit = 1;
+				else Scape[x][y].LaufZeit = 2;
+
+				if ((Scape[x][y].Typ !== 0) &&
+					((x<=2) || (x>=MAXXKACH-2) || (y<=2) || (y>=MAXYKACH-2)))
+					CheckRand=false;
+			}
+		}
+		if ((Anzahl > MinGroesse) && (Anzahl < MaxGroesse) && (CheckRand)) break;
+	}
 }
 
-void Meer()	//Das Meer und den Strand bestimmen
+function Meer()	//Das Meer und den Strand bestimmen
 {
-	short				x,y;
-	short				Anzahl; //Anzahl von angrenzenden Landst�cken
-	
-	for (y=0;y<MAXYKACH;y++)//Meer rausfinden
-		for (x=0;x<MAXXKACH;x++)
-		{
+	for (let y=0; y<MAXYKACH; y++) {//Meer rausfinden
+		for (let x=0; x<MAXXKACH; x++) {
 			if	((Scape[x][y].Hoehe < 0) || 
-				((Scape[x][y].Hoehe == 0) && (Scape[x][y].Typ == 0))) 
+				((Scape[x][y].Hoehe === 0) && (Scape[x][y].Typ === 0)))
 			{
 				Scape[x][y].Typ = 0;
 				Scape[x][y].Hoehe = 0;
 				Scape[x][y].Art = 1;		
 				Scape[x][y].Objekt = MEERWELLEN;
-				Scape[x][y].ObPos.x = (short)Bmp[MEERWELLEN].rcDes.left;
-				Scape[x][y].ObPos.y = (short)Bmp[MEERWELLEN].rcDes.top;
+				Scape[x][y].ObPos.x = Bmp[MEERWELLEN].rcDes.left;
+				Scape[x][y].ObPos.y = Bmp[MEERWELLEN].rcDes.top;
 				if (rand()%2 == 0) Scape[x][y].Reverse = true;
 				Scape[x][y].Begehbar = false;
-				Scape[x][y].Phase = (float)(Bmp[Scape[x][y].Objekt].Anzahl-
+				Scape[x][y].Phase = (Bmp[Scape[x][y].Objekt].Anzahl-
 						            rand()%(Bmp[Scape[x][y].Objekt].Anzahl)-1); 
 			}
 		}
-	for (y=1;y<MAXYKACH-1;y++)//Strand rausfinden
-		for (x=1;x<MAXXKACH-1;x++) //Alle M�glichkeiten durchgehen
-		{
+	}
+	for (let y=1; y<MAXYKACH-1; y++) {//Strand rausfinden
+		for (let x=1; x<MAXXKACH-1; x++) {//Alle Möglichkeiten durchgehen
 			if	((Scape[x][y].Typ == 0) && (Scape[x][y].Hoehe == 0)) 
 			{
-				Anzahl = 0;	//Anzahl rausfinden
+				//Anzahl von angrenzenden Landstücken
+				let Anzahl = 0;	//Anzahl rausfinden
 				if  (Scape[x-1][y].Typ != 0) Anzahl++;
 				if  (Scape[x-1][y-1].Typ != 0) Anzahl++;
 				if  (Scape[x][y-1].Typ != 0) Anzahl++;
@@ -8735,41 +8695,40 @@ void Meer()	//Das Meer und den Strand bestimmen
 				}
 				Scape[x][y].Art = 1;		//sonst Meer
 				Scape[x][y].Objekt = MEERWELLEN;
-				Scape[x][y].ObPos.x = (short)Bmp[MEERWELLEN].rcDes.left;
-				Scape[x][y].ObPos.y = (short)Bmp[MEERWELLEN].rcDes.top;
-				Scape[x][y].Phase = (float)(Bmp[Scape[x][y].Objekt].Anzahl-
+				Scape[x][y].ObPos.x = Bmp[MEERWELLEN].rcDes.left;
+				Scape[x][y].ObPos.y = Bmp[MEERWELLEN].rcDes.top;
+				Scape[x][y].Phase = (Bmp[Scape[x][y].Objekt].Anzahl-
 						            rand()%(Bmp[Scape[x][y].Objekt].Anzahl)-1); 
 				if (rand()%2 == 0) Scape[x][y].Reverse = true;
 				Scape[x][y].Begehbar = false;
 			}
 		}
-		
+	}
 }
 
-void ChangeBootsFahrt()
+function ChangeBootsFahrt()
 {
-	short x,y;
-	
 	BootsFahrt = !BootsFahrt;
 	//Begehbarkeit umdrehen
-	for (y=0;y<MAXYKACH;y++)
-		for (x=0;x<MAXXKACH;x++) Scape[x][y].Begehbar = !Scape[x][y].Begehbar;
+	for (let y=0; y<MAXYKACH; y++)
+		for (let x=0; x<MAXXKACH; x++) Scape[x][y].Begehbar = !Scape[x][y].Begehbar;
 }
 
-void Fade(short RP,short GP,short BP)
+function Fade(RP, GP, BP)
 {
-	short blackloop;
-	
-	for(blackloop=0;blackloop<256;blackloop++)
+	/*
+	for(let blackloop=0; blackloop<256; blackloop++)
 	{
 		DDGammaRamp.red[blackloop]=DDGammaOld.red[blackloop]*RP/100;
 		DDGammaRamp.green[blackloop]=DDGammaOld.green[blackloop]*GP/100;
 		DDGammaRamp.blue[blackloop]=DDGammaOld.blue[blackloop]*BP/100; 
 	}
-	lpDDGammaControl->SetGammaRamp(0, &DDGammaRamp); 
+	lpDDGammaControl->SetGammaRamp(0, &DDGammaRamp);
+	 */
+	// TODO: do fading
 }
 
-void CheckRohr(short x, short y)
+function CheckRohr(x, y)
 {
 	Scape[x][y].Phase = 1;
 	if (Scape[x][y].Art == 0)   Scape[x][y]  .Art = 4;
@@ -8788,27 +8747,24 @@ void CheckRohr(short x, short y)
 	if ((Scape[x][y+1].Objekt == ROHR) && (Scape[x][y+1].Phase == 0)) CheckRohr(x,y+1);
 }
 
-void FillRohr()
+function FillRohr()
 {
-	short x,y;
-
-	for (y=0;y<MAXYKACH;y++)
-		for (x=0;x<MAXXKACH;x++) 
-		{
+	for (let y=0; y<MAXYKACH; y++) {
+		for (let x=0; x<MAXXKACH; x++) {
 			if ((Scape[x][y].Objekt == ROHR) && (Scape[x][y].Phase < Bmp[ROHR].Anzahl))
 				Scape[x][y].Phase = 0;
 			if (Scape[x][y].Art == 4)   Scape[x][y].Art = 0;
 			if ((Scape[x][y].Objekt >= SCHLEUSE1) && (Scape[x][y].Objekt <= SCHLEUSE6))
 			{
 				Scape[x][y].Objekt -= 14;
-				Scape[x][y].ObPos.x = (short)Bmp[Scape[x][y].Objekt].rcDes.left;
-				Scape[x][y].ObPos.y = (short)Bmp[Scape[x][y].Objekt].rcDes.top;
+				Scape[x][y].ObPos.x = Bmp[Scape[x][y].Objekt].rcDes.left;
+				Scape[x][y].ObPos.y = Bmp[Scape[x][y].Objekt].rcDes.top;
 			}
 		}
+	}
 	//StartRohr finden
-	for (y=0;y<MAXYKACH;y++)
-		for (x=0;x<MAXXKACH;x++) 
-		{
+	for (let y=0; y<MAXYKACH; y++) {
+		for (let x=0; x<MAXXKACH; x++)  {
 			if  ((Scape[x][y].Objekt >= FLUSS1) && (Scape[x][y].Objekt <= SCHLEUSE6))
 			{
 				if (Scape[x][y].Art == 0)   Scape[x][y]  .Art = 4;
@@ -8826,8 +8782,8 @@ void FillRohr()
 			if ((Scape[x-1][y].Objekt >= FLUSS5) && (Scape[x-1][y].Objekt <= FLUSS10))
 			{
 				Scape[x-1][y].Objekt += 14;
-				Scape[x-1][y].ObPos.x = (short)Bmp[Scape[x-1][y].Objekt].rcDes.left;
-				Scape[x-1][y].ObPos.y = (short)Bmp[Scape[x-1][y].Objekt].rcDes.top;
+				Scape[x-1][y].ObPos.x = Bmp[Scape[x-1][y].Objekt].rcDes.left;
+				Scape[x-1][y].ObPos.y = Bmp[Scape[x-1][y].Objekt].rcDes.top;
 				CheckRohr(x,y);
 			}
 			else if ((Scape[x-1][y].Objekt >= SCHLEUSE1) && (Scape[x-1][y].Objekt <= SCHLEUSE6))
@@ -8837,8 +8793,8 @@ void FillRohr()
 			if ((Scape[x][y-1].Objekt >= FLUSS5) && (Scape[x][y-1].Objekt <= FLUSS10))
 			{
 				Scape[x][y-1].Objekt += 14;
-				Scape[x][y-1].ObPos.x = (short)Bmp[Scape[x][y-1].Objekt].rcDes.left;
-				Scape[x][y-1].ObPos.y = (short)Bmp[Scape[x][y-1].Objekt].rcDes.top;
+				Scape[x][y-1].ObPos.x = Bmp[Scape[x][y-1].Objekt].rcDes.left;
+				Scape[x][y-1].ObPos.y = Bmp[Scape[x][y-1].Objekt].rcDes.top;
 				CheckRohr(x,y);
 			}
 			else if ((Scape[x][y-1].Objekt >= SCHLEUSE1) && (Scape[x][y-1].Objekt <= SCHLEUSE6))
@@ -8848,8 +8804,8 @@ void FillRohr()
 			if ((Scape[x+1][y].Objekt >= FLUSS5) && (Scape[x+1][y].Objekt <= FLUSS10))
 			{
 				Scape[x+1][y].Objekt += 14;
-				Scape[x+1][y].ObPos.x = (short)Bmp[Scape[x+1][y].Objekt].rcDes.left;
-				Scape[x+1][y].ObPos.y = (short)Bmp[Scape[x+1][y].Objekt].rcDes.top;
+				Scape[x+1][y].ObPos.x = Bmp[Scape[x+1][y].Objekt].rcDes.left;
+				Scape[x+1][y].ObPos.y = Bmp[Scape[x+1][y].Objekt].rcDes.top;
 			    CheckRohr(x,y);
 			}
 			else if ((Scape[x+1][y].Objekt >= SCHLEUSE1) && (Scape[x+1][y].Objekt <= SCHLEUSE6))
@@ -8859,20 +8815,19 @@ void FillRohr()
 		    if ((Scape[x][y+1].Objekt >= FLUSS5) && (Scape[x][y+1].Objekt <= FLUSS10))
 			{
 				Scape[x][y+1].Objekt += 14;
-				Scape[x][y+1].ObPos.x = (short)Bmp[Scape[x][y+1].Objekt].rcDes.left;
-				Scape[x][y+1].ObPos.y = (short)Bmp[Scape[x][y+1].Objekt].rcDes.top;
+				Scape[x][y+1].ObPos.x = Bmp[Scape[x][y+1].Objekt].rcDes.left;
+				Scape[x][y+1].ObPos.y = Bmp[Scape[x][y+1].Objekt].rcDes.top;
 				CheckRohr(x,y);
 			}
 			else if ((Scape[x][y+1].Objekt >= SCHLEUSE1) && (Scape[x][y+1].Objekt <= SCHLEUSE6))
 			{
 				 CheckRohr(x,y);
 			}
-			
 		}
-		//Felder auf trockenen Wiesen l�schen
-	for (y=0;y<MAXYKACH;y++)
-		for (x=0;x<MAXXKACH;x++) 
-		{
+	}
+	//Felder auf trockenen Wiesen löschen
+	for (let y=0; y<MAXYKACH; y++) {
+		for (let x=0; x<MAXXKACH; x++) {
 			if ((Scape[x][y].Objekt == FELD) && (Scape[x][y].Art == 0))
 			{
 				Scape[x][y].Objekt   =-1;
@@ -8882,76 +8837,67 @@ void FillRohr()
 				Scape[x][y].AkNummer = 0;
 			}
 		}
+	}
 	Generate();
-
 }
 
-bool CheckFluss(short x, short y) //Nachpr�fen ob auf aktuellem Teil ein Fluss ist (Nur f�r die Fluss-Routine)
+function CheckFluss(x, y) //Nachprüfen ob auf aktuellem Teil ein Fluss ist (Nur für die Fluss-Routine)
 {
-	short i,j;
-	
-	
-	for (i=0;i<FLUSSANZAHL;i++) for (j=0;j<MAXFLUSS;j++)
-	{
-		if ((x == Flusslauf[i][j].x) && (y == Flusslauf[i][j].y)) return true;
+	for (let i=0; i<FLUSSANZAHL; i++) {
+		for (let j=0; j<MAXFLUSS; j++) {
+			if ((x == Flusslauf[i][j].x) && (y == Flusslauf[i][j].y)) return true;
+		}
 	}
 	return false;
 }
 
-
-void Fluss() //Anzahl der Fl�sse und der minimale L�nge
+function Fluss() //Anzahl der Flüsse und der minimale Länge
 {
-	short	i,j,k,l,l2,m,o; 
-	short   Richtung; //Aktuelle Fliesrichtung von 0-3
-	short	x0,y0,x1,x2,y1,y2;	  //x2,y2 Koordinate des zu pr�fenden Teils
-	bool	gefunden,fertig,Strand;
-	FLUSSLAUF Flusstmp[MAXFLUSS]; //Zum zwischenspeichern des Versuchs
-	short Laengetmp;
+	let l, i;
+	let Richtung; //Aktuelle Fliesrichtung von 0-3
+	let x0,y0,x1,x2,y1,y2;	  //x2,y2 Koordinate des zu prüfenden Teils
+	let	Strand;
+	let gefunden;
+	let Flusstmp = Array.from(Array(MAXFLUSS), x => ({x:0,y:0})); //Zum zwischenspeichern des Versuchs
 	
-	for (m=0;m<FLUSSANZAHL;m++) for (j=0;j<MAXFLUSS;j++) 
-	{
-		Flusslauf[m][j].x=-1;
-		Flusslauf[m][j].y=-1;
+	for (let m=0; m<FLUSSANZAHL; m++) {
+		for (let j=0; j<MAXFLUSS; j++) {
+			Flusslauf[m][j].x=-1;
+			Flusslauf[m][j].y=-1;
+		}
 	}
 	
-	for (m=0;m<FLUSSANZAHL;m++)
-	{
-		fertig			= false;
-		Laengetmp		= 0;
-		for (j=0;j<MAXFLUSS;j++) 
-		{
+	for (let m=0; m<FLUSSANZAHL; m++) {
+		let fertig    = false;
+		let Laengetmp = 0;
+		for (let j=0; j<MAXFLUSS; j++) {
 			Flusstmp[j].x = -1;
 			Flusstmp[j].y = -1;
 		}
-		for (k=0;k<1000;k++)
-		{
-			for(o=0;o<10000;o++)
-			{
+		for (let k=0; k<1000; k++) {
+			for(let o=0; o<10000; o++) {
 				gefunden = true;
-				
 				x0 = rand()%MAXXKACH; //geeignete Quelle bestimmen
 				y0 = rand()%MAXYKACH;
 				if (CheckFluss(x0,y0)) gefunden = false;
-				if ((Scape[x0][y0].Typ != 0) ||
+				if ((Scape[x0][y0].Typ !== 0) ||
 					(Scape[x0][y0].Hoehe < 2)) gefunden = false;
 				if (gefunden) break;
 			}
-			if (! gefunden) {MessageBeep(MB_OK);break;}	//Wenn keine Quelle mehr gefunden aufh�ren
+			if (! gefunden) break;	//Wenn keine Quelle mehr gefunden aufhören
 			Flusslauf[m][0].x = x0;
 			Flusslauf[m][0].y = y0;
 			Strand = false;
-			for (i=1;i<MAXFLUSS;i++)
-			{
+			for (i=1; i<MAXFLUSS; i++) {
 				gefunden = false;
 				if (! Strand) Richtung = rand()%4; //Auf dem Strand geradeausfliessen
-				for (l2=0;l2<4;l2++)
-				{
+				for (let l2=0; l2<4; l2++) {
 					l=(Richtung+l2)%4;	 //Im Urzeigersinn nachpr�fen und bei der vorgegeben Richtung anfangen
 					
 					x1 = Flusslauf[m][i-1].x;
 					y1 = Flusslauf[m][i-1].y;
 					
-					if (l==0)
+					if (l===0)
 					{
 						x2 = x1-1;
 						y2 = y1;
@@ -9005,11 +8951,11 @@ void Fluss() //Anzahl der Fl�sse und der minimale L�nge
 				if ((Scape[Flusslauf[m][i].x][Flusslauf[m][i].y].Art == 2) &&	//Auf Strand die Richtung beibehalten
 					(Scape[Flusslauf[m][i].x][Flusslauf[m][i].y].Typ == 0)) 
 				{
-					if (Strand == true) break;	//Nur ein Strandst�ck �berfliessen
+					if (Strand == true) break;	//Nur ein Strandstück überfliessen
 					else Strand = true;
 				}
 				
-				if ((Scape[Flusslauf[m][i].x][Flusslauf[m][i].y].Art == 1) &&	//im meer aufh�ren
+				if ((Scape[Flusslauf[m][i].x][Flusslauf[m][i].y].Art == 1) &&	//im meer aufhören
 					(Scape[Flusslauf[m][i].x][Flusslauf[m][i].y].Typ == 0)) 
 				{
 					fertig = true;	
@@ -9029,8 +8975,7 @@ void Fluss() //Anzahl der Fl�sse und der minimale L�nge
 					}
 				}
 			}
-			for (i=0;i<MAXFLUSS;i++)
-			{
+			for (i=0; i<MAXFLUSS; i++) {
 				Flusslauf[m][i].x = -1;
 				Flusslauf[m][i].y = -1;
 			}
@@ -9038,38 +8983,38 @@ void Fluss() //Anzahl der Fl�sse und der minimale L�nge
 			fertig = false;
 			
 		}
-		//Den l�ngsten Fluss nehmen
+		//Den längsten Fluss nehmen
 		Flusslaenge[m] = Laengetmp;
-		for (j=0;j<=Flusslaenge[m];j++) 
+		for (let j=0; j<=Flusslaenge[m]; j++)
 		{
 			Flusslauf[m][j].x = Flusstmp[j].x;
 			Flusslauf[m][j].y = Flusstmp[j].y;
 		}
 		
-		//Die richtigen Wasserkacheln ausw�hlen
-		x0,y0,x1,y1,x2,y2 = -1;
-		for (m=0;m<FLUSSANZAHL;m++)
+		//Die richtigen Wasserkacheln auswählen
+		//x0, y0, x1, y1, x2; y2 = -1;
+		for (let m=0; m<FLUSSANZAHL; m++)
 		{	
-			for (i=0;i<=Flusslaenge[m];i++)
+			for (i=0; i<=Flusslaenge[m]; i++)
 			{
-				//F�r die Kachel, einen Vorgang davor
-				Scape[x1][y1].ObPos.x = (short)Bmp[Scape[x1][y1].Objekt].rcDes.left;
-				Scape[x1][y1].ObPos.y = (short)Bmp[Scape[x1][y1].Objekt].rcDes.top;
+				//Für die Kachel, einen Vorgang davor
+				Scape[x1][y1].ObPos.x = Bmp[Scape[x1][y1].Objekt].rcDes.left;
+				Scape[x1][y1].ObPos.y = Bmp[Scape[x1][y1].Objekt].rcDes.top;
 
 				x1 =Flusslauf[m][i].x;
 				y1 =Flusslauf[m][i].y;
 								
 				Scape[x1][y1].Phase   = 0;
 
-				if (Scape[x1][y1].Art == 0)   Scape[x1][y1]  .Art = 4;
-				if (Scape[x1-1][y1].Art == 0) Scape[x1-1][y1].Art = 4;
-				if (Scape[x1-1][y1-1].Art == 0) Scape[x1-1][y1-1].Art = 4;
-				if (Scape[x1][y1-1].Art == 0) Scape[x1][y1-1].Art = 4;
-				if (Scape[x1+1][y1-1].Art == 0) Scape[x1+1][y1-1].Art = 4;
-				if (Scape[x1+1][y1].Art == 0) Scape[x1+1][y1].Art = 4;
-				if (Scape[x1+1][y1+1].Art == 0) Scape[x1+1][y1+1].Art = 4;
-				if (Scape[x1][y1+1].Art == 0) Scape[x1][y1+1].Art = 4;
-				if (Scape[x1-1][y1+1].Art == 0) Scape[x1-1][y1+1].Art = 4;
+				if (Scape[x1][y1].Art === 0)   Scape[x1][y1]  .Art = 4;
+				if (Scape[x1-1][y1].Art === 0) Scape[x1-1][y1].Art = 4;
+				if (Scape[x1-1][y1-1].Art === 0) Scape[x1-1][y1-1].Art = 4;
+				if (Scape[x1][y1-1].Art === 0) Scape[x1][y1-1].Art = 4;
+				if (Scape[x1+1][y1-1].Art === 0) Scape[x1+1][y1-1].Art = 4;
+				if (Scape[x1+1][y1].Art === 0) Scape[x1+1][y1].Art = 4;
+				if (Scape[x1+1][y1+1].Art === 0) Scape[x1+1][y1+1].Art = 4;
+				if (Scape[x1][y1+1].Art === 0) Scape[x1][y1+1].Art = 4;
+				if (Scape[x1-1][y1+1].Art === 0) Scape[x1-1][y1+1].Art = 4;
 				
 				if (i < Flusslaenge[m])
 				{
@@ -9077,7 +9022,7 @@ void Fluss() //Anzahl der Fl�sse und der minimale L�nge
 					y2 =Flusslauf[m][i+1].y;
 				}
 				
-				if (i!=0)  
+				if (i!==0)
 				{	
 					x0 =Flusslauf[m][i-1].x;
 					y0 =Flusslauf[m][i-1].y;
@@ -9107,7 +9052,7 @@ void Fluss() //Anzahl der Fl�sse und der minimale L�nge
 					}
 				}
 				
-				//Alle M�glichkeiten durchgehen
+				//Alle Möglichkeiten durchgehen
 				
 				if (Scape[x1][y1].Typ ==1) Scape[x1][y1].Objekt = FLUSS1;
 				if (Scape[x1][y1].Typ ==2) Scape[x1][y1].Objekt = FLUSS2;
@@ -9118,7 +9063,7 @@ void Fluss() //Anzahl der Fl�sse und der minimale L�nge
 				{
 					if ((x0 < x1) && (y0 == y1))
 					{
-						if (Scape[x1][y1].Art == 2) Scape[x1][y1].Objekt = MUENDUNG3; //M�ndung
+						if (Scape[x1][y1].Art == 2) Scape[x1][y1].Objekt = MUENDUNG3; //Mündung
 						else
 						{
 							if ((x1 < x2) && (y1 == y2)) Scape[x1][y1].Objekt = FLUSS5;
@@ -9128,7 +9073,7 @@ void Fluss() //Anzahl der Fl�sse und der minimale L�nge
 					}
 					if ((x0 == x1) && (y0 < y1))
 					{
-						if (Scape[x1][y1].Art == 2) Scape[x1][y1].Objekt = MUENDUNG4; //M�ndung
+						if (Scape[x1][y1].Art == 2) Scape[x1][y1].Objekt = MUENDUNG4; //Mündung
 						else
 						{
 							if ((x1 < x2) && (y1 == y2)) Scape[x1][y1].Objekt = FLUSS8;
@@ -9142,7 +9087,7 @@ void Fluss() //Anzahl der Fl�sse und der minimale L�nge
 					}
 					if ((x0 > x1) && (y0 == y1))
 					{
-						if (Scape[x1][y1].Art == 2) Scape[x1][y1].Objekt =MUENDUNG1; //M�ndung
+						if (Scape[x1][y1].Art == 2) Scape[x1][y1].Objekt =MUENDUNG1; //Mündung
 						else
 						{
 							if ((x1 > x2) && (y1 == y2)) Scape[x1][y1].Objekt = FLUSS5;
@@ -9153,7 +9098,7 @@ void Fluss() //Anzahl der Fl�sse und der minimale L�nge
 					}
 					if ((x0 == x1) && (y0 > y1))
 					{
-						if (Scape[x1][y1].Art == 2) Scape[x1][y1].Objekt = MUENDUNG2; //M�ndung
+						if (Scape[x1][y1].Art == 2) Scape[x1][y1].Objekt = MUENDUNG2; //Mündung
 						else
 						{
 							if ((x1 == x2) && (y1 > y2)) Scape[x1][y1].Objekt = FLUSS6;
@@ -9168,33 +9113,30 @@ void Fluss() //Anzahl der Fl�sse und der minimale L�nge
 					}
 				}
 			}
-			//F�r das letzte Flussst�ck
-			Scape[x1][y1].ObPos.x = (short)Bmp[Scape[x1][y1].Objekt].rcDes.left;
-			Scape[x1][y1].ObPos.y = (short)Bmp[Scape[x1][y1].Objekt].rcDes.top;
+			//Für das letzte Flussstück
+			Scape[x1][y1].ObPos.x = Bmp[Scape[x1][y1].Objekt].rcDes.left;
+			Scape[x1][y1].ObPos.y = Bmp[Scape[x1][y1].Objekt].rcDes.top;
 		}
 	}
 }
 
-void Baeume(short Prozent)
+function Baeume(Prozent)
 {
-	short				x,y;		//Diese Kachel wird angeschaut
-	ZWEID				Erg;
-	ZWEID				Pos;		//Da steht der Baum
-	short				r;			//random speicherung
-	bool				einGrosserBaum = false;	//gibt es bereits einen gro�en Baum
+	let Pos = ZWEID(); //Da steht der Baum
+	let einGrosserBaum = false;	//gibt es bereits einen großen Baum
 
-	for (y=0;y<MAXYKACH;y++)//Alle Kacheln durchgehen
-		for (x=0;x<MAXXKACH;x++)
-		{
+	//x,y Diese Kachel wird angeschaut
+	for (let y=0; y < MAXYKACH; y++) {//Alle Kacheln durchgehen
+		for (let x=0; x < MAXXKACH; x++) {
 			if ((Scape[x][y].Objekt != -1) || 
 				((Scape[x][y].Art == 3) && (Scape[x][y].Typ ==0))) continue;
-				//Wenn schon ein Objekt da ist oder Treibsand ist, dann mit n�chsten Teil weitermachen
-			if (rand()%(100/Prozent) != 0) continue; //Die Wahrscheinlichkeit f�r einen Baum bestimmen
+				//Wenn schon ein Objekt da ist oder Treibsand ist, dann mit nächsten Teil weitermachen
+			if (rand()%(100/Prozent) != 0) continue; //Die Wahrscheinlichkeit für einen Baum bestimmen
 			while(1)
 			{
 				Pos.x = rand()%KXPIXEL;
 				Pos.y = rand()%KYPIXEL;
-				Erg = GetKachel(Scape[x][y].xScreen+Pos.x,Scape[x][y].yScreen+Pos.y);
+				let Erg = GetKachel(Scape[x][y].xScreen+Pos.x,Scape[x][y].yScreen+Pos.y);
 				if ((Erg.x == x) && (Erg.y == y)) break;
 			}
 			if ((Scape[x][y].Art == 2) && (Scape[x][y].Typ ==0))//Bei Strand nur Palmen nehmen
@@ -9203,7 +9145,7 @@ void Baeume(short Prozent)
 			}
 			else
 			{
-				r = rand()%5;
+				let r = rand()%5; //random speicherung
 				Scape[x][y].Objekt  = BAUM1+r;
 				if ((rand()%50 == 1) || (!einGrosserBaum))  
 				{
@@ -9212,28 +9154,28 @@ void Baeume(short Prozent)
 				}
 			}
 			//Linke obere Ecke speichern
-			Scape[x][y].ObPos.x = Pos.x-(short)(Bmp[Scape[x][y].Objekt].Breite)/2;	
-			Scape[x][y].ObPos.y = Pos.y-(short)(Bmp[Scape[x][y].Objekt].Hoehe);
+			Scape[x][y].ObPos.x = Pos.x-(Bmp[Scape[x][y].Objekt].Breite)/2;
+			Scape[x][y].ObPos.y = Pos.y-(Bmp[Scape[x][y].Objekt].Hoehe);
 			//Startphase
 			if (Scape[x][y].Objekt == BUSCH) 
-				Scape[x][y].Phase = (float)Bmp[Scape[x][y].Objekt].Anzahl-1; 
-			else Scape[x][y].Phase = (float)(Bmp[Scape[x][y].Objekt].Anzahl-
+				Scape[x][y].Phase = Bmp[Scape[x][y].Objekt].Anzahl-1;
+			else Scape[x][y].Phase = (Bmp[Scape[x][y].Objekt].Anzahl-
 						rand()%(Bmp[Scape[x][y].Objekt].Anzahl)-1); 
 
 		}
+	}
 }
 
-void Piratenwrack()
+function Piratenwrack()
 {
-	short x,y,i,Richtung;
+	let x,y;
 
-	Richtung = rand()%3;
+	let Richtung = rand()%3;
 	switch(Richtung)
 	{
 	case 0:
 		x = MAXXKACH/2;
-		for (i=0;i<MAXYKACH;i++)
-		{
+		for (let i=0; i<MAXYKACH; i++) {
 			if (Scape[x][i].Art != 1)
 			{
 				y = i-1;
@@ -9243,8 +9185,7 @@ void Piratenwrack()
 		break;
 	case 1:
 		y = MAXYKACH/2;
-		for (i=MAXXKACH-1;i>=0;i--)
-		{
+		for (let i = MAXXKACH-1; i >= 0; i--) {
 			if (Scape[i][y].Art != 1)
 			{
 				x = i+1;
@@ -9254,8 +9195,7 @@ void Piratenwrack()
 		break;
 	case 2:
 		x = MAXXKACH/2;
-		for (i=MAXYKACH-1;i>=0;i--)
-		{
+		for (let i=MAXYKACH-1; i >= 0; i--) {
 			if (Scape[x][i].Art != 1)
 			{
 				y = i+1;
@@ -9265,19 +9205,16 @@ void Piratenwrack()
 		break;
 	}
 	Scape[x][y].Objekt = WRACK2;
-	Scape[x][y].ObPos.x = (short)Bmp[WRACK2].rcDes.left;
-	Scape[x][y].ObPos.y = (short)Bmp[WRACK2].rcDes.top;
+	Scape[x][y].ObPos.x = Bmp[WRACK2].rcDes.left;
+	Scape[x][y].ObPos.y = Bmp[WRACK2].rcDes.top;
 }
 
-void Schatz()
+function Schatz()
 {
-	short				x,y,i,j;		//Diese Kachel wird angeschaut
-	RGBSTRUCT			rgbleft,rgbtop,rgbright,rgbbottom;   
-	
 	while(1)
     {
-		x = rand()%(MAXXKACH-1);
-		y = rand()%(MAXYKACH-1);
+		let x = rand()%(MAXXKACH-1);
+		let y = rand()%(MAXYKACH-1);
 		//nur auf flachen Kacheln ohne Objekt
 		if ((Scape[x][y].Objekt == -1) && (Scape[x][y].Typ ==0)
 			&& (Scape[x][y].Art != 3))
@@ -9287,23 +9224,35 @@ void Schatz()
 				SchatzPos.x = x;
 				SchatzPos.y = y;
 			}
-			
+
+			/*
 			lpDDSScape->Lock(null,&ddsd,DDLOCK_WAIT,null);
 			lpDDSSchatzkarte->Lock(null,&ddsd2,DDLOCK_WAIT,null);
-									
-			for (i=0;i<SKARTEX;i++)
-				for (j=0;j<SKARTEY;j++)
-				{
-					GetPixel((short)(i+Scape[SchatzPos.x][SchatzPos.y].xScreen-SKARTEX/2+KXPIXEL/2),
-						     (short)(j+Scape[SchatzPos.x][SchatzPos.y].yScreen-SKARTEY/2+30),&ddsd);
-					PutPixel(i,j,RGB2DWORD((rgbStruct.r*30+rgbStruct.g*59+rgbStruct.b*11)/100,
-										   (rgbStruct.r*30+rgbStruct.g*59+rgbStruct.b*11)/100,
-										   (rgbStruct.r*30+rgbStruct.g*59+rgbStruct.b*11)/100*3/4), &ddsd2);
-				}
+			*/
 
+			//Diese Kachel wird angeschaut
+			for (let i=0; i<SKARTEX; i++) {
+				for (let j=0; j<SKARTEY; j++) {
+					let rgbStruct = GetPixel(
+						(i+Scape[SchatzPos.x][SchatzPos.y].xScreen-SKARTEX/2+KXPIXEL/2),
+						(j+Scape[SchatzPos.x][SchatzPos.y].yScreen-SKARTEY/2+30), lpDDSScape
+					);
+					PutPixel(
+						i,j,
+						[
+							(rgbStruct[0]*30+rgbStruct[1]*59+rgbStruct[2]*11)/100,
+							(rgbStruct[0]*30+rgbStruct[1]*59+rgbStruct[2]*11)/100,
+							(rgbStruct[0]*30+rgbStruct[1]*59+rgbStruct[2]*11)/100*3/4
+						],
+						lpDDSSchatzkarte
+					);
+				}
+			}
+			/*
 			lpDDSScape->Unlock(null);
 			lpDDSSchatzkarte->Unlock(null);
-			
+			*/
+
 			rcRectsrc  = Bmp[KREUZ].rcSrc;
 			rcRectdes.left = SKARTEX/2-Bmp[KREUZ].Breite/2;
 			rcRectdes.right= rcRectdes.left+Bmp[KREUZ].Breite;
@@ -9312,37 +9261,36 @@ void Schatz()
 			Blitten(Bmp[KREUZ].Surface,lpDDSSchatzkarte,true);
  			
 			
-			lpDDSSchatzkarte->Lock(null,&ddsd2,DDLOCK_WAIT,null);
+			// lpDDSSchatzkarte->Lock(null,&ddsd2,DDLOCK_WAIT,null);
 			
 			//Weichzeichnen
-			for (i=0;i<SKARTEX;i++)
-				for (j=0;j<SKARTEY;j++)
-				{
-					if ((i>0) && (i<SKARTEX-1) && (j>0) && (j<SKARTEY-1))
-					{
-						GetPixel(i-1,j,&ddsd2);
-						rgbleft = rgbStruct;
-						GetPixel(i,j-1,&ddsd2);
-						rgbtop = rgbStruct;
-						GetPixel(i+1,j,&ddsd2);
-						rgbright = rgbStruct;
-						GetPixel(i,j+1,&ddsd2);
-						rgbbottom = rgbStruct;
-						GetPixel(i,j,&ddsd2);
-						PutPixel(i,j,RGB2DWORD(
-							(rgbleft.r+rgbtop.r+rgbright.r+rgbbottom.r+rgbStruct.r)/5,
-							(rgbleft.g+rgbtop.g+rgbright.g+rgbbottom.g+rgbStruct.g)/5,
-							(rgbleft.b+rgbtop.b+rgbright.b+rgbbottom.b+rgbStruct.b)/5), 
-							&ddsd2);
+			for (let i=0; i<SKARTEX; i++) {
+				for (let j=0; j<SKARTEY; j++) {
+					if ((i>0) && (i<SKARTEX-1) && (j>0) && (j<SKARTEY-1)) {
+						let rgbleft = GetPixel(i-1,j, lpDDSSchatzkarte);
+						let rgbtop = GetPixel(i,j-1, lpDDSSchatzkarte);
+						let rgbright = GetPixel(i+1,j, lpDDSSchatzkarte);
+						let rgbbottom = GetPixel(i,j+1, lpDDSSchatzkarte);
+						let rgbStruct = GetPixel(i,j, lpDDSSchatzkarte);
+						PutPixel(
+							i,j,
+							[
+								(rgbleft.r+rgbtop.r+rgbright.r+rgbbottom.r+rgbStruct.r)/5,
+								(rgbleft.g+rgbtop.g+rgbright.g+rgbbottom.g+rgbStruct.g)/5,
+								(rgbleft.b+rgbtop.b+rgbright.b+rgbbottom.b+rgbStruct.b)/5
+							],
+							lpDDSSchatzkarte
+						);
 					}
 				}
-			lpDDSSchatzkarte->Unlock(null);
+			}
+			// lpDDSSchatzkarte->Unlock(null);
 			break;
 		}
     }
 }
 
-short RotateRight(short Dir)	//Richtungskoordinate rechtsrum umrechnen
+function RotateRight(Dir)	//Richtungskoordinate rechtsrum umrechnen
 {
 	switch(Dir)
 	{
@@ -9354,58 +9302,48 @@ short RotateRight(short Dir)	//Richtungskoordinate rechtsrum umrechnen
 	return Dir;
 }
  
-bool LineIntersect(ZWEID LineStartPos, ZWEID Pos, bool store)
-{	
-	short		i;
-	float	  x,y;
-	short  Dx, Dy;
-	float  Sx, Sy;
-	bool	  erg = false;
-	float	Nextx,Nexty;
+function LineIntersect(LineStartPos, Pos, store)
+{
+	let Sx, Sy;
+	let erg = false;
 	
 	Steps=0;
 		 
-	Dx = LineStartPos.x-Pos.x;
-	Dy = LineStartPos.y-Pos.y;
-	x = LineStartPos.x;
-	y = LineStartPos.y;
-	if (abs(Dx)>abs(Dy)) 
+	let Dx = LineStartPos.x-Pos.x;
+	let Dy = LineStartPos.y-Pos.y;
+	let x = LineStartPos.x;
+	let y = LineStartPos.y;
+	if (Math.abs(Dx) > Math.abs(Dy))
 	{
 		if (Dx>0)  Sx = -1; else Sx = 1;
-		if (Dx==0)  Sy = 0; else Sy = (float)Dy/((float)(Dx*Sx));
-		Steps = abs(Dx);
+		if (Dx==0)  Sy = 0; else Sy = Dy/(Dx*Sx);
+		Steps = Math.abs(Dx);
 	} 
 	else
 	{
 		if (Dy>0)  Sy = -1; else Sy = 1;
-		if (Dy==0)  Sx = 0; else Sx = (float)Dx/((float)(Dy*Sy));
-		Steps = abs(Dy);
+		if (Dy==0)  Sx = 0; else Sx = Dx/(Dy*Sy);
+		Steps = Math.abs(Dy);
 	}
 		 
-	for (i=0; i<Steps; i++) 
-	{
+	for (let i=0; i<Steps; i++) {
 		if (!Scape[ROUND(x)][ROUND(y)].Begehbar)  erg = true;
-		if ((store)) 
-		{
+		if (store) {
 			Route[RouteLaenge].x = ROUND(x);
 			Route[RouteLaenge].y = ROUND(y);
 			RouteLaenge++;
 		}
-		Nextx = x + Sx;
-		Nexty = y + Sy;
-		if ((ROUND(y)!=ROUND(Nexty)) && (ROUND(x)!=ROUND(Nextx))) 
-		{
-			if (Scape[ROUND(x)][ROUND(Nexty)].Begehbar)
-			{
-				if ((store)) 
-				{
+		let Nextx = x + Sx;
+		let Nexty = y + Sy;
+		if ((ROUND(y)!=ROUND(Nexty)) && (ROUND(x)!=ROUND(Nextx))) {
+			if (Scape[ROUND(x)][ROUND(Nexty)].Begehbar) {
+				if (store) {
 					Route[RouteLaenge].x = ROUND(x);
 					Route[RouteLaenge].y = ROUND(Nexty);
 					RouteLaenge++;
 				}
 			}
-			else
-			{
+			else {
 				if (Scape[ROUND(Nextx)][ROUND(y)].Begehbar)
 				{
 					if ((store)) 
@@ -9424,89 +9362,71 @@ bool LineIntersect(ZWEID LineStartPos, ZWEID Pos, bool store)
 		y = Nexty;
 		x = Nextx;
 	}
-	//MessageBeep(MB_OK);
 	return erg;	 
 }
 
-bool FindTheWay()
+function FindTheWay()
 {
-	ZWEID		Pos;
-	short		Dir;
+	let Plist = Array(MAXXKACH*MAXYKACH); // Besuchte Punkte merken
+	let Llist = Array(MAXXKACH*MAXYKACH); // Länge vom Punkt zum Ziel
 	
-	ZWEID		Plist[MAXXKACH*MAXYKACH]; // Besuchte Punkte merken
-	short		Llist[MAXXKACH*MAXYKACH]; // L�nge vom Punkt zum Ziel
-	short		PCnt;
-	bool		GoalReached;
-	short		Shortest;
-	short		DiffX,DiffY;
-	short		StepCnt;
-	
-	ZWEID		ShPos;
-	int     	ShStep;
-	ZWEID		BestLine;
-	ZWEID		LineStartPos;
-	short		AI,BI,CI;
-	ZWEID		ShortKoor;
-	short		ShortEntf;
+	let ShPos;
+	let BestLine;
+	let ShortKoor;
 
-
-	
-	for (AI=0;AI<MAXYKACH;AI++)
-			for (BI=0;BI<MAXXKACH;BI++)
-			{
-				LenMap[AI][BI]= 65535;
-				Llist[AI*BI] = 0;
-				Plist[AI*BI].x = 0;
-				Plist[AI*BI].y = 0;
-
-			}
-	ShortEntf   = -1;
+	for (let AI=0; AI<MAXYKACH; AI++) {
+		for (let BI=0; BI<MAXXKACH; BI++) {
+			LenMap[AI][BI]= 65535;
+			Llist[AI*BI] = 0;
+			Plist[AI*BI] = {x: 0, y: 0};
+		}
+	}
+	let ShortEntf   = -1;
 	RouteLaenge = 0;	
 
-	PCnt = 1;
+	let PCnt = 1;
 	Plist[0] = RouteStart;
-	DiffX = (RouteStart.x-RouteZiel.x);
-	DiffY = (RouteStart.y-RouteZiel.y);
+	let DiffX = (RouteStart.x-RouteZiel.x);
+	let DiffY = (RouteStart.y-RouteZiel.y);
 	Llist[0] = (DiffX*DiffX)+(DiffY*DiffY);
 	
 	LenMap[RouteStart.x][RouteStart.y]=0;
-	Pos = RouteStart;
+	let Pos = RouteStart;
 	NewPos = Pos;
-	GoalReached = false;
+	let GoalReached = false;
 	while((!GoalReached) && (PCnt > 0))
 	{
-		//den mit der k�rzesten Entfernung zum Ziel finden (der in der Liste ist)
-		Shortest=0;
-		for (CI = 0;CI <= PCnt-1; CI++)
-		{
+		//den mit der kürzesten Entfernung zum Ziel finden (der in der Liste ist)
+		let Shortest=0;
+		for (let CI = 0; CI <= PCnt-1; CI++) {
 			if (Llist[CI]<Llist[Shortest]) 
 			{
 				Shortest=CI;
 			}
 		}
-		//Mit dem N�chsten weitermachen
+		//Mit dem Nächsten weitermachen
 		Pos = Plist[Shortest];
-		//Den k�rzesten merken
+		//Den kürzesten merken
 		if ((ShortEntf > Llist[Shortest]) || (ShortEntf == -1))
 		{
 			ShortEntf = Llist[Shortest];
 			ShortKoor = Plist[Shortest];
 		}
 		
-		//Den N�chsten aus der Liste l�schen
+		//Den Nächsten aus der Liste löschen
 		Plist[Shortest] = Plist[PCnt-1];
 		Llist[Shortest] = Llist[PCnt-1];
 		PCnt--;
 		NewPos = Pos;
-		Dir = 2; NewPos.y--; //Oben nachschauen anfangen
-		for (BI = 0; BI<=3; BI++) //In jede Richtung schauen
+		let Dir = 2; NewPos.y--; //Oben nachschauen anfangen
+		for (let BI = 0; BI<=3; BI++) //In jede Richtung schauen
 		{
 			//ist das Feld noch nicht besucht und frei?
 			if ((LenMap[NewPos.x][NewPos.y]==65535) &&
 				(Scape[NewPos.x][NewPos.y].Begehbar)) 
 			{
 				// Wieviele Schritte braucht man um zu diesem Feld zu kommen 
-				StepCnt = LenMap[Pos.x][Pos.y]+1;
+				let StepCnt = LenMap[Pos.x][Pos.y]+1;
 				LenMap[NewPos.x][NewPos.y] = StepCnt;
 				Plist[PCnt] = NewPos;
 				//Die Entfernung in die Liste aufnehmen
@@ -9532,16 +9452,16 @@ bool FindTheWay()
 		if (FindTheWay()) return true;
 		else return false;
 	}
-	else if (GoalReached) //Punkt r�ckw�rts durchgehen und Abk�rzungen finden
+	else if (GoalReached) //Punkt rückwärts durchgehen und Abkürzungen finden
 	{
 		Pos = RouteZiel;
-		LineStartPos = Pos;
+		let LineStartPos = Pos;
 		while ((Pos.x!=RouteStart.x) || (Pos.y!=RouteStart.y))
 		{
 			NewPos = Pos;
-			ShStep = 65535;
+			let ShStep = 65535;
 			Dir = 2; NewPos.y--; //Zuerst nach oben probieren
-			for (AI=0; AI<=3; AI++)
+			for (let AI=0; AI<=3; AI++)
 			{
 				if (LenMap[NewPos.x][NewPos.y]<ShStep) 
 				{
@@ -9574,21 +9494,17 @@ bool FindTheWay()
 	return true;
 }
 
-bool CheckRoute(short x, short y, bool save, short Laenge) //Nachpr�fen ob auf aktuellem Teil in der Route ist
+function CheckRoute(x, y, save, Laenge) //Nachprüfen ob auf aktuellem Teil in der Route ist
 {
-	short i;
-	
 	if (!save)
 	{
-		for (i=0;i<RouteLaenge;i++)
-		{
+		for (let i=0; i<RouteLaenge; i++) {
 			if ((x == Route[i].x) && (y == Route[i].y)) return true;
 		}
 	}
 	else
 	{
-		for (i=0;i<=Laenge;i++)
-		{
+		for (let i=0; i<=Laenge; i++) {
 			if ((x == SaveRoute[i].x) && (y == SaveRoute[i].y)) return true;
 		}
 	}
@@ -9596,16 +9512,12 @@ bool CheckRoute(short x, short y, bool save, short Laenge) //Nachpr�fen ob auf
 }
 
 
-void SortRoute()
+function SortRoute()
 {
-	short i,j;
-	ZWEID Pos;
-	short Dir;
-
+	let Pos = ZWEID();
 	Pos.x = RouteStart.x;
 	Pos.y = RouteStart.y;
-	for (i=0;i<RouteLaenge;i++) //Alle Teile vom Start durchgehen
-	{
+	for (let i=0; i<RouteLaenge; i++) { //Alle Teile vom Start durchgehen
 		SaveRoute[i].x = Pos.x;
 		SaveRoute[i].y = Pos.y;
 		
@@ -9618,9 +9530,8 @@ void SortRoute()
 		
 		NewPos.x = Pos.x;
 		NewPos.y = Pos.y-1; //oben mit nachschauen anfangen
-		Dir		 = 2;
-		for (j=0;j<=3;j++)
-		{
+		let Dir  = 2;
+		for (let j=0; j<=3; j++) {
 			if ((CheckRoute(NewPos.x,NewPos.y,false,RouteLaenge)) &&
 				(!CheckRoute(NewPos.x,NewPos.y,true,i))) 
 			{
@@ -9667,14 +9578,13 @@ void SortRoute()
 		Pos.x = NewPos.x;
 		Pos.y = NewPos.y;
 	}
-	for (i=0;i<=RouteLaenge;i++)	//Wieder in die Originalroute speichern
-	{
+	for (let i=0; i<=RouteLaenge; i++) { //Wieder in die Originalroute speichern
 		Route[i].x = SaveRoute[i].x;
 		Route[i].y = SaveRoute[i].y;
 	}
 }
 
-void ShortRoute(short Zielx, short Ziely)
+function ShortRoute(Zielx, Ziely)
 {
 	RouteLaenge = 1;
 	Route[0].x = Guy.Pos.x;
@@ -9686,7 +9596,7 @@ void ShortRoute(short Zielx, short Ziely)
 	RouteKoor[1].x = Zielx;
 	RouteKoor[1].y = Ziely;
 
-	//Die Animation gleich anschlie�end starten
+	//Die Animation gleich anschließend starten
 	Guy.Aktiv = true;
 	if ((BootsFahrt) && (Guy.Zustand != GUYSCHWIMMEN)) Guy.Zustand = GUYBOOTLINKS;
 	else if (Guy.Zustand != GUYSCHWIMMEN)              Guy.Zustand = GUYLINKS;
@@ -9695,7 +9605,7 @@ void ShortRoute(short Zielx, short Ziely)
 	Step		= 0;
 }
 
-void CheckBenutze(short Objekt)
+function CheckBenutze(Objekt)
 {
 	if (((Objekt == ROHSTEIN) && (TwoClicks == ROHAST)) ||
 		((Objekt == ROHAST) && (TwoClicks == ROHSTEIN)))
@@ -9766,33 +9676,29 @@ void CheckBenutze(short Objekt)
 	TwoClicks = -1;
 }
 
-
-void Animationen()
+function Animationen()
 {
-	short x,y,i,j,k,loop; //Zwischenspeicher
-	
-	
-	for (y=0;y<MAXYKACH;y++)
-		for (x=0;x<MAXXKACH;x++)
-		{
-			j = Scape[x][y].Objekt;
+	let loop; //Zwischenspeicher
+
+	for (let y=0; y<MAXYKACH; y++) {
+		for (let x=0; x<MAXXKACH; x++) {
+			let j = Scape[x][y].Objekt;
 			if ((j==-1) || (!Bmp[j].Animation)) continue;
-			i = LastBild/Bmp[j].Geschwindigkeit;
+			let i = LastBild/Bmp[j].Geschwindigkeit;
 			if (i<1) i = 1;
-			if (Bild%i == 0)
-			{
+			if (Bild%i == 0) {
 				if ((j>=BAUM1DOWN) && (j<=BAUM4DOWN) &&  //Die Baumf�llenanimation nur ein mal abspielen
 					(Scape[x][y].Phase == Bmp[j].Anzahl-1));
 				else Scape[x][y].Phase++;
 				if (Scape[x][y].Phase>=Bmp[j].Anzahl) Scape[x][y].Phase = 0;
 			}
-			
 		}
+	}
 	
-	for (j=BUTTGITTER;j<=BUTTDESTROY;j++)
+	for (let j=BUTTGITTER; j<=BUTTDESTROY; j++)
 	{
 		if (!Bmp[j].Animation) continue;
-		i = LastBild/Bmp[j].Geschwindigkeit;
+		let i = LastBild/Bmp[j].Geschwindigkeit;
 		if (i<1) i = 1;
 		if (Bild%i == 0)
 		{
@@ -9808,18 +9714,18 @@ void Animationen()
 		((Guy.Zustand >= GUYBOOTLINKS) && (Guy.Zustand <= GUYBOOTUNTEN)) ||
 		( Guy.Zustand == GUYSCHIFF) || (Guy.Zustand == GUYSCHWIMMEN))
 	{
-		i = LastBild/Bmp[Guy.Zustand].Geschwindigkeit;
+		let i = LastBild/Bmp[Guy.Zustand].Geschwindigkeit;
 		if (i<1) i = 1;
 		if (LastBild-Bmp[Guy.Zustand].Geschwindigkeit < 0) loop = 2; else loop=1;
 		if (BootsFahrt) loop = loop*2;
-		for (k=0;k<loop;k++) if ((Bild%i == 0) && (Guy.Aktiv)) CalcGuyKoor();
+		for (let k=0; k<loop; k++) if ((Bild%i == 0) && (Guy.Aktiv)) CalcGuyKoor();
 		return;
 	}
 	//sonstige Aktionen
 	if ((Guy.Zustand >= GUYSUCHEN) && (Guy.Zustand <= GUYSCHLEUDER) && 
 		(Bmp[Guy.Zustand].Phase != Bmp[Guy.Zustand].Anzahl))
 	{
-		i = LastBild/Bmp[Guy.Zustand].Geschwindigkeit;
+		let i = LastBild/Bmp[Guy.Zustand].Geschwindigkeit;
 		if (i<1) i = 1;
 		if (Bild%i == 0)
 		{
@@ -9833,10 +9739,8 @@ void Animationen()
 	}
 }
 
-void CalcGuyKoor()
-{	
-	short	Dx,Dy;	//Differenz zwischen Ziel und Start
-	
+function CalcGuyKoor()
+{
 	if (Step >= Steps)
 	{
 		RoutePunkt++;
@@ -9865,7 +9769,7 @@ void CalcGuyKoor()
 		else if (BootsFahrt) Guy.Zustand = GUYBOOTLINKS;
 		else Guy.Zustand = GUYLINKS;
 				
-		if (RouteLaenge > 1)	//Bei normaler Routenabarbeitung die Richung Kachelm��ig rausfinden
+		if (RouteLaenge > 1)	//Bei normaler Routenabarbeitung die Richung Kachelmäßig rausfinden
 		{
 			if      (Route[RoutePunkt/2].x > Route[RoutePunkt/2+1].x) Guy.Zustand += 0;
 			else if (Route[RoutePunkt/2].x < Route[RoutePunkt/2+1].x) Guy.Zustand += 2;
@@ -9883,9 +9787,10 @@ void CalcGuyKoor()
 			else if ((RouteKoor[RoutePunkt].x >= RouteKoor[RoutePunkt+1].x) && 
 				     (RouteKoor[RoutePunkt].y <  RouteKoor[RoutePunkt+1].y)) Guy.Zustand += 3;
 		}
-		
-		Dx = RouteKoor[RoutePunkt+1].x-RouteKoor[RoutePunkt].x;
-		Dy = RouteKoor[RoutePunkt+1].y-RouteKoor[RoutePunkt].y;
+
+		//Differenz zwischen Ziel und Start
+		let Dx = RouteKoor[RoutePunkt+1].x-RouteKoor[RoutePunkt].x;
+		let Dy = RouteKoor[RoutePunkt+1].y-RouteKoor[RoutePunkt].y;
 		GuyPosScreenStart.x = RouteKoor[RoutePunkt].x;
 		GuyPosScreenStart.y = RouteKoor[RoutePunkt].y;
 		Step = 0;
@@ -9893,15 +9798,15 @@ void CalcGuyKoor()
 		if (abs(Dx)>abs(Dy)) 
 		{
 			if (Dx>0)  Schrittx = 1; else Schrittx = -1;
-			if (Dx==0)  Schritty = 0; else Schritty = (float)Dy/((float)(Dx*Schrittx));
-			Steps = abs(Dx);
+			if (Dx==0)  Schritty = 0; else Schritty = Dy/(Dx*Schrittx);
+			Steps = Math.abs(Dx);
 			
 		} 
 		else
 		{
 			if (Dy>0)  Schritty = 1; else Schritty = -1;
-			if (Dy==0)  Schrittx = 0; else Schrittx = (float)Dx/((float)(Dy*Schritty));
-			Steps = abs(Dy);
+			if (Dy==0)  Schrittx = 0; else Schrittx = Dx/(Dy*Schritty);
+			Steps = Math.abs(Dy);
 		}
 	
 	}
@@ -9909,7 +9814,7 @@ void CalcGuyKoor()
 	if (Bild % Scape[Guy.Pos.x][Guy.Pos.y].LaufZeit == 0)
 	{
 		Step++;
-		short i;
+		let i;
 		if (BootsFahrt) i = 4; else i = 2;
 		if (Step%i == 0)
 		{
@@ -9918,7 +9823,7 @@ void CalcGuyKoor()
 		}
 		Guy.PosScreen.x = GuyPosScreenStart.x + ROUND(Step*Schrittx);
 		Guy.PosScreen.y = GuyPosScreenStart.y + ROUND(Step*Schritty);
-		if ((Spielzustand == SZINTRO) || (Spielzustand == SZGERETTET)) //Beim Intro f�hrt die Kamera mit
+		if ((Spielzustand == SZINTRO) || (Spielzustand == SZGERETTET)) //Beim Intro führt die Kamera mit
 		{
 			Camera.x = Guy.PosScreen.x-rcGesamt.right/2;
 			Camera.y = Guy.PosScreen.y-rcGesamt.bottom/2;
@@ -9926,35 +9831,32 @@ void CalcGuyKoor()
 	}
 }
 
-void Entdecken()
+function Entdecken()
 {
-	bool Aenderung = false;
-	short i,j;
+	let Aenderung = false;
 
-	for (i=-1;i<=1;i++)
-		for (j=-1;j<=1;j++)
-		{
+	for (let i = -1; i<=1; i++) {
+		for (let j = -1; j<=1; j++) {
 			if (!Scape[Guy.Pos.x+i][Guy.Pos.y+j].Entdeckt) 
 			{
 				Scape[Guy.Pos.x+i][Guy.Pos.y+j].Entdeckt = true;
 				Aenderung = true;
 			}
 		}
+	}
 
 	if (Aenderung) Generate();
 }
 
-void CalcKoor()
+function CalcKoor()
 {
-	short				x,y;
 	// Bildschirmkoordinaten berechnen und speichern
-	for (y=0;y<MAXYKACH;y++)
-		for (x=0;x<MAXXKACH;x++)
-		{	
-			Scape[x][y].xScreen			=	KXPIXEL/2*MAXXKACH+32+
+	for (let y=0; y<MAXYKACH; y++) {
+		for (let x=0; x<MAXXKACH; x++) {
+			Scape[x][y].xScreen =	KXPIXEL/2*MAXXKACH+32+
 				x * KXPIXEL / 2 - y * KYPIXEL /2 +
 				(-6*y)+ x; //seltsame Korrekturen
-			Scape[x][y].yScreen			=
+			Scape[x][y].yScreen	=
 				x * KXPIXEL /2  + y * KYPIXEL / 2-16*Scape[x][y].Hoehe +
 				(-13*x) + (-8*y); //seltsame Korrekturen
 			if ((x==0)		  && (y==0))				ScapeGrenze.top		= Scape[x][y].yScreen;
@@ -9962,81 +9864,84 @@ void CalcKoor()
 			if ((x==MAXXKACH-1) && (y==MAXYKACH-1))		ScapeGrenze.bottom	= Scape[x][y].yScreen+KYPIXEL;
 			if ((x==MAXXKACH-1) && (y==0))				ScapeGrenze.right	= Scape[x][y].xScreen+KXPIXEL;
 		}
-
+	}
 }
 
-short Refresh()
+function Refresh()
 {
-	long Zeitsave;
-	
-	if (Spielzustand == SZNICHTS) 
+	if (Spielzustand === SZNICHTS)
 	{
 		Spielzustand = SZLOGO; 
 		InitStructs(); //Nur zum Wavinitialisieren
 	}
-	while(1)
+
+	requestAnimationFrame(main_loop);
+	function main_loop()
 	{
+		requestAnimationFrame(main_loop);
 		Bild++;
-		time(&Zeitsave);
+		let Zeitsave = Date.now() / 1000;
 		if (Zeit+5 < Zeitsave)
 		{
 			Zeit = Zeitsave;
 			LastBild = (LastBild+Bild/5)/2;
 			Bild = 0;
-			if (LastBild==0) LastBild = 50; 
+			if (LastBild===0) LastBild = 50;
 			
 			//BilderproSec ausgeben
 			/*Textloeschen(TXTFPS);
 			TextBereich[TXTFPS].Aktiv = true;
 			sprintf(StdString, "%d", LastBild);
 			DrawString(StdString,(short)TextBereich[TXTFPS].rcText.left,(short)TextBereich[TXTFPS].rcText.top,1);
-	*/	}
-		if (Spielzustand == SZLOGO)
+			*/
+		}
+		if (Spielzustand === SZLOGO)
 		{
-			if (CheckKey()==2) break;		//Das Keyboard abfragen
+			if (CheckKey()===2) return;		//Das Keyboard abfragen
 			ZeigeLogo(); //Bild auffrischen
 						
 		}
-		else if ((Spielzustand == SZINTRO) || (Spielzustand == SZGERETTET))
+		else if ((Spielzustand === SZINTRO) || (Spielzustand === SZGERETTET))
 		{
-			if (CheckKey()==0) return(0);		//Das Keyboard abfragen
+			if (CheckKey()===0) return 0;		//Das Keyboard abfragen
 
 			Animationen();  //Animationen weiterschalten
 			if (!Guy.Aktiv) Event(Guy.Aktion); //Aktionen starten
-			if (Guy.Pos.x != RouteStart.x) ZeigeIntro(); //Bild auffrischen (if-Abfrage n�tig (seltsamerweise))
+			if (Guy.Pos.x !== RouteStart.x) ZeigeIntro(); //Bild auffrischen (if-Abfrage nötig (seltsamerweise))
 						
 		}
-		else if (Spielzustand == SZSPIEL)
+		else if (Spielzustand === SZSPIEL)
 		{
-			if ((Stunden >= 12) && (Minuten != 0) && (Guy.Aktion != AKTAGENDE))	//Hier ist der Tag zuende
+			if ((Stunden >= 12) && (Minuten !== 0) && (Guy.Aktion !== AKTAGENDE))	//Hier ist der Tag zuende
 			{
-				if (Guy.Aktion == AKAUSSCHAU) Chance -= 1 + Scape[Guy.Pos.x][Guy.Pos.y].Hoehe;
+				if (Guy.Aktion === AKAUSSCHAU) Chance -= 1 + Scape[Guy.Pos.x][Guy.Pos.y].Hoehe;
 				Guy.Aktiv = false;
 				Guy.AkNummer = 0;
 				Guy.Aktion = AKTAGENDE;
 			}
 			
-			CheckSpzButton();					//Die Spezialkn�pfe umschalten
+			CheckSpzButton();					//Die Spezialknöpfe umschalten
 			if (MouseAktiv) CheckMouse();		//Den MouseZustand abchecken
-			if (CheckKey()==0) return(0);		//Das Keyboard abfragen
+			if (CheckKey()===0) return 0;		//Das Keyboard abfragen
 			LimitScroll();						//Das Scrollen an die Grenzen der Landschaft anpassen
 			Animationen();						//Die Animationsphasen weiterschalten
 			if (!Guy.Aktiv) Event(Guy.Aktion);  //Die Aktionen starten
 			Zeige();//Das Bild zeichnen
-			if (Spielbeenden) return(0);
+			if (Spielbeenden) return 0;
 		
 		}
-		else if (Spielzustand == SZABSPANN)
+		else if (Spielzustand === SZABSPANN)
 		{
-			if (CheckKey()==0) return(0);
+			if (CheckKey()===0) return 0;
 			AbspannCalc();
 			ZeigeAbspann();
 		}
 	}
-	return(1);
+	return 1;
 }
 
-long FAR PASCAL WindowProc( HWND hWnd, UINT message, 
+/*
+function WindowProc( HWND hWnd, UINT message,
                             WPARAM wParam, LPARAM lParam )
 {
 		static BYTE phase = 0;
@@ -10071,85 +9976,28 @@ long FAR PASCAL WindowProc( HWND hWnd, UINT message,
  * doInit - do work required for every instance of the application:
  *                create the window, initialize data
  */
-static BOOL doInit( HINSTANCE hInstance, int nCmdShow )
+function doInit(hInstance, nCmdShow)
 {
-    
-    WNDCLASS             wc;
-    
-    /*
-     * set up and register window class
-     */
-    wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc = WindowProc;
-    wc.cbClsExtra = 0;
-    wc.cbWndExtra = 0;
-    wc.hInstance = hInstance;
-    wc.hIcon = LoadIcon( hInstance, IDI_APPLICATION );
-    wc.hCursor = LoadCursor( null, IDC_ARROW );
-    wc.hbrBackground = null;
-    wc.lpszMenuName = NAME;
-    wc.lpszClassName = NAME;
-    RegisterClass( &wc );
-    
-    /*
-     * create a window
-     */
-    hwnd = CreateWindowEx(
-        WS_EX_TOPMOST,
-        NAME,
-        TITLE,
-        WS_POPUP,
-        0,
-        0,
-        GetSystemMetrics( SM_CXSCREEN ),
-        GetSystemMetrics( SM_CYSCREEN ),
-        null,
-        null,
-        hInstance,
-        null );
-
-    if( !hwnd )
-    {
-        return FALSE;
-    }
-	
+	canvas = document.querySelector("#canvas");
+	lpDDSBack = canvas;
+	lpDDSPrimary = canvas;
 	InitDInput();
-	MouseInit = true;
-    	
-	ShowWindow( hwnd, nCmdShow );
-    UpdateWindow( hwnd );
-	  
 	InitDDraw();
 	InitDSound();
-		 
-	SetTimer( hwnd, 0, 1000, null ); //Provisorisch
-	srand( (unsigned)time(null)); //Random initialisieren
-	return TRUE;
-	
-} /* doInit */
+
+	setInterval(() => {
+		if (Refresh()==0) ; // destroy
+	}, 1000); //Provisorisch
+
+	//srand( (unsigned)time(null)); //Random initialisieren
+}
 
 /*
  * WinMain - initialization, message loop
  */
-int PASCAL WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                        LPSTR lpCmdLine, int nCmdShow)
+function main()
 {
-    MSG         msg;
+	doInit();
+}
 
-    lpCmdLine = lpCmdLine;
-    hPrevInstance = hPrevInstance;
-	g_hInst = hInstance;
-    if( !doInit( hInstance, nCmdShow ) )
-    {
-        return FALSE;
-    }
-
-    while(GetMessage(&msg, null, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-	}
-
-    return msg.wParam;
-
-} /* WinMain */
+window.onload = main;
