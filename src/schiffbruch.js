@@ -681,6 +681,15 @@ const Logo		= "LOGO";
 let canvas = document.querySelector("#canvas");
 let ctx = null;
 let audioCtx = null;
+let cur_mouse_state = {
+	x: 0,
+	y: 0,
+	lX: 0,
+	lY: 0,
+	lZ: 0,
+	rgbButtons: [0, 0, 0, 0],
+};
+let keymap = {};
 
 function loadImage(url)
 {
@@ -3103,15 +3112,43 @@ function Blitten(lpDDSVon, lpDDSNach, Transp)
 	);
 }
 
+function InitDInput()
+{
+	canvas.onmousemove = e => {
+		cur_mouse_state.lX = e.clientX - cur_mouse_state.x;
+		cur_mouse_state.lY = e.clientY - cur_mouse_state.y;
+		cur_mouse_state.x = e.clientX;
+		cur_mouse_state.y = e.clientY;
+	};
+
+	canvas.onmousedown = e => {
+		if(e.button === 0) cur_mouse_state.rgbButtons[0] = 0x80;
+		if(e.button === 2) cur_mouse_state.rgbButtons[1] = 0x80;
+	};
+
+	canvas.onmouseup = e => {
+		if(e.button === 0) cur_mouse_state.rgbButtons[0] = 0;
+		if(e.button === 2) cur_mouse_state.rgbButtons[1] = 0;
+	};
+
+	canvas.onkeydown = e => {
+		keymap[e.key] = true;
+	};
+
+	canvas.onkeyup = e => {
+		keymap[e.key] = false;
+	};
+}
+
 function CheckMouse()
 {
-	let	dims; //Da werden die Daten der Maus gespeichert
-	let			Button; //Welcher Knopf ist gedrückt worden
-	let			Push;	//Knopf gedrückt(1) oder losgelassen(-1) oder gedrückt(0) gehalten
-	let			xDiff,yDiff; //Die Differenz zur vorherigen Position ((Für Scrollen)
+	let dims = cur_mouse_state; //Da werden die Daten der Maus gespeichert
+	let Button; //Welcher Knopf ist gedrückt worden
+	let Push;	//Knopf gedrückt(1) oder losgelassen(-1) oder gedrückt(0) gehalten
+	let xDiff,yDiff; //Die Differenz zur vorherigen Position ((Für Scrollen)
 
-	g_pMouse->GetDeviceState(sizeof(DIMOUSESTATE), &dims);
 	//Mausbewegung
+	/*
 	xDiff = MousePosition.x;
 	MousePosition.x += (short) dims.lX;
 	xDiff -= MousePosition.x;
@@ -3119,22 +3156,31 @@ function CheckMouse()
 	if (MousePosition.x > MAXX-2) MousePosition.x = MAXX-2;
 	yDiff =	MousePosition.y;
 	MousePosition.y += (short) dims.lY;
-    yDiff -= MousePosition.y;
+	yDiff -= MousePosition.y;
 	if (MousePosition.y < 0) MousePosition.y = 0;
 	if (MousePosition.y > MAXY-2) MousePosition.y = MAXY-2;
-	
-	if (TwoClicks == -1) 
+	*/
+	xDiff = dims.lX;
+	yDiff = dims.lY;
+	MousePosition.x = dims.x;
+	MousePosition.y = dims.y;
+	if (MousePosition.x < 0) MousePosition.x = 0;
+	if (MousePosition.x > MAXX-2) MousePosition.x = MAXX-2;
+	if (MousePosition.y < 0) MousePosition.y = 0;
+	if (MousePosition.y > MAXY-2) MousePosition.y = MAXY-2;
+
+	if (TwoClicks == -1)
 	{
-		if (Guy.Aktiv)	
+		if (Guy.Aktiv)
 		{
-			if (InRect(MousePosition.x,MousePosition.y,Bmp[BUTTSTOP].rcDes) && 
+			if (InRect(MousePosition.x,MousePosition.y,Bmp[BUTTSTOP].rcDes) &&
 				(Bmp[BUTTSTOP].Phase!=-1)) CursorTyp = CUPFEIL;
-			else CursorTyp = CUUHR; 
+			else CursorTyp = CUUHR;
 		}
 		else CursorTyp = CUPFEIL;
 	}
 	Button = -1;
-		
+
 	if (dims.rgbButtons[0] & 0x80)
 	{
 		Button = 0;
@@ -3146,18 +3192,18 @@ function CheckMouse()
 		}
 	}
 	else
-	{ 
+	{
 		if (Button0down)
 		{
 			Button = 0;
 			Push = -1;
 			Button0down = false;
 		}
-	} 
+	}
 
-	
+
 	if (dims.rgbButtons[1] & 0x80)
-	{	
+	{
 		Button = 1;
 		if (Button1down) Push = 0;
 		else
@@ -3167,16 +3213,16 @@ function CheckMouse()
 		}
 	}
 	else
-	{ 	
+	{
 		if (Button1down)
 		{
 			Button = 1;
 			Push = -1;
 			Button1down = false;
 		}
-	} 
-	
-	//Wenn ein Text steht, dann bei Mausdruck Text weg 
+	}
+
+	//Wenn ein Text steht, dann bei Mausdruck Text weg
 	if (PapierText != -1)
 	{
 		if (Frage == 0)
@@ -3214,27 +3260,27 @@ function CheckMouse()
 			Guy.Aktiv = false;
 		}
 		return;
-		
+
 	}
-	
-	//Animationen und Text l�schen (werden dann von den MouseIn.. Sachen neu angestellt
+
+	//Animationen und Text löschen (werden dann von den MouseIn.. Sachen neu angestellt
 	Textloeschen(TXTTEXTFELD);
 	ButtAniAus();
-	
+
 	//Wenn der Guy aktiv dann linke Mouse-Buttons ignorieren
-	if ((Guy.Aktiv) && (Button == 0)) 
+	if ((Guy.Aktiv) && (Button == 0))
 	{
-		if ((InRect(MousePosition.x,MousePosition.y,Bmp[BUTTSTOP].rcDes)) && 
-				(Bmp[BUTTSTOP].Phase!=-1)) ;
+		if ((InRect(MousePosition.x,MousePosition.y,Bmp[BUTTSTOP].rcDes)) &&
+			(Bmp[BUTTSTOP].Phase!=-1)) ;
 		else Button = -1;
-	} 
-	
+	}
+
 	//die Maus ist in der Spielflaeche ->
-	if (InRect(MousePosition.x,MousePosition.y,rcSpielflaeche))	
+	if (InRect(MousePosition.x,MousePosition.y,rcSpielflaeche))
 		MouseInSpielflaeche(Button,Push,xDiff,yDiff);
 	//die Maus ist im Panel ->
-	if (InRect(MousePosition.x,MousePosition.y,rcPanel))	
-		MouseInPanel(Button,Push);	
+	if (InRect(MousePosition.x,MousePosition.y,rcPanel))
+		MouseInPanel(Button,Push);
 	/*dims.lX, dims.lY, dims.lZ,
                      (dims.rgbButtons[0] & 0x80) ? '0' : ' ',
                      (dims.rgbButtons[1] & 0x80) ? '1' : ' ',
@@ -3242,42 +3288,38 @@ function CheckMouse()
                      (dims.rgbButtons[3] & 0x80) ? '3' : ' ');*/
 }
 
-short CheckKey() 
-{ 
-    #define KEYDOWN(name,key) (name[key] & 0x80) 
-    char     buffer[256]; 
-    short	 x; 
+function CheckKey()
+{
+    //#define KEYDOWN(name,key) (name[key] & 0x80)
+    //char     buffer[256];
 	
-    g_pKey->GetDeviceState(sizeof(buffer),(LPVOID)&buffer); 
+    //g_pKey->GetDeviceState(sizeof(buffer),(LPVOID)&buffer);
    
 	
 	if (Spielzustand == SZLOGO)
 	{
-		if ((KEYDOWN(buffer, DIK_ESCAPE)) || (KEYDOWN(buffer, DIK_RETURN)) ||
-			(KEYDOWN(buffer, DIK_SPACE))) //Logo Abbrechen
+		if (keymap.Escape || keymap.Return || keymap[" "]) //Logo Abbrechen
 		{
 			StopSound(WAVLOGO);
 			NeuesSpiel(false);
-			return(2);
+			return 2;
 		}
 	}
 	else if (Spielzustand == SZINTRO)
 	{
-		if ((KEYDOWN(buffer, DIK_ESCAPE)) || (KEYDOWN(buffer, DIK_RETURN)) ||
-			(KEYDOWN(buffer, DIK_SPACE)))//Intro Abbrechen
+		if (keymap.Escape || keymap.Return || keymap[" "]) //Intro Abbrechen
 		{
 			StopSound(WAVSTURM); //Sound hier sofort stoppen
 			StopSound(WAVSCHWIMMEN); //Sound hier sofort stoppen
 			Guy.Aktiv = false;
-			for (x=Guy.Pos.x;x<MAXXKACH;x++)
-			{
+			for (let x=Guy.Pos.x; x<MAXXKACH; x++) {
 				Guy.Pos.x = x;
 				Entdecken();
 				if (Scape[Guy.Pos.x][Guy.Pos.y].Art != 1) break;
 			}
 			Scape[Guy.Pos.x-2][Guy.Pos.y].Objekt = WRACK;
-			Scape[Guy.Pos.x-2][Guy.Pos.y].ObPos.x = (short)Bmp[WRACK].rcDes.left;
-			Scape[Guy.Pos.x-2][Guy.Pos.y].ObPos.y = (short)Bmp[WRACK].rcDes.top;
+			Scape[Guy.Pos.x-2][Guy.Pos.y].ObPos.x = Bmp[WRACK].rcDes.left;
+			Scape[Guy.Pos.x-2][Guy.Pos.y].ObPos.y = Bmp[WRACK].rcDes.top;
 
 			Guy.PosScreen.x =   
 				(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][0].x +
@@ -3302,38 +3344,32 @@ short CheckKey()
 	}
 	else if (Spielzustand == SZGERETTET)
 	{
-		if ((KEYDOWN(buffer, DIK_ESCAPE)) || (KEYDOWN(buffer, DIK_RETURN)) ||
-			(KEYDOWN(buffer, DIK_SPACE))) 
-		{
+		if (keymap.Escape || keymap.Return || keymap[" "]) {
 			Spielzustand = SZABSPANN;
-			return(1);
+			return 1;
 		}
 	}
 	else if (Spielzustand == SZSPIEL)
 	{
-		if (KEYDOWN(buffer, DIK_RIGHT)) Camera.x += 10;
-		if (KEYDOWN(buffer, DIK_LEFT))  Camera.x -= 10;
-		if (KEYDOWN(buffer, DIK_DOWN))	Camera.y += 10;
-		if (KEYDOWN(buffer, DIK_UP))    Camera.y -= 10;
-		if (KEYDOWN(buffer, DIK_ESCAPE))
-		{
+		if (keymap.ArrowRight) Camera.x += 10;
+		if (keymap.ArrowLeft)  Camera.x -= 10;
+		if (keymap.ArrowDown)	Camera.y += 10;
+		if (keymap.ArrowUp)    Camera.y -= 10;
+		if (keymap.Escape) {
 			Guy.AkNummer = 0;
 			Guy.Aktiv = false;
 			Guy.Aktion = AKSPIELVERLASSEN;
 		}
-		if (KEYDOWN(buffer, DIK_F11))
-		{
+		if (keymap.F11) {
 			Guy.AkNummer = 0;
 			Guy.Aktiv = false;
 			Guy.Aktion = AKNEUBEGINNEN;
 		}
-		if (KEYDOWN(buffer, DIK_G))	
-		{
+		if (keymap.g) {
 			Gitter = !Gitter;
 			Generate();
 		}
-		if (KEYDOWN(buffer, DIK_A))	
-		{
+		if (keymap.a) {
 			LAnimation = !LAnimation;
 			Generate();
 		}
@@ -3381,8 +3417,8 @@ short CheckKey()
 			Bmp[BUTTHAUS2].Phase = 0;
 			Bmp[BUTTHAUS3].Phase = 0;
 		}*/
-		
-		if (KEYDOWN(buffer, DIK_S))	//Sound ausschalten
+
+		if (keymap.s) {	//Sound ausschalten
 		{
 			if (Soundzustand == 0) Soundzustand = 1;
 			else if (Soundzustand == 1) Soundzustand = 0; 
@@ -3390,36 +3426,30 @@ short CheckKey()
 	}
 	else if (Spielzustand == SZABSPANN)
 	{
-		if ((KEYDOWN(buffer, DIK_ESCAPE)) || (KEYDOWN(buffer, DIK_RETURN)) ||
-			(KEYDOWN(buffer, DIK_SPACE)))
-		{
+		if (keymap.Escape || keymap.Return || keymap[" "]) {
 			StopSound(WAVABSPANN);
 			return(0);
 		}
 	}
-	return(1);
+	return 1;
 } 
  
-void AddTime(short h,short m)
+function AddTime(h, m)
 {
-	short x,y,i;
+	//short x,y,i;
 
 	Stunden += h;
 	Minuten += m;
-	if (Minuten >= 60) 
-	{
+	if (Minuten >= 60) {
 		Minuten -= 60;
 		Stunden++;
 	}
-	for (y=0;y<MAXYKACH;y++)
-		for (x=0;x<MAXXKACH;x++) 
-		{
+	for (let y=0; y<MAXYKACH; y++) {
+		for (let x=0; x<MAXXKACH; x++)  {
 			//Feuer nach einer bestimmten Zeit ausgehen lassen
-			if (Scape[x][y].Objekt == FEUER) 
-			{
-				Scape[x][y].Timer += float((60*h+m)*0.0005);
-				if (Scape[x][y].Timer >= 1)
-				{
+			if (Scape[x][y].Objekt == FEUER) {
+				Scape[x][y].Timer += ((60*h+m)*0.0005);
+				if (Scape[x][y].Timer >= 1) {
 					Scape[x][y].Objekt   =-1;
 					Scape[x][y].Timer    = 0;
 					Scape[x][y].ObPos.x	 = 0;
@@ -3432,17 +3462,16 @@ void AddTime(short h,short m)
 				((Scape[x][y].Objekt != FELD) &&
 				(Scape[x][y].Objekt != BUSCH))) continue; //Wenn kein Fruchtobjekt weiter
 			if (Scape[x][y].Phase >= Bmp[Scape[x][y].Objekt].Anzahl) continue;
-			if (Scape[x][y].Objekt == FELD) Scape[x][y].Phase += float((60*h+m)*0.005);
-			else if (Scape[x][y].Objekt == BUSCH) Scape[x][y].Phase += float((60*h+m)*0.0005); //pro Minute Reifungsprozess fortf�hren
+			if (Scape[x][y].Objekt == FELD) Scape[x][y].Phase += ((60*h+m)*0.005);
+			else if (Scape[x][y].Objekt == BUSCH) Scape[x][y].Phase += ((60*h+m)*0.0005); //pro Minute Reifungsprozess fortf�hren
 			if (Scape[x][y].Phase > Bmp[Scape[x][y].Objekt].Anzahl-1) 
-				Scape[x][y].Phase = (float)Bmp[Scape[x][y].Objekt].Anzahl-1;
+				Scape[x][y].Phase = Bmp[Scape[x][y].Objekt].Anzahl-1;
 		}
+	}
 	AddResource(GESUNDHEIT, (60*h+m)*(Guy.Resource[WASSER]-50+Guy.Resource[NAHRUNG]-50)/1000);
 	
-	if ((Spielzustand == SZSPIEL) && (!BootsFahrt))
-	{
-		for (i=0;i<=(60*h+m);i++)
-		{
+	if ((Spielzustand == SZSPIEL) && (!BootsFahrt)) {
+		for (let i=0; i<=(60*h+m); i++) {
 			if (Chance == 0) break;
 			if (rand()%((int)(1/(Chance/72000))) == 1)
 			{
@@ -3453,11 +3482,9 @@ void AddTime(short h,short m)
 			}
 		}
 	}
-
-	
 }
 
-void AddResource(short Art, float Anzahl) //F�gt wassser usw hinzu
+function AddResource(Art, Anzahl) //Fügt wassser usw hinzu
 {
 	Guy.Resource[Art] += Anzahl;
 	if (Guy.Resource[Art] > 100) Guy.Resource[Art] = 100;
@@ -3471,30 +3498,30 @@ void AddResource(short Art, float Anzahl) //F�gt wassser usw hinzu
 		Guy.Aktion = AKTOD;
 	}
 }
-void LimitScroll()
+
+function LimitScroll()
 {
 	if (Camera.x < ScapeGrenze.left) 
-		Camera.x = (short)ScapeGrenze.left;
+		Camera.x = ScapeGrenze.left;
 	if (Camera.x+rcSpielflaeche.right > ScapeGrenze.right) 
-		Camera.x = (short)ScapeGrenze.right-(short)rcSpielflaeche.right;
+		Camera.x = ScapeGrenze.right - rcSpielflaeche.right;
 	if (Camera.y < ScapeGrenze.top) 
-		Camera.y = (short)ScapeGrenze.top;
+		Camera.y = ScapeGrenze.top;
 	if (Camera.y+rcSpielflaeche.bottom > ScapeGrenze.bottom) 
-		Camera.y = (short)ScapeGrenze.bottom-(short)rcSpielflaeche.bottom;
+		Camera.y = ScapeGrenze.bottom - rcSpielflaeche.bottom;
 }
 
-ZWEID GetKachel(short PosX,short PosY)
+function GetKachel(PosX, PosY)
 {
-	short				x,y;
-	ZWEID				Erg;
+	//short				x,y;
+	//ZWEID				Erg;
+	let Erg = ZWEID();
 
-	for (y=0;y<MAXYKACH;y++)
-		for (x=0;x<MAXXKACH;x++)
-	{		//Die in Betracht kommenden Kacheln rausfinden
+	for (let y=0; y<MAXYKACH; y++) {
+		for (let x=0; x<MAXXKACH; x++) {		//Die in Betracht kommenden Kacheln rausfinden
 			if ((PosX >	Scape[x][y].xScreen) && (PosX < Scape[x][y].xScreen+KXPIXEL) &&
 				(PosY > Scape[x][y].yScreen) && (PosY < Scape[x][y].yScreen+KYPIXEL))
 			{
-				
 				if ((InDreieck(PosX,PosY,
 							Scape[x][y].xScreen+EckKoor[Scape[x][y].Typ][0].x,
 							Scape[x][y].yScreen+EckKoor[Scape[x][y].Typ][0].y,
@@ -3515,138 +3542,131 @@ ZWEID GetKachel(short PosX,short PosY)
 					return Erg;
 				}
 			}
+		}
 	}
 	Erg.x = -1;
 	Erg.y = -1;
 	return Erg;
 }
 
-void MakeRohString(short x, short y, short Objekt)
+function MakeRohString(x, y, Objekt)
 {
-	char TmpString[1024];
-	bool  keinRohstoff; 
-	short i;
+	let TmpString = "";
+	let keinRohstoff = true;
+	//short i;
 
-	RohString[0] = char(0);
-	keinRohstoff = true;
-	if (Objekt == -1)
-	{
-	  for (i=0;i<BILDANZ;i++)
-	  {
+	RohString = "";
+	if (Objekt == -1) {
+	  for (let i=0; i<BILDANZ; i++) {
 	    if (Scape[x][y].Rohstoff[i] != 0) keinRohstoff = false;
 	  }
 	}	
-	else 
-	{ 
-	  for (i=0;i<BILDANZ;i++)
-	  {
+	else {
+	  for (let i=0; i<BILDANZ; i++) {
 		if (Bmp[Objekt].Rohstoff[i] != 0) keinRohstoff = false;
 	  }
 	}
 	if (keinRohstoff) return;
-	strcat(RohString, " ->");
-	for (i=0;i<BILDANZ;i++)
-	{
-		if (Objekt == -1){ if (Scape[x][y].Rohstoff[i] == 0) continue;}
-		else { if (Bmp[Objekt].Rohstoff[i] == 0) continue;}
-		strcat(RohString, " ");
-		switch(i)
-		{
-		case ROHAST: LoadString(g_hInst,AST,TmpString,1024); break;
-		case ROHSTEIN: LoadString(g_hInst,STEIN,TmpString,1024); break;	
-		case ROHBLATT: LoadString(g_hInst,BLATT,TmpString,1024);  break;
-		case ROHLIANE: LoadString(g_hInst,LIANE,TmpString,1024);  break;
-		case ROHSTAMM: LoadString(g_hInst,STAMM,TmpString,1024);  break;
+	RohString += " ->";
+
+	for (let i=0; i<BILDANZ; i++) {
+		if (Objekt == -1) {
+			if (Scape[x][y].Rohstoff[i] == 0) continue;
 		}
-		strcat(RohString, TmpString);
-		strcat(RohString, "=");
-		if (Objekt == -1) sprintf(TmpString, "%d", Scape[x][y].Rohstoff[i]);
-		else sprintf(TmpString, "%d", Bmp[Objekt].Rohstoff[i]);
-		strcat(RohString, TmpString);
+		else {
+			if (Bmp[Objekt].Rohstoff[i] == 0) continue;
+		}
+		RohString += " ";
+		switch(i) {
+			case ROHAST: TmpString = LoadString(AST); break;
+			case ROHSTEIN: TmpString = LoadString(STEIN); break;
+			case ROHBLATT: TmpString = LoadString(BLATT);  break;
+			case ROHLIANE: TmpString = LoadString(LIANE);  break;
+			case ROHSTAMM: TmpString = LoadString(STAMM);  break;
+		}
+		RohString += TmpString;
+		RohString += "=";
+		if (Objekt == -1) RohString += Scape[x][y].Rohstoff[i];
+		else RohString += Bmp[Objekt].Rohstoff[i];
 	}
 }
 
-void MouseInSpielflaeche(short Button, short Push, short xDiff, short yDiff)
+function MouseInSpielflaeche(Button, Push, xDiff, yDiff)
 {
-	ZWEID			Erg; //Die angeklickte Kachel
-	char			Text[1024],TextTmp[1024]; //Text f�r Infoleiste
+	//let Erg = ZWEID(); //Die angeklickte Kachel
+	//char			Text[1024],TextTmp[1024]; //Text f�r Infoleiste
+	let Text = "";
+	let TextTmp = "";
 	
 	//Info anzeigen
-	Erg = GetKachel((MousePosition.x+Camera.x),(MousePosition.y+Camera.y)); 
+	let Erg = GetKachel((MousePosition.x+Camera.x),(MousePosition.y+Camera.y));
 	if (Scape[Erg.x][Erg.y].Entdeckt) 
 	{
-		LoadString(g_hInst,45+Scape[Erg.x][Erg.y].Art,Text,1024); 
-		if ((Scape[Erg.x][Erg.y].Objekt != -1) && (Scape[Erg.x][Erg.y].Objekt != MEERWELLEN)) 
-		{
-			LoadString(g_hInst,MIT,TextTmp,1024); 
-			strcat(Text, " ");
-			strcat(Text, TextTmp);
-			strcat(Text, " ");
+		Text = LoadString(45 + Scape[Erg.x][Erg.y].Art);
+
+		if ((Scape[Erg.x][Erg.y].Objekt != -1) && (Scape[Erg.x][Erg.y].Objekt != MEERWELLEN)) {
+			TextTmp = LoadString(MIT);
+			Text += " " + TextTmp + " ";
 			
-			if ((Scape[Erg.x][Erg.y].Objekt >= BAUM1) && (Scape[Erg.x][Erg.y].Objekt <= BAUM4)) 
-				 LoadString(g_hInst,BAUMTEXT,TextTmp,1024); 
+			if ((Scape[Erg.x][Erg.y].Objekt >= BAUM1) && (Scape[Erg.x][Erg.y].Objekt <= BAUM4))
+				TextTmp = LoadString(BAUMTEXT,TextTmp,1024);
 			else if ((Scape[Erg.x][Erg.y].Objekt >= FLUSS1) && (Scape[Erg.x][Erg.y].Objekt <= SCHLEUSE6))
-				 LoadString(g_hInst,FLUSSTEXT,TextTmp,1024); 	
+				TextTmp =  LoadString(FLUSSTEXT);
 			else if (Scape[Erg.x][Erg.y].Objekt == BUSCH)
-				 LoadString(g_hInst,BUSCHTEXT,TextTmp,1024);
+				TextTmp =  LoadString(BUSCHTEXT);
 			else if (Scape[Erg.x][Erg.y].Objekt == ZELT)
-				 LoadString(g_hInst,ZELTTEXT,TextTmp,1024); 
+				TextTmp =  LoadString(ZELTTEXT);
 			else if (Scape[Erg.x][Erg.y].Objekt == FELD)
-				 LoadString(g_hInst,FELDTEXT,TextTmp,1024); 
+				TextTmp =  LoadString(FELDTEXT);
 			else if (Scape[Erg.x][Erg.y].Objekt == BOOT)
-				 LoadString(g_hInst,BOOTTEXT,TextTmp,1024); 
+				TextTmp =  LoadString(BOOTTEXT);
 			else if (Scape[Erg.x][Erg.y].Objekt == ROHR)
-				 LoadString(g_hInst,ROHRTEXT,TextTmp,1024); 
+				TextTmp = LoadString(ROHRTEXT);
 			else if (Scape[Erg.x][Erg.y].Objekt == SOS)
-				 LoadString(g_hInst,SOSTEXT,TextTmp,1024);
+				TextTmp =  LoadString(SOSTEXT);
 			else if (Scape[Erg.x][Erg.y].Objekt == HAUS1)
-				 LoadString(g_hInst,HAUS1TEXT,TextTmp,1024); 
+				TextTmp =  LoadString(HAUS1TEXT);
 			else if (Scape[Erg.x][Erg.y].Objekt == HAUS2)
-				 LoadString(g_hInst,HAUS2TEXT,TextTmp,1024); 
+				TextTmp =  LoadString(HAUS2TEXT);
 			else if (Scape[Erg.x][Erg.y].Objekt == HAUS3)
-				 LoadString(g_hInst,HAUS3TEXT,TextTmp,1024); 
+				TextTmp =  LoadString(HAUS3TEXT);
 			else if (Scape[Erg.x][Erg.y].Objekt == BAUMGROSS)
-				 LoadString(g_hInst,BAUMGROSSTEXT,TextTmp,1024); 
+				TextTmp =  LoadString(BAUMGROSSTEXT);
 			else if (Scape[Erg.x][Erg.y].Objekt == FEUERSTELLE)
-				 LoadString(g_hInst,FEUERSTELLETEXT,TextTmp,1024); 
+				TextTmp =  LoadString(FEUERSTELLETEXT);
 			else if (Scape[Erg.x][Erg.y].Objekt == FEUER)
-				 LoadString(g_hInst,FEUERTEXT,TextTmp,1024);
+				TextTmp =  LoadString(FEUERTEXT);
 			else if ((Scape[Erg.x][Erg.y].Objekt == WRACK) || (Scape[Erg.x][Erg.y].Objekt == WRACK2))
-				 LoadString(g_hInst,WRACKTEXT,TextTmp,1024);
-			strcat(Text, TextTmp);
+				TextTmp =  LoadString(WRACKTEXT);
+			Text += TextTmp;
 			
 			if ((Scape[Erg.x][Erg.y].Objekt >= FELD) && 
 				(Scape[Erg.x][Erg.y].Objekt <= FEUERSTELLE))
 			{
 				//Baufortschrittanzeigen
-				strcat(Text, " ");
-				strcat(Text, "(");
-				sprintf(TextTmp, "%d", (Scape[Erg.x][Erg.y].AkNummer*100)/Bmp[Scape[Erg.x][Erg.y].Objekt].AkAnzahl);
-				strcat(Text, TextTmp);
-				strcat(Text, "%");
-				strcat(Text, ")");
-				//ben�tigte Rohstoffe anzeigen
+				Text += " (";
+				Text += (Scape[Erg.x][Erg.y].AkNummer*100)/Bmp[Scape[Erg.x][Erg.y].Objekt].AkAnzahl;
+				Text += "%)";
+				//benötigte Rohstoffe anzeigen
 				MakeRohString(Erg.x,Erg.y,-1);
-				strcat(Text, RohString);
+				Text += RohString;
 			}
 			
 		}
 		TextBereich[TXTTEXTFELD].Aktiv = true;
-		DrawString(Text,(short)TextBereich[TXTTEXTFELD].rcText.left,
-			(short)TextBereich[TXTTEXTFELD].rcText.top,2);
+		DrawString(Text, TextBereich[TXTTEXTFELD].rcText.left,
+			TextBereich[TXTTEXTFELD].rcText.top,2);
 	}
 	
 	//rechte Maustastescrollen
-	if ((Button == 1) && (Push == 0))
-	{
+	if ((Button == 1) && (Push == 0)) {
 		Camera.x += xDiff;
 		Camera.y += yDiff;
 		CursorTyp = CURICHTUNG;
 	}
 	
 	//Wenn Maustaste gedr�ckt wird
-	if ((Button == 0) && (Push == 1)) 
-	{
+	if ((Button == 0) && (Push == 1)) {
 		if ((Erg.x != -1) && (Erg.y != -1) && 
 			(Scape[Erg.x][Erg.y].Entdeckt) && (!Guy.Aktiv) &&
 			((Erg.x != Guy.Pos.x) || (Erg.y != Guy.Pos.y)) &&
@@ -3655,8 +3675,7 @@ void MouseInSpielflaeche(short Button, short Push, short xDiff, short yDiff)
 		{
 				//Klicksound abspielen
 			PlaySound(WAVKLICK2, 100);
-			if ((Erg.x == RouteZiel.x) && (Erg.y == RouteZiel.y))
-			{
+			if ((Erg.x == RouteZiel.x) && (Erg.y == RouteZiel.y)) {
 				MarkRoute(false);
 				Bmp[BUTTSTOP].Phase = 0;
 				Guy.Aktiv = true;
@@ -3664,8 +3683,7 @@ void MouseInSpielflaeche(short Button, short Push, short xDiff, short yDiff)
 				Steps		= 0;
 				Step		= 0;
 			}
-			else 
-			{
+			else {
 				MarkRoute(false);
 				RouteStart.x = Guy.Pos.x;
 				RouteStart.y = Guy.Pos.y;
@@ -3678,7 +3696,6 @@ void MouseInSpielflaeche(short Button, short Push, short xDiff, short yDiff)
 					RouteStart.y = -1;
 					RouteZiel.x = -1;
 					RouteZiel.y = -1;
-					MessageBeep(MB_OK);
 				}
 			}
 		}
@@ -3686,25 +3703,22 @@ void MouseInSpielflaeche(short Button, short Push, short xDiff, short yDiff)
 	}
 }
 
-void ButtAniAus()
+function ButtAniAus()
 {
-	short i;
-
-	for (i=BUTTGITTER;i<=BUTTDESTROY;i++)
-	{
+	for (let i=BUTTGITTER; i<=BUTTDESTROY; i++) {
 		Bmp[i].Animation = false;
 	}
 }
 
-void MouseInPanel(short Button,short Push)
+function MouseInPanel(Button, Push)
 {
-	short mx,my,i;	//Mauskoordinaten in Minimap
+	let mx,my;	//Mauskoordinaten in Minimap
 	
 	//wenn die Maus in der Minimap ist ->
 	if ((InRect(MousePosition.x,MousePosition.y,rcKarte)) && (Button ==0) && (Push != -1))
 	{
-		mx = MousePosition.x-(short)rcKarte.left;
-		my = MousePosition.y-(short)rcKarte.top;
+		mx = MousePosition.x-rcKarte.left;
+		my = MousePosition.y-rcKarte.top;
 		Camera.x = ((KXPIXEL/4)*(mx-my) + MAXXKACH * KXPIXEL /2)
 					-(rcSpielflaeche.right-rcSpielflaeche.left)/2;
 		Camera.y = ((KXPIXEL/7)*(my+mx))
@@ -4062,12 +4076,12 @@ void MouseInPanel(short Button,short Push)
     else if	((InRect(MousePosition.x,MousePosition.y,Bmp[BUTTFELD].rcDes)) && 
 		     (HauptMenue == MEBAUEN) && (Bmp[BUTTFELD].Phase != -1))
 	{
-		LoadString(g_hInst,BEGINNFELD,StdString,1024);
+		StdString = LoadString(BEGINNFELD);
 		MakeRohString(-1,-1,FELD);
-		strcat(StdString, RohString);
+		StdString += RohString;
 		TextBereich[TXTTEXTFELD].Aktiv = true;
-		DrawString(StdString,(short)TextBereich[TXTTEXTFELD].rcText.left,
-						     (short)TextBereich[TXTTEXTFELD].rcText.top,2);
+		DrawString(StdString,TextBereich[TXTTEXTFELD].rcText.left,
+						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTFELD].Animation = true;
 		if ((Button==0) && (Push==1)) 
@@ -4095,12 +4109,12 @@ void MouseInPanel(short Button,short Push)
 	else if	((InRect(MousePosition.x,MousePosition.y,Bmp[BUTTZELT].rcDes)) && 
 		     (HauptMenue == MEBAUEN) && (Bmp[BUTTZELT].Phase != -1))
 	{
-		LoadString(g_hInst,BEGINNZELT,StdString,1024);
+		StdString = LoadString(BEGINNZELT);
 		MakeRohString(-1,-1,ZELT);
-		strcat(StdString, RohString);
+		StdString += RohString;
 		TextBereich[TXTTEXTFELD].Aktiv = true;
-		DrawString(StdString,(short)TextBereich[TXTTEXTFELD].rcText.left,
-						     (short)TextBereich[TXTTEXTFELD].rcText.top,2);
+		DrawString(StdString,TextBereich[TXTTEXTFELD].rcText.left,
+						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTZELT].Animation = true;
 		if ((Button==0) && (Push==1)) 
@@ -4129,12 +4143,12 @@ void MouseInPanel(short Button,short Push)
 	else if	((InRect(MousePosition.x,MousePosition.y,Bmp[BUTTBOOT].rcDes)) && 
 		     (HauptMenue == MEBAUEN) && (Bmp[BUTTBOOT].Phase != -1))
 	{
-		LoadString(g_hInst,BEGINNBOOT,StdString,1024);
+		StdString = LoadString(BEGINNBOOT);
 		MakeRohString(-1,-1,BOOT);
-		strcat(StdString, RohString);
+		StdString += RohString;
 		TextBereich[TXTTEXTFELD].Aktiv = true;
-		DrawString(StdString,(short)TextBereich[TXTTEXTFELD].rcText.left,
-						     (short)TextBereich[TXTTEXTFELD].rcText.top,2);
+		DrawString(StdString,TextBereich[TXTTEXTFELD].rcText.left,
+						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTBOOT].Animation = true;
 		if ((Button==0) && (Push==1)) 
@@ -4166,12 +4180,12 @@ void MouseInPanel(short Button,short Push)
 	else if	((InRect(MousePosition.x,MousePosition.y,Bmp[BUTTROHR].rcDes)) && 
 		     (HauptMenue == MEBAUEN) && (Bmp[BUTTROHR].Phase != -1))
 	{
-		LoadString(g_hInst,BEGINNROHR,StdString,1024);
+		StdString = LoadString(BEGINNROHR);
 		MakeRohString(-1,-1,ROHR);
-		strcat(StdString, RohString);
+		StdString += RohString;
 		TextBereich[TXTTEXTFELD].Aktiv = true;
-		DrawString(StdString,(short)TextBereich[TXTTEXTFELD].rcText.left,
-						     (short)TextBereich[TXTTEXTFELD].rcText.top,2);
+		DrawString(StdString,TextBereich[TXTTEXTFELD].rcText.left,
+						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTROHR].Animation = true;
 		if ((Button==0) && (Push==1)) 
@@ -4199,12 +4213,12 @@ void MouseInPanel(short Button,short Push)
 	else if	((InRect(MousePosition.x,MousePosition.y,Bmp[BUTTSOS].rcDes)) && 
 		     (HauptMenue == MEBAUEN) && (Bmp[BUTTSOS].Phase != -1))
 	{
-		LoadString(g_hInst,BEGINNSOS,StdString,1024);
+		StdString = LoadString(BEGINNSOS);
 		MakeRohString(-1,-1,SOS);
-		strcat(StdString, RohString);
+		StdString += RohString;
 		TextBereich[TXTTEXTFELD].Aktiv = true;
-		DrawString(StdString,(short)TextBereich[TXTTEXTFELD].rcText.left,
-						     (short)TextBereich[TXTTEXTFELD].rcText.top,2);
+		DrawString(StdString,TextBereich[TXTTEXTFELD].rcText.left,
+						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTSOS].Animation = true;
 		if ((Button==0) && (Push==1)) 
@@ -4232,12 +4246,12 @@ void MouseInPanel(short Button,short Push)
 	else if	((InRect(MousePosition.x,MousePosition.y,Bmp[BUTTHAUS1].rcDes)) && 
 		     (HauptMenue == MEBAUEN) && (Bmp[BUTTHAUS1].Phase != -1))
 	{
-		LoadString(g_hInst,BEGINNHAUS1,StdString,1024);
+		StdString = LoadString(BEGINNHAUS1);
 		MakeRohString(-1,-1,HAUS1);
-		strcat(StdString, RohString);
+		StdString += RohString;
 		TextBereich[TXTTEXTFELD].Aktiv = true;
-		DrawString(StdString,(short)TextBereich[TXTTEXTFELD].rcText.left,
-						     (short)TextBereich[TXTTEXTFELD].rcText.top,2);
+		DrawString(StdString,TextBereich[TXTTEXTFELD].rcText.left,
+						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTHAUS1].Animation = true;
 		if ((Button==0) && (Push==1)) 
@@ -4267,12 +4281,12 @@ void MouseInPanel(short Button,short Push)
 	else if	((InRect(MousePosition.x,MousePosition.y,Bmp[BUTTHAUS2].rcDes)) && 
 		     (HauptMenue == MEBAUEN) && (Bmp[BUTTHAUS2].Phase != -1))
 	{
-		LoadString(g_hInst,BEGINNHAUS2,StdString,1024);
+		StdString = LoadString(BEGINNHAUS2);
 		MakeRohString(-1,-1,HAUS2);
-		strcat(StdString, RohString);
+		StdString += RohString;
 		TextBereich[TXTTEXTFELD].Aktiv = true;
-		DrawString(StdString,(short)TextBereich[TXTTEXTFELD].rcText.left,
-						     (short)TextBereich[TXTTEXTFELD].rcText.top,2);
+		DrawString(StdString,TextBereich[TXTTEXTFELD].rcText.left,
+						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTHAUS2].Animation = true;
 		if ((Button==0) && (Push==1)) 
@@ -4304,12 +4318,12 @@ void MouseInPanel(short Button,short Push)
 	else if	((InRect(MousePosition.x,MousePosition.y,Bmp[BUTTHAUS3].rcDes)) && 
 		     (HauptMenue == MEBAUEN) && (Bmp[BUTTHAUS3].Phase != -1))
 	{
-		LoadString(g_hInst,BEGINNHAUS3,StdString,1024);
+		StdString = LoadString(BEGINNHAUS3);
 		MakeRohString(-1,-1,HAUS3);
-		strcat(StdString, RohString);
+		StdString += RohString;
 		TextBereich[TXTTEXTFELD].Aktiv = true;
-		DrawString(StdString,(short)TextBereich[TXTTEXTFELD].rcText.left,
-						     (short)TextBereich[TXTTEXTFELD].rcText.top,2);
+		DrawString(StdString,TextBereich[TXTTEXTFELD].rcText.left,
+						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTHAUS3].Animation = true;
 		if ((Button==0) && (Push==1)) 
@@ -4342,12 +4356,12 @@ void MouseInPanel(short Button,short Push)
 	else if	((InRect(MousePosition.x,MousePosition.y,Bmp[BUTTFEUERST].rcDes)) && 
 		     (HauptMenue == MEBAUEN) && (Bmp[BUTTFEUERST].Phase != -1))
 	{
-		LoadString(g_hInst,BEGINNFEUERSTELLE,StdString,1024);
+		StdString = LoadString(BEGINNFEUERSTELLE);
 		MakeRohString(-1,-1,FEUERSTELLE);
-		strcat(StdString, RohString);
+		StdString += RohString;
 		TextBereich[TXTTEXTFELD].Aktiv = true;
-		DrawString(StdString,(short)TextBereich[TXTTEXTFELD].rcText.left,
-						     (short)TextBereich[TXTTEXTFELD].rcText.top,2);
+		DrawString(StdString,TextBereich[TXTTEXTFELD].rcText.left,
+						     TextBereich[TXTTEXTFELD].rcText.top,2);
 		
 		Bmp[BUTTFEUERST].Animation = true;
 		if ((Button==0) && (Push==1)) 
@@ -4391,8 +4405,7 @@ void MouseInPanel(short Button,short Push)
 	}
 	else if	((InRect(MousePosition.x,MousePosition.y,Bmp[INVPAPIER].rcDes)) && (HauptMenue == MEINVENTAR))
 	{
-		for (i=ROHAST;i<=ROHSCHLEUDER;i++)
-		{
+		for (let i=ROHAST; i<=ROHSCHLEUDER; i++) {
 			if	(InRect(MousePosition.x,MousePosition.y,Bmp[i].rcDes) && (Guy.Inventar[i]>0))
 			{
 				if	((Button==0) && (Push==1)) 
@@ -4436,30 +4449,37 @@ void MouseInPanel(short Button,short Push)
 		TwoClicks = -1;
 	}
 }
-bool InDreieck(short X, short Y, short X0, short Y0, short X1, short Y1, short X3, short Y3)
+
+function InDreieck(X, Y, X0, Y0, X1, Y1, X3, Y3)
 {
-	float	x,y,x0,y0,x1,y1,x3,y3,a,b,c,d;
+	let x=X;
+	let y=Y;
+	let x0=X0;
+	let y0=Y0;
+	let x1=X1;
+	let y1=Y1;
+	let x3=X3;
+	let y3=Y3;
 	
-	x=(float)X;y=(float)Y;x0=(float)X0;y0=(float)Y0;x1=(float)X1;y1=(float)Y1;x3=(float)X3;y3=(float)Y3;
-	
-	c= (x-x1)/(x0-x1);
+	let c = (x-x1)/(x0-x1);
 	if (c<0) return false;
-	d= ((y-y3)*(x0-x1)-(x-x1)*(y0-y3))/((y1-y3)*(x0-x1));
+	let d = ((y-y3)*(x0-x1)-(x-x1)*(y0-y3))/((y1-y3)*(x0-x1));
 	if (d<0) return false;
-	b= ((y-y0)*(x1-x0)-(x-x0)*(y1-y0))/((x1-x0)*(y3-y1));
+	let b = ((y-y0)*(x1-x0)-(x-x0)*(y1-y0))/((x1-x0)*(y3-y1));
 	if (b<0) return false;
-	a= (x-x0)/(x1-x0)-b;
+	let a = (x-x0)/(x1-x0)-b;
 	if (a<0) return false;
 	return true;
 }
 
-bool InRect(short x,short y,RECT rcRect)
+function InRect(x, y, rcRect)
 {
 	if  ((x <= rcRect.right) &&	(x >= rcRect.left) &&
 		 (y <= rcRect.bottom) && (y >= rcRect.top))	return true;
 	return false;
 }
 
+/*
 inline DWORD RGB2DWORD(BYTE r, BYTE g, BYTE b)
 {
 	DWORD Erg = 0;
@@ -4487,7 +4507,9 @@ inline DWORD RGB2DWORD(BYTE r, BYTE g, BYTE b)
 	}
 	return Erg;
 }
+*/
 
+	/*
 inline void DWORD2RGB(DWORD color)
 {
 	if (ddpf.dwRBitMask == 63488)
@@ -4503,31 +4525,28 @@ inline void DWORD2RGB(DWORD color)
 		rgbStruct.b = (byte)((color & 0x001F) << 3);
 	}
 }
+*/
 
-void PutPixel(short x, short y, DWORD color, LPDDSURFACEDESC2 ddsd)
+function PutPixel(x, y, color, dest)
 {
-    WORD *pixels = (WORD *)ddsd->lpSurface;
-    //DWORD pitch = ddsd->dwWidth+2;
-	DWORD pitch = ddsd->lPitch>>1;
-	pixels[y*pitch + x] = (WORD)color; 
+	let data = dest.ctx.createImageData(1, 1);
+	data.data[0] = color[0];
+	data.data[1] = color[1];
+	data.data[2] = color[2];
+	data.data[3] = 255;
+	dest.ctx.putImageData(data, x, y);
 }
 
-void GetPixel(short x, short y, LPDDSURFACEDESC2 ddsd)
+function GetPixel(x, y, src)
 {
-    DWORD color;
-
-	WORD *pixels = (WORD *)ddsd->lpSurface;
-    //DWORD pitch = ddsd->dwWidth;
-   	DWORD pitch = ddsd->lPitch>>1;
-	color = pixels[y*pitch + x];
-
-	DWORD2RGB(color);
+	let data = src.ctx.getImageData(x, y, 1, 1);
+	return data.data;
 }
 
-void NeuesSpiel(bool neu)
+function NeuesSpiel(neu)
 {
-	short x,y;
-	bool LoadOK;
+	//short x,y;
+	let LoadOK = false;
 
 	InitStructs();
 	
@@ -4535,15 +4554,13 @@ void NeuesSpiel(bool neu)
 	
 	if ((!LoadOK) || (neu))
 	{
-		//F�r die Statusanzeige
+		//Für die Statusanzeige
 		rcRectdes.left		= 0;
 		rcRectdes.top		= 0;
 		rcRectdes.right		= MAXX;
 		rcRectdes.bottom	= MAXY;
-		ddbltfx.dwFillColor = RGB2DWORD(70,70,100);
-		lpDDSPrimary->Blt(&rcRectdes, null,null,DDBLT_COLORFILL, &ddbltfx);
-		ddbltfx.dwFillColor = RGB2DWORD(255,0,255);
-		lpDDSSchrift->Blt(&rcRectdes, null,null,DDBLT_COLORFILL, &ddbltfx);
+		fill_dest([70,70,100]);
+		fill_dest([255,0,255]);
 		
 		//Landschaft erzeugen
 		
@@ -4552,6 +4569,7 @@ void NeuesSpiel(bool neu)
 		rcRectdes.top		= 0;
 		rcRectdes.right		= MAXX;
 		rcRectdes.bottom	= MAXY;
+		// TODO: here
 		lpDDSPrimary->Blt(&rcRectdes,lpDDSSchrift,&rcRectdes,DDBLT_KEYSRC | DDBLT_WAIT,null);
 		Compute(200,600);
 		
