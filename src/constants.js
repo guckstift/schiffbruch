@@ -306,7 +306,9 @@ const SZABSPANN	 = 3;
 const SZGERETTET	 = 4;
 const SZLOGO		 = 5;
 
-const ZWEID = (x = 0, y = 0) => ({x, y});
+const ZWEID = (x = 0, y = 0) => ({
+	x, y,
+});
 
 //Die Eckkoordinaten der Kacheln (Achtung: mit überlappendem Rand)
 const EckKoor = [
