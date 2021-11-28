@@ -132,11 +132,14 @@ let cur_mouse_state = {
 };
 let keymap = {};
 
-function copy_zweid(z) {
-    return ZWEID(z.x, z.y);
+function copy_zweid(d, s)
+{
+    d.x = s.x;
+    d.y = s.y;
 }
 
-function rand() {
+function rand()
+{
     return Math.floor(Math.random() * 0xffFFffFF);
 }
 
@@ -206,6 +209,7 @@ function InitDDraw() {
     lpDDSKarte = createSurface(2 * MAXXKACH, 2 * MAXYKACH);
     //In diese Surface soll die Landschaft gespeichert werden
     lpDDSScape = createSurface(MAXSCAPEX, MAXSCAPEY);
+    //document.body.appendChild(lpDDSScape);
     //In diese Surface soll die Schrift gespeichert werden
     lpDDSSchrift = createSurface(MAXX, MAXY);
     //In diese Surface soll die Schatzkarte gespeichert werden
@@ -304,7 +308,7 @@ function LoadGame() {
 }
 
 function Blitten(lpDDSVon, lpDDSNach, Transp) {
-    // TODO: handle transparency
+    // TODO: handle transparency?
     lpDDSNach.ctx.drawImage(
         lpDDSVon,
         rcRectsrc.left,
@@ -468,10 +472,14 @@ function CheckMouse() {
         MouseInPanel(Button, Push);
 }
 
-function CheckKey() {
+function CheckKey()
+{
     if (Spielzustand === SZLOGO) {
         if (keymap.Escape || keymap.Return || keymap[" "]) //Logo Abbrechen
         {
+            keymap.Escape = false;
+            keymap.Return = false;
+            keymap[" "] = false;
             StopSound(WAVLOGO);
             NeuesSpiel(false);
             return 2;
@@ -509,7 +517,7 @@ function CheckKey() {
             Spielzustand = SZSPIEL;
             Guy.PosAlt = Guy.PosScreen;
             SaveGame();
-            return (1);
+            return 1;
         }
     } else if (Spielzustand === SZGERETTET) {
         if (keymap.Escape || keymap.Return || keymap[" "]) {
@@ -546,7 +554,7 @@ function CheckKey() {
     } else if (Spielzustand === SZABSPANN) {
         if (keymap.Escape || keymap.Return || keymap[" "]) {
             StopSound(WAVABSPANN);
-            return (0);
+            return 0;
         }
     }
     return 1;
@@ -623,7 +631,8 @@ function LimitScroll() {
         Camera.y = ScapeGrenze.bottom - rcSpielflaeche.bottom;
 }
 
-function GetKachel(PosX, PosY) {
+function GetKachel(PosX, PosY)
+{
     let Erg = ZWEID();
 
     for (let y = 0; y < MAXYKACH; y++) {
@@ -704,7 +713,8 @@ function MakeRohString(x, y, Objekt) {
     }
 }
 
-function MouseInSpielflaeche(Button, Push, xDiff, yDiff) {
+function MouseInSpielflaeche(Button, Push, xDiff, yDiff)
+{
     let Text = "";
     let TextTmp = "";
 
@@ -1497,6 +1507,7 @@ function fill_dest(color, dest = null) {
 }
 
 function NeuesSpiel(neu) {
+    console.log("NeuesSpiel");
     let LoadOK = false;
 
     InitStructs();
@@ -1607,9 +1618,12 @@ function NeuesSpiel(neu) {
     LAnimation = Anitmp;
     Generate(); //Und nochmal ohne das die Gegend entdeckt ist
     Guy.PosAlt = Guy.PosScreen;
+    console.log("NeuesSpiel...done");
 }
 
-function Generate() {
+function Generate()
+{
+    console.log("generate");
     //Die Kartehintergrundfarbe
     rcRectdes.left = 0;
     rcRectdes.top = 0;
@@ -1720,6 +1734,7 @@ function Generate() {
             }
         }
     }
+    console.log("done");
 }
 
 function Zeige() {
@@ -1953,7 +1968,7 @@ function AbspannCalc() {
 
             if (Bmp[AbspannListe[AbspannNr][k].Bild].rcDes.top < MAXY - 400) {
                 if ((!AbspannListe[AbspannNr][k + 1].Aktiv) &&
-                    (AbspannListe[AbspannNr][k + 1].Bild != -1))
+                    (AbspannListe[AbspannNr][k + 1].Bild !== -1))
                     AbspannListe[AbspannNr][k + 1].Aktiv = true;
             }
             if (Bmp[AbspannListe[AbspannNr][k].Bild].rcDes.top < 0) {
@@ -2003,7 +2018,8 @@ function ZeichneBilder(x, y, i, Ziel, Reverse, Frucht) {
     Blitten(Bmp[i].Surface, lpDDSBack, true);
 }
 
-function ZeichneObjekte() {
+function ZeichneObjekte()
+{
     for (let y = 0; y < MAXYKACH; y++) {
         for (let x = 0; x < MAXXKACH; x++) {
             let Guyzeichnen = false;
@@ -2059,12 +2075,15 @@ function ZeichneObjekte() {
                     (Scape[x][y].Objekt >= ZELT)) //Bäume und Früchte (und alle anderen Objekte) malen
                 {
                     //Sound abspielen
-                    if (((Guy.Pos.x - 1 <= x) && (x <= Guy.Pos.x + 1)) &&
+                    let Obj = Scape[x][y].Objekt;
+                    let GuyObj = Scape[Guy.Pos.x][Guy.Pos.y].Objekt;
+                    if (Obj !== -1 && GuyObj !== -1 &&
+                        ((Guy.Pos.x - 1 <= x) && (x <= Guy.Pos.x + 1)) &&
                         ((Guy.Pos.y - 1 <= y) && (y <= Guy.Pos.y + 1))) {
                         if ((x === Guy.Pos.x) && (y === Guy.Pos.y))
-                            PlaySound(Bmp[Scape[x][y].Objekt].Sound, 100);
-                        else if (Bmp[Scape[x][y].Objekt].Sound !== Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Sound)
-                            PlaySound(Bmp[Scape[x][y].Objekt].Sound, 90);
+                            PlaySound(Bmp[Obj].Sound, 100);
+                        else if (Bmp[Obj].Sound !== Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Sound)
+                            PlaySound(Bmp[Obj].Sound, 90);
                     }
                     if (Guyzeichnen) {
                         if ((Guy.PosScreen.y) < (Scape[x][y].yScreen + Scape[x][y].ObPos.y
@@ -2128,7 +2147,8 @@ function ZeichnePapier() {
     Blitten(lpDDSPapier, lpDDSBack, true);
 }
 
-function ZeichnePanel() {
+function ZeichnePanel()
+{
     let Ringtmp;	//für die Sonnenanzeige
 
     //Karte
@@ -2153,7 +2173,7 @@ function ZeichnePanel() {
     rcRectsrc.left = 205;
     rcRectsrc.top = 0;
     rcRectsrc.right = 205 + 65;
-    rcRectsrc.bottom = 0 + 65;
+    rcRectsrc.bottom = 65;
     rcRectdes.left = rcKarte.left + (Camera.x + 2 * Camera.y) / (KXPIXEL / 2) - MAXXKACH - 2;
     rcRectdes.top = rcKarte.top + (2 * Camera.y - Camera.x) / (KXPIXEL / 2) + MAXYKACH - 21 - 2;
     rcRectdes.right = rcRectdes.left + 65;
@@ -2719,8 +2739,8 @@ function Compute(MinGroesse, MaxGroesse) //Groesse der Insel in Anzahl der Landk
 {
     let gefunden;
 
-    let Mittex = MAXXKACH / 2 - 1;
-    let Mittey = MAXYKACH / 2 - 1;
+    let Mittex = Math.floor(MAXXKACH / 2) - 1;
+    let Mittey = Math.floor(MAXYKACH / 2) - 1;
 
     for (let m = 0; m < 1000; m++)	//100mal wiederholen, oder bis eine geeignete Insel gefunden ist
     {
@@ -3550,7 +3570,8 @@ function Fluss() //Anzahl der Flüsse und der minimale Länge
     }
 }
 
-function Baeume(Prozent) {
+function Baeume(Prozent)
+{
     let Pos = ZWEID(); //Da steht der Baum
     let einGrosserBaum = false;	//gibt es bereits einen großen Baum
 
@@ -3560,7 +3581,7 @@ function Baeume(Prozent) {
             if ((Scape[x][y].Objekt !== -1) ||
                 ((Scape[x][y].Art === 3) && (Scape[x][y].Typ === 0))) continue;
             //Wenn schon ein Objekt da ist oder Treibsand ist, dann mit nächsten Teil weitermachen
-            if (rand() % (100 / Prozent) !== 0) continue; //Die Wahrscheinlichkeit für einen Baum bestimmen
+            if (rand() % Math.floor(100 / Prozent) !== 0) continue; //Die Wahrscheinlichkeit für einen Baum bestimmen
             while (1) {
                 Pos.x = rand() % KXPIXEL;
                 Pos.y = rand() % KYPIXEL;
@@ -3733,7 +3754,8 @@ function RotateRight(Dir)	//Richtungskoordinate rechtsrum umrechnen
     return Dir;
 }
 
-function LineIntersect(LineStartPos, Pos, store) {
+function LineIntersect(LineStartPos, Pos, store)
+{
     let Sx, Sy;
     let erg = false;
 
@@ -3787,13 +3809,14 @@ function LineIntersect(LineStartPos, Pos, store) {
     return erg;
 }
 
-function FindTheWay() {
+function FindTheWay()
+{
     let Plist = Array(MAXXKACH * MAXYKACH); // Besuchte Punkte merken
     let Llist = Array(MAXXKACH * MAXYKACH); // Länge vom Punkt zum Ziel
 
-    let ShPos;
-    let BestLine;
-    let ShortKoor;
+    let ShPos = ZWEID();
+    let BestLine = ZWEID();
+    let ShortKoor = ZWEID();
 
     for (let AI = 0; AI < MAXYKACH; AI++) {
         for (let BI = 0; BI < MAXXKACH; BI++) {
@@ -3806,14 +3829,15 @@ function FindTheWay() {
     RouteLaenge = 0;
 
     let PCnt = 1;
-    Plist[0] = copy_zweid(RouteStart);
+    copy_zweid(Plist[0], RouteStart);
     let DiffX = (RouteStart.x - RouteZiel.x);
     let DiffY = (RouteStart.y - RouteZiel.y);
     Llist[0] = (DiffX * DiffX) + (DiffY * DiffY);
 
     LenMap[RouteStart.x][RouteStart.y] = 0;
-    let Pos = copy_zweid(RouteStart);
-    NewPos = copy_zweid(Pos);
+    let Pos = ZWEID();
+    copy_zweid(Pos, RouteStart);
+    copy_zweid(NewPos, Pos);
     let GoalReached = false;
     while ((!GoalReached) && (PCnt > 0)) {
         //den mit der kürzesten Entfernung zum Ziel finden (der in der Liste ist)
@@ -3824,18 +3848,18 @@ function FindTheWay() {
             }
         }
         //Mit dem Nächsten weitermachen
-        Pos = copy_zweid(Plist[Shortest]);
+        copy_zweid(Pos, Plist[Shortest]);
         //Den kürzesten merken
         if ((ShortEntf > Llist[Shortest]) || (ShortEntf === -1)) {
             ShortEntf = Llist[Shortest];
-            ShortKoor = copy_zweid(Plist[Shortest]);
+            copy_zweid(ShortKoor, Plist[Shortest]);
         }
 
         //Den Nächsten aus der Liste löschen
         Plist[Shortest] = Plist[PCnt - 1];
         Llist[Shortest] = Llist[PCnt - 1];
         PCnt--;
-        NewPos = copy_zweid(Pos);
+        copy_zweid(NewPos, Pos);
         let Dir = 2;
         NewPos.y--; //Oben nachschauen anfangen
         for (let BI = 0; BI <= 3; BI++) //In jede Richtung schauen
@@ -3846,7 +3870,7 @@ function FindTheWay() {
                 // Wieviele Schritte braucht man um zu diesem Feld zu kommen
                 let StepCnt = LenMap[Pos.x][Pos.y] + 1;
                 LenMap[NewPos.x][NewPos.y] = StepCnt;
-                Plist[PCnt] = copy_zweid(NewPos);
+                copy_zweid(Plist[PCnt], NewPos);
                 //Die Entfernung in die Liste aufnehmen
                 DiffX = (NewPos.x - RouteZiel.x);
                 DiffY = (NewPos.y - RouteZiel.y);
@@ -3867,34 +3891,36 @@ function FindTheWay() {
 
         if (FindTheWay()) return true;
         else return false;
-    } else if (GoalReached) //Punkt rückwärts durchgehen und Abkürzungen finden
+    }
+    else if (GoalReached) //Punkt rückwärts durchgehen und Abkürzungen finden
     {
         // TODO: what the heck does this code? it hangs always
-        Pos = copy_zweid(RouteZiel);
-        let LineStartPos = copy_zweid(Pos);
+        copy_zweid(Pos, RouteZiel);
+        let LineStartPos = ZWEID();
+        copy_zweid(LineStartPos, Pos);
         while ((Pos.x !== RouteStart.x) || (Pos.y !== RouteStart.y)) {
-            NewPos = copy_zweid(Pos);
+            copy_zweid(NewPos, Pos);
             let ShStep = 65535;
             Dir = 2;
             NewPos.y--; //Zuerst nach oben probieren
             for (let AI = 0; AI <= 3; AI++) {
                 if (LenMap[NewPos.x][NewPos.y] < ShStep) {
                     ShStep = LenMap[NewPos.x][NewPos.y];
-                    ShPos = copy_zweid(NewPos);
+                    copy_zweid(ShPos, NewPos);
                 }
                 Dir = RotateRight(Dir);
             }
-            Pos = copy_zweid(ShPos);
+            copy_zweid(Pos, ShPos);
 
             // Linie beste Linie ohne Unterbrechung finden
             if (!LineIntersect(LineStartPos, Pos, false)) {
-                BestLine = copy_zweid(Pos);
+                copy_zweid(BestLine, Pos);
             }
 
             if ((Pos.x === RouteStart.x) && (Pos.y === RouteStart.y)) {
-                Pos = copy_zweid(BestLine);
+                copy_zweid(Pos, BestLine);
                 LineIntersect(LineStartPos, Pos, true);
-                LineStartPos = copy_zweid(Pos);
+                copy_zweid(LineStartPos, Pos);
             }
         }
         Route[RouteLaenge].x = RouteStart.x;
@@ -4063,13 +4089,11 @@ function CheckBenutze(Objekt) {
 }
 
 function Animationen() {
-    let loop; //Zwischenspeicher
-
     for (let y = 0; y < MAXYKACH; y++) {
         for (let x = 0; x < MAXXKACH; x++) {
             let j = Scape[x][y].Objekt;
             if ((j === -1) || (!Bmp[j].Animation)) continue;
-            let i = LastBild / Bmp[j].Geschwindigkeit;
+            let i = Math.floor(LastBild / Bmp[j].Geschwindigkeit);
             if (i < 1) i = 1;
             if (Bild % i === 0) {
                 if ((j >= BAUM1DOWN) && (j <= BAUM4DOWN) &&  //Die Baumfällenanimation nur ein mal abspielen
@@ -4082,7 +4106,7 @@ function Animationen() {
 
     for (let j = BUTTGITTER; j <= BUTTDESTROY; j++) {
         if (!Bmp[j].Animation) continue;
-        let i = LastBild / Bmp[j].Geschwindigkeit;
+        let i = Math.floor(LastBild / Bmp[j].Geschwindigkeit);
         if (i < 1) i = 1;
         if (Bild % i === 0) {
             Bmp[j].Phase++;
@@ -4096,8 +4120,9 @@ function Animationen() {
     if (((Guy.Zustand >= GUYLINKS) && (Guy.Zustand <= GUYUNTEN)) ||
         ((Guy.Zustand >= GUYBOOTLINKS) && (Guy.Zustand <= GUYBOOTUNTEN)) ||
         (Guy.Zustand === GUYSCHIFF) || (Guy.Zustand === GUYSCHWIMMEN)) {
-        let i = LastBild / Bmp[Guy.Zustand].Geschwindigkeit;
+        let i = Math.floor(LastBild / Bmp[Guy.Zustand].Geschwindigkeit);
         if (i < 1) i = 1;
+        let loop; //Zwischenspeicher
         if (LastBild - Bmp[Guy.Zustand].Geschwindigkeit < 0) loop = 2; else loop = 1;
         if (BootsFahrt) loop = loop * 2;
         for (let k = 0; k < loop; k++) if ((Bild % i === 0) && (Guy.Aktiv)) CalcGuyKoor();
@@ -4106,7 +4131,7 @@ function Animationen() {
     //sonstige Aktionen
     if ((Guy.Zustand >= GUYSUCHEN) && (Guy.Zustand <= GUYSCHLEUDER) &&
         (Bmp[Guy.Zustand].Phase !== Bmp[Guy.Zustand].Anzahl)) {
-        let i = LastBild / Bmp[Guy.Zustand].Geschwindigkeit;
+        let i = Math.floor(LastBild / Bmp[Guy.Zustand].Geschwindigkeit);
         if (i < 1) i = 1;
         if (Bild % i === 0) {
             Bmp[Guy.Zustand].Phase++;
@@ -4233,86 +4258,71 @@ function CalcKoor() {
     }
 }
 
-function Refresh() {
-    if (Spielzustand === SZNICHTS) {
-        Spielzustand = SZLOGO;
-        InitStructs(); //Nur zum Wavinitialisieren
+function frame(now)
+{
+    requestAnimationFrame(frame);
+
+    //console.log("frame spielzustand = ", Spielzustand);
+    frametime.innerText = "fps " + LastBild;
+
+    Bild++;
+    let Zeitsave = now / 1000;
+    const test_period_sec = 5;
+    if (Zeit + test_period_sec < Zeitsave) {
+        Zeit = Zeitsave;
+        LastBild = (LastBild + Bild / test_period_sec) / 2;
+        Bild = 0;
+        if (LastBild === 0) LastBild = 60;
     }
-
-    requestAnimationFrame(main_loop);
-
-    function main_loop() {
-        console.log("frame");
-        requestAnimationFrame(main_loop);
-        Bild++;
-        let Zeitsave = Date.now() / 1000;
-        if (Zeit + 5 < Zeitsave) {
-            Zeit = Zeitsave;
-            LastBild = (LastBild + Bild / 5) / 2;
-            Bild = 0;
-            if (LastBild === 0) LastBild = 50;
-        }
-        if (Spielzustand === SZLOGO) {
-            if (CheckKey() === 2) return;		//Das Keyboard abfragen
-            ZeigeLogo(); //Bild auffrischen
-
-        } else if ((Spielzustand === SZINTRO) || (Spielzustand === SZGERETTET)) {
-            if (CheckKey() === 0) return 0;		//Das Keyboard abfragen
-
-            Animationen();  //Animationen weiterschalten
-            if (!Guy.Aktiv) Event(Guy.Aktion); //Aktionen starten
-            if (Guy.Pos.x !== RouteStart.x) ZeigeIntro(); //Bild auffrischen (if-Abfrage nötig (seltsamerweise))
-
-        } else if (Spielzustand === SZSPIEL) {
-            if ((Stunden >= 12) && (Minuten !== 0) && (Guy.Aktion !== AKTAGENDE))	//Hier ist der Tag zuende
-            {
-                if (Guy.Aktion === AKAUSSCHAU) Chance -= 1 + Scape[Guy.Pos.x][Guy.Pos.y].Hoehe;
-                Guy.Aktiv = false;
-                Guy.AkNummer = 0;
-                Guy.Aktion = AKTAGENDE;
-            }
-
-            CheckSpzButton();					//Die Spezialknöpfe umschalten
-            if (MouseAktiv) CheckMouse();		//Den MouseZustand abchecken
-            if (CheckKey() === 0) return 0;		//Das Keyboard abfragen
-            LimitScroll();						//Das Scrollen an die Grenzen der Landschaft anpassen
-            Animationen();						//Die Animationsphasen weiterschalten
-            if (!Guy.Aktiv) Event(Guy.Aktion);  //Die Aktionen starten
-            Zeige();//Das Bild zeichnen
-            if (Spielbeenden) return 0;
-
-        } else if (Spielzustand === SZABSPANN) {
-            if (CheckKey() === 0) return 0;
-            AbspannCalc();
-            ZeigeAbspann();
-        }
+    if (Spielzustand === SZLOGO) {
+        if (CheckKey() === 2) return;		//Das Keyboard abfragen
+        ZeigeLogo(); //Bild auffrischen
     }
+    else if ((Spielzustand === SZINTRO) || (Spielzustand === SZGERETTET)) {
+        if (CheckKey() === 0) return 0;		//Das Keyboard abfragen
 
-    return 1;
+        Animationen();  //Animationen weiterschalten
+        if (!Guy.Aktiv) Event(Guy.Aktion); //Aktionen starten
+        if (Guy.Pos.x !== RouteStart.x) ZeigeIntro(); //Bild auffrischen (if-Abfrage nötig (seltsamerweise))
+
+    }
+    else if (Spielzustand === SZSPIEL) {
+        if ((Stunden >= 12) && (Minuten !== 0) && (Guy.Aktion !== AKTAGENDE))	//Hier ist der Tag zuende
+        {
+            if (Guy.Aktion === AKAUSSCHAU) Chance -= 1 + Scape[Guy.Pos.x][Guy.Pos.y].Hoehe;
+            Guy.Aktiv = false;
+            Guy.AkNummer = 0;
+            Guy.Aktion = AKTAGENDE;
+        }
+
+        CheckSpzButton();					//Die Spezialknöpfe umschalten
+        if (MouseAktiv) CheckMouse();		//Den MouseZustand abchecken
+        if (CheckKey() === 0) return 0;		//Das Keyboard abfragen
+        LimitScroll();						//Das Scrollen an die Grenzen der Landschaft anpassen
+        Animationen();						//Die Animationsphasen weiterschalten
+        if (!Guy.Aktiv) Event(Guy.Aktion);  //Die Aktionen starten
+        Zeige();//Das Bild zeichnen
+        if (Spielbeenden) return 0;
+
+    } else if (Spielzustand === SZABSPANN) {
+        if (CheckKey() === 0) return 0;
+        AbspannCalc();
+        ZeigeAbspann();
+    }
 }
 
-/*
- * doInit - do work required for every instance of the application:
- *                create the window, initialize data
- */
-function doInit(hInstance, nCmdShow) {
+function main()
+{
     canvas = document.querySelector("#canvas");
+    canvas.oncontextmenu = () => false;
     lpDDSBack = canvas;
     lpDDSPrimary = canvas;
     InitDInput();
     InitDDraw();
     InitDSound();
-
-    setInterval(() => {
-        Refresh(); // if return value is 0, then destroy
-    }, 1000); //Provisorisch
+    Spielzustand = SZLOGO;
+    InitStructs();
+    requestAnimationFrame(frame);
 }
 
-/*
- * WinMain - initialization, message loop
- */
-function main() {
-    doInit();
-}
-
-window.onload = main;
+addEventListener("load", main);

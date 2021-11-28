@@ -1098,7 +1098,7 @@ function InitStructs()
     Bmp[WRACK2].Geschwindigkeit = 5;
     Bmp[WRACK2].Phase = 0;
 
-    //Fr�chte
+    //Früchte
     //Busch
     Bmp[BUSCH].rcSrc.left = 81;
     Bmp[BUSCH].rcSrc.top = 0;
@@ -2238,9 +2238,10 @@ function InitStructs()
     TwoClicks = -1;
     Nacht	= false;
     Frage = -1;
-    LastBild = 100;
+    LastBild = 60;
     Bild = 0;
-    Zeit = Date.now() / 1000;
+    //Zeit = Date.now() / 1000;
+    Zeit = performance.now() / 1000;
     Spielbeenden = false;
     MousePosition.x = MAXX /2;
     MousePosition.y = MAXY /2;
