@@ -607,9 +607,9 @@ const TerrainInfoLabels = [
 
 let RECT = (left = 0, top = 0, right = 0, bottom = 0) => ({
 	left, top, right, bottom,
-	copy: function() {
-		return RECT(this.left, this.top, this.right, this.bottom);
-	},
+	// copy: function() {
+	// 	return RECT(this.left, this.top, this.right, this.bottom);
+	// },
 });
 
 //Bereiche

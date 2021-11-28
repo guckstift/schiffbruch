@@ -86,12 +86,12 @@ let RGBSTRUCT = (r = 0, g = 0, b = 0) => ({
 
 let Guy = {
     Aktiv: false,//Ist er aktiv?
-    Aktion: 0, //Welche Aktion (Suchen, fischen ...) (�bergeordnet �ber Zustand)
+    Aktion: 0, //Welche Aktion (Suchen, fischen ...) (übergeordnet über Zustand)
     Pos: ZWEID(),	// KachelPosition der Spielfigur
-    PosAlt: ZWEID(), //Die urspr�nglich Position in der Kachel (f�r die Aktionsprozeduren)
+    PosAlt: ZWEID(), //Die ursprünglich Position in der Kachel (für die Aktionsprozeduren)
     PosScreen: ZWEID(), // Absolute Position der Spielfigur
     Zustand: 0, //Was macht er gerade? (Animation)(linkslaufen,rechtslaufen...,angeln..)
-    AkNummer: 0, //Bei welcher Aktion (f�r die Aktionsprozeduren)
+    AkNummer: 0, //Bei welcher Aktion (für die Aktionsprozeduren)
     Resource: [0, 0, 0],	//Wieviel Wasservorrat usw
     Inventar: Array(BILDANZ).fill(0), //Welche Rohstoffe usw. besitzt man
 };
@@ -138,12 +138,21 @@ function copy_zweid(d, s)
     d.y = s.y;
 }
 
+function copy_rect(d, s)
+{
+    d.left = s.left;
+    d.right = s.right;
+    d.top = s.top;
+    d.bottom = s.bottom;
+}
+
 function rand()
 {
     return Math.floor(Math.random() * 0xffFFffFF);
 }
 
-function loadImage(alias) {
+function loadImage(alias)
+{
     let url = BMP_FILENAMES[alias];
     let img = document.createElement("img");
     img.is_ready = false;
@@ -154,7 +163,8 @@ function loadImage(alias) {
     return img;
 }
 
-function createSurface(w, h) {
+function createSurface(w, h)
+{
     let off = document.createElement("canvas");
     off.width = w;
     off.height = h;
@@ -162,11 +172,13 @@ function createSurface(w, h) {
     return off;
 }
 
-function LoadString(id) {
+function LoadString(id)
+{
     return messages[id];
 }
 
-function InitDDraw() {
+function InitDDraw()
+{
     console.log("InitDDraw");
     // Set the video mode to 800x600
     canvas.width = MAXX;
@@ -217,13 +229,15 @@ function InitDDraw() {
     console.log("...done");
 }
 
-function InitDSound() {
+function InitDSound()
+{
     console.log("InitDSound");
     audioCtx = new AudioContext();
     console.log("...done");
 }
 
-function LoadSound(Sound) {
+function LoadSound(Sound)
+{
     fetch(Wav[Sound].Dateiname)
         .then(response => response.arrayBuffer())
         .then(buffer => audioCtx.decodeAudioData(buffer))
@@ -560,7 +574,8 @@ function CheckKey()
     return 1;
 }
 
-function AddTime(h, m) {
+function AddTime(h, m)
+{
     Stunden += h;
     Minuten += m;
     if (Minuten >= 60) {
@@ -620,7 +635,8 @@ function AddResource(Art, Anzahl) //Fügt wassser usw hinzu
     }
 }
 
-function LimitScroll() {
+function LimitScroll()
+{
     if (Camera.x < ScapeGrenze.left)
         Camera.x = ScapeGrenze.left;
     if (Camera.x + rcSpielflaeche.right > ScapeGrenze.right)
@@ -665,7 +681,8 @@ function GetKachel(PosX, PosY)
     return Erg;
 }
 
-function MakeRohString(x, y, Objekt) {
+function MakeRohString(x, y, Objekt)
+{
     let TmpString = "";
     let keinRohstoff = true;
 
@@ -818,13 +835,15 @@ function MouseInSpielflaeche(Button, Push, xDiff, yDiff)
     }
 }
 
-function ButtAniAus() {
+function ButtAniAus()
+{
     for (let i = BUTTGITTER; i <= BUTTDESTROY; i++) {
         Bmp[i].Animation = false;
     }
 }
 
-function MouseInPanel(Button, Push) {
+function MouseInPanel(Button, Push)
+{
     let mx, my;	//Mauskoordinaten in Minimap
 
     //wenn die Maus in der Minimap ist ->
@@ -1448,7 +1467,8 @@ function MouseInPanel(Button, Push) {
     }
 }
 
-function InDreieck(X, Y, X0, Y0, X1, Y1, X3, Y3) {
+function InDreieck(X, Y, X0, Y0, X1, Y1, X3, Y3)
+{
     let x = X;
     let y = Y;
     let x0 = X0;
@@ -1469,12 +1489,14 @@ function InDreieck(X, Y, X0, Y0, X1, Y1, X3, Y3) {
     return true;
 }
 
-function InRect(x, y, rcRect) {
+function InRect(x, y, rcRect)
+{
     return (x <= rcRect.right) && (x >= rcRect.left) &&
         (y <= rcRect.bottom) && (y >= rcRect.top);
 }
 
-function PutPixel(x, y, color, dest) {
+function PutPixel(x, y, color, dest)
+{
     let offset = 4 * (x + y * dest.width);
     dest.data.data[offset] = color[0];
     dest.data.data[offset + 1] = color[1];
@@ -1482,20 +1504,24 @@ function PutPixel(x, y, color, dest) {
     dest.data.data[offset + 3] = 255;
 }
 
-function lock_canvas(src) {
+function lock_canvas(src)
+{
     src.data = src.ctx.getImageData(0, 0, src.width, src.height);
 }
 
-function upload_canvas(src) {
+function upload_canvas(src)
+{
     src.ctx.putImageData(src.data, 0, 0)
 }
 
-function GetPixel(x, y, src) {
+function GetPixel(x, y, src)
+{
     let offset = 4 * (x + y * src.width);
     return src.data.data.slice(offset, offset + 4);
 }
 
-function fill_dest(color, dest = null) {
+function fill_dest(color, dest = null)
+{
     if (dest === null) dest = lpDDSBack;
     ctx.fillStyle = "rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")";
     dest.ctx.fillRect(
@@ -1506,7 +1532,8 @@ function fill_dest(color, dest = null) {
     );
 }
 
-function NeuesSpiel(neu) {
+function NeuesSpiel(neu)
+{
     console.log("NeuesSpiel");
     let LoadOK = false;
 
@@ -1623,7 +1650,6 @@ function NeuesSpiel(neu) {
 
 function Generate()
 {
-    console.log("generate");
     //Die Kartehintergrundfarbe
     rcRectdes.left = 0;
     rcRectdes.top = 0;
@@ -1734,10 +1760,10 @@ function Generate()
             }
         }
     }
-    console.log("done");
 }
 
-function Zeige() {
+function Zeige()
+{
     rcRectsrc.left = Camera.x + rcSpielflaeche.left;
     rcRectsrc.top = Camera.y + rcSpielflaeche.top;
     rcRectsrc.right = Camera.x + rcSpielflaeche.right;
@@ -1776,8 +1802,8 @@ function Zeige() {
     //Die Textsurface blitten
     for (let i = 0; i < TEXTANZ; i++) {
         if (!TextBereich[i].Aktiv) continue; //Die nicht aktiven Felder auslassen
-        rcRectsrc = TextBereich[i].rcText;
-        rcRectdes = TextBereich[i].rcText;
+        copy_rect(rcRectsrc, TextBereich[i].rcText);
+        copy_rect(rcRectdes, TextBereich[i].rcText);
         Blitten(lpDDSSchrift, lpDDSBack, true);
     }
     //Alles schwarz übermalen und nur das Papier mit Text anzeigen
@@ -1790,8 +1816,8 @@ function Zeige() {
 
         if (PapierText !== -1) {
             ZeichnePapier();
-            rcRectsrc = TextBereich[TXTPAPIER].rcText;
-            rcRectdes = TextBereich[TXTPAPIER].rcText;
+            copy_rect(rcRectsrc, TextBereich[TXTPAPIER].rcText);
+            copy_rect(rcRectdes, TextBereich[TXTPAPIER].rcText);
             Blitten(lpDDSSchrift, lpDDSBack, true);
         }
         Fade(100, 100, 100);
@@ -1807,7 +1833,9 @@ function Zeige() {
     if (Nacht) Fade(100, 100, 100); //Das muss hier stehen, damit man die Textnachricht in der Nacht lesen kann
 }
 
-function ZeigeIntro() {
+function ZeigeIntro()
+{
+    console.log("zeig intro ", Camera);
     rcRectdes.left = 0;
     rcRectdes.top = 0;
     rcRectdes.right = MAXX;
@@ -1823,6 +1851,7 @@ function ZeigeIntro() {
     rcRectdes.right = rcSpielflaeche.right;
     rcRectdes.bottom = rcSpielflaeche.bottom;
 
+    console.log(rcRectsrc, rcRectdes, rcRectsrc === rcRectdes);
     Blitten(lpDDSScape, lpDDSBack, false); //Landschaft zeichnen
 
     ZeichneObjekte();
@@ -1832,13 +1861,14 @@ function ZeigeIntro() {
     //Die Textsurface blitten
     for (let i = 0; i < TEXTANZ; i++) {
         if (!TextBereich[i].Aktiv) continue; //Die nicht aktiven Felder auslassen
-        rcRectsrc = TextBereich[i].rcText;
-        rcRectdes = TextBereich[i].rcText;
+        copy_rect(rcRectsrc, TextBereich[i].rcText);
+        copy_rect(rcRectdes, TextBereich[i].rcText);
         Blitten(lpDDSSchrift, lpDDSBack, true);
     }
 }
 
-function ZeigeAbspann() {
+function ZeigeAbspann()
+{
     //HRESULT				ddrval;
     //short				z;
 
@@ -1868,7 +1898,7 @@ function ZeigeAbspann() {
                 );
         }
     } else if (AbspannZustand === 1) {
-        rcRectsrc = Bmp[AbspannNr].rcSrc;
+        copy_rect(rcRectsrc, Bmp[AbspannNr].rcSrc);
         rcRectsrc.top += Bmp[AbspannNr].Phase * Bmp[AbspannNr].Hoehe;
         rcRectsrc.bottom = rcRectsrc.top + Bmp[AbspannNr].Hoehe;
 
@@ -1905,7 +1935,8 @@ function ZeigeAbspann() {
     }
 }
 
-function ZeigeLogo() {
+function ZeigeLogo()
+{
     //HRESULT				ddrval;
     //short				z;
 
@@ -1930,7 +1961,8 @@ function ZeigeLogo() {
     PlaySound(WAVLOGO, 100);
 }
 
-function AbspannBlt(Bild, Prozent) {
+function AbspannBlt(Bild, Prozent)
+{
     lock_canvas(lpDDSBack);
 
     for (let x = 0; x < Bmp[Bild].Breite; x++) {
@@ -1958,7 +1990,8 @@ function AbspannBlt(Bild, Prozent) {
     upload_canvas(lpDDSBack);
 }
 
-function AbspannCalc() {
+function AbspannCalc()
+{
     if (AbspannZustand === 0) {
         for (let k = 1; k < 10; k++) {
             if (AbspannListe[AbspannNr][k].Bild === -1) break;
@@ -1999,11 +2032,12 @@ function AbspannCalc() {
     }
 }
 
-function ZeichneBilder(x, y, i, Ziel, Reverse, Frucht) {
+function ZeichneBilder(x, y, i, Ziel, Reverse, Frucht)
+{
     let Phase;
 
     if (Frucht === -1) Phase = Bmp[i].Phase; else Phase = Frucht;
-    rcRectsrc = Bmp[i].rcSrc.copy();
+    copy_rect(rcRectsrc, Bmp[i].rcSrc);
     if (!Reverse) {
         rcRectsrc.top += Phase * (Bmp[i].Hoehe);
     } else {
@@ -2067,7 +2101,8 @@ function ZeichneObjekte()
                     Scape[x][y].yScreen + Scape[x][y].ObPos.y - Camera.y,
                     Scape[x][y].Objekt, rcSpielflaeche, Scape[x][y].Reverse,
                     Scape[x][y].Phase);
-            } else {
+            }
+            else {
 
                 if (((Scape[x][y].Objekt >= BAUM1) && (Scape[x][y].Objekt <= BAUM4DOWN)) ||
                     (Scape[x][y].Objekt === BAUMGROSS) || (Scape[x][y].Objekt === FEUER) ||
@@ -2104,25 +2139,27 @@ function ZeichneObjekte()
     }
 }
 
-function ZeichneGuy() {
+function ZeichneGuy()
+{
     if (BootsFahrt) {
         if (Guy.Zustand === GUYSCHIFF) {
             ZeichneBilder(Guy.PosScreen.x - 30 - Camera.x,
                 Guy.PosScreen.y - 28 - Camera.y,
-                Guy.Zustand, rcSpielflaeche.copy(), false, -1);
+                Guy.Zustand, rcSpielflaeche, false, -1);
         } else {
             ZeichneBilder(Guy.PosScreen.x - (Bmp[Guy.Zustand].Breite) / 2 - Camera.x,
                 Guy.PosScreen.y - (Bmp[Guy.Zustand].Hoehe) / 2 - Camera.y,
-                Guy.Zustand, rcSpielflaeche.copy(), false, -1);
+                Guy.Zustand, rcSpielflaeche, false, -1);
         }
     } else ZeichneBilder(Guy.PosScreen.x - (Bmp[Guy.Zustand].Breite) / 2 - Camera.x,
         Guy.PosScreen.y - (Bmp[Guy.Zustand].Hoehe) - Camera.y,
-        Guy.Zustand, rcSpielflaeche.copy(), false, -1);
+        Guy.Zustand, rcSpielflaeche, false, -1);
     //Sound abspielen
     if (Guy.Aktiv) PlaySound(Bmp[Guy.Zustand].Sound, 100);
 }
 
-function ZeichnePapier() {
+function ZeichnePapier()
+{
     rcRectsrc.left = 0;
     rcRectsrc.top = 0;
     rcRectsrc.right = 464;
@@ -2324,25 +2361,25 @@ function ZeichnePanel()
 
     //Säule1
     i = Bmp[SAEULE1].Hoehe - Guy.Resource[WASSER] * Bmp[SAEULE1].Hoehe / 100;
-    rcRectsrc = Bmp[SAEULE1].rcSrc;
+    copy_rect(rcRectsrc, Bmp[SAEULE1].rcSrc);
     rcRectsrc.top += i;
-    rcRectdes = Bmp[SAEULE1].rcDes;
+    copy_rect(rcRectdes, Bmp[SAEULE1].rcDes);
     rcRectdes.top += i;
     Blitten(Bmp[SAEULE1].Surface, lpDDSBack, true);
 
     //Säule2
     i = Bmp[SAEULE2].Hoehe - Guy.Resource[NAHRUNG] * Bmp[SAEULE2].Hoehe / 100;
-    rcRectsrc = Bmp[SAEULE2].rcSrc;
+    copy_rect(rcRectsrc, Bmp[SAEULE2].rcSrc);
     rcRectsrc.top += i;
-    rcRectdes = Bmp[SAEULE2].rcDes;
+    copy_rect(rcRectdes, Bmp[SAEULE2].rcDes);
     rcRectdes.top += i;
     Blitten(Bmp[SAEULE2].Surface, lpDDSBack, true);
 
     //Säule3
     i = Bmp[SAEULE3].Hoehe - Guy.Resource[GESUNDHEIT] * Bmp[SAEULE3].Hoehe / 100;
-    rcRectsrc = Bmp[SAEULE3].rcSrc;
+    copy_rect(rcRectsrc, Bmp[SAEULE3].rcSrc);
     rcRectsrc.top += i;
-    rcRectdes = Bmp[SAEULE3].rcDes;
+    copy_rect(rcRectdes, Bmp[SAEULE3].rcDes);
     rcRectdes.top += i;
     Blitten(Bmp[SAEULE3].Surface, lpDDSBack, true);
 
@@ -2377,7 +2414,7 @@ function ZeichnePanel()
     rcRectsrc.top = 0;
     rcRectsrc.right = 605;
     rcRectsrc.bottom = 20;
-    rcRectdes = rcTextFeld1.copy();
+    copy_rect(rcRectdes, rcTextFeld1);
     Blitten(lpDDSTextFeld, lpDDSBack, false);
 }
 
@@ -2494,7 +2531,7 @@ function DrawText(Text, Bereich, Art) {
                     break;
                 case 'd':
                     Frage = 0;
-                    rcRectsrc = Bmp[JA].rcSrc;
+                    copy_rect(rcRectsrc, Bmp[JA].rcSrc);
                     rcRectdes.left = TextBereich[Bereich].rcText.left + 50;
                     rcRectdes.top = Posy + 50;
                     rcRectdes.right = rcRectdes.left + Bmp[JA].Breite;
@@ -2502,7 +2539,7 @@ function DrawText(Text, Bereich, Art) {
                     Bmp[JA].rcDes = rcRectdes;
                     Blitten(Bmp[JA].Surface, lpDDSSchrift, false);
 
-                    rcRectsrc = Bmp[NEIN].rcSrc;
+                    copy_rect(rcRectsrc, Bmp[NEIN].rcSrc);
                     rcRectdes.left = TextBereich[Bereich].rcText.left + 220;
                     rcRectdes.top = Posy + 50;
                     rcRectdes.right = rcRectdes.left + Bmp[NEIN].Breite;
@@ -3686,7 +3723,7 @@ function Schatz() {
             }
             upload_canvas(lpDDSSchatzkarte);
 
-            rcRectsrc = Bmp[KREUZ].rcSrc;
+            copy_rect(rcRectsrc, Bmp[KREUZ].rcSrc);
             rcRectdes.left = SKARTEX / 2 - Bmp[KREUZ].Breite / 2;
             rcRectdes.right = rcRectdes.left + Bmp[KREUZ].Breite;
             rcRectdes.top = SKARTEY / 2 - Bmp[KREUZ].Hoehe / 2;
