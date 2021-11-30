@@ -247,13 +247,15 @@ function LoadSound(Sound)
     // lpdsbWav[Sound]->SetVolume((long)(-10000+100*Wav[Sound].Volume));
 }
 
-function PlaySound(Sound, Volume) {
+function PlaySound(Sound, Volume, doLoop = false)
+{
     //console.log("play sound ", Sound, " volume ", Volume);
-    return;
-    if (lpdsbWav[Sound]) {
+    if (lpdsbWav[Sound] && !lpdsbWav[Sound].src) {
         const source = audioCtx.createBufferSource();
         source.buffer = lpdsbWav[Sound];
         source.connect(audioCtx.destination);
+        if(Wav[Sound].Loop || doLoop) source.loop = true;
+        console.log("sound", Sound, "looped", Wav[Sound].Loop);
         source.start();
         source.buffer.src = source;
     }
@@ -270,17 +272,19 @@ function PlaySound(Sound, Volume) {
 	 */
 }
 
-function StopSound(Sound) {
-    return;
+function StopSound(Sound)
+{
     if (lpdsbWav[Sound]) {
         let src = lpdsbWav[Sound].src;
         if (src) {
             src.stop();
+            lpdsbWav[Sound].src = null;
         }
     }
 }
 
-function SaveGame() {
+function SaveGame()
+{
     let data = {
         Scape, Guy, BootsFahrt, Camera, Chance, Gitter, HauptMenue, LAnimation, Minuten, ScapeGrenze, SchatzPos,
         Spielzustand, Stunden, Tag, TextBereich, SchatzGef, Bmp
@@ -289,7 +293,8 @@ function SaveGame() {
     //window.localStorage.setItem('save.dat', JSON.stringify(data));
 }
 
-function LoadGame() {
+function LoadGame()
+{
     return false;
     let data = window.localStorage.getItem('save.dat');
     if (!data) return false;
@@ -321,7 +326,8 @@ function LoadGame() {
     return true;
 }
 
-function Blitten(lpDDSVon, lpDDSNach, Transp) {
+function Blitten(lpDDSVon, lpDDSNach, Transp)
+{
     // TODO: handle transparency?
     lpDDSNach.ctx.drawImage(
         lpDDSVon,
@@ -336,7 +342,8 @@ function Blitten(lpDDSVon, lpDDSNach, Transp) {
     );
 }
 
-function Blit_destrect(lpDDSVon, lpDDSNach) {
+function Blit_destrect(lpDDSVon, lpDDSNach)
+{
     lpDDSNach.ctx.drawImage(
         lpDDSVon,
         rcRectdes.left,
@@ -350,7 +357,8 @@ function Blit_destrect(lpDDSVon, lpDDSNach) {
     );
 }
 
-function InitDInput() {
+function InitDInput()
+{
     console.log("InitDInput");
     canvas.onmousemove = e => {
         cur_mouse_state.lX = e.clientX - cur_mouse_state.x;
@@ -380,7 +388,8 @@ function InitDInput() {
     console.log("...done");
 }
 
-function CheckMouse() {
+function CheckMouse()
+{
     let dims = cur_mouse_state; //Da werden die Daten der Maus gespeichert
     let Button; //Welcher Knopf ist gedrückt worden
     let Push;	//Knopf gedrückt(1) oder losgelassen(-1) oder gedrückt(0) gehalten
@@ -1835,7 +1844,6 @@ function Zeige()
 
 function ZeigeIntro()
 {
-    console.log("zeig intro ", Camera);
     rcRectdes.left = 0;
     rcRectdes.top = 0;
     rcRectdes.right = MAXX;
@@ -1851,7 +1859,6 @@ function ZeigeIntro()
     rcRectdes.right = rcSpielflaeche.right;
     rcRectdes.bottom = rcSpielflaeche.bottom;
 
-    console.log(rcRectsrc, rcRectdes, rcRectsrc === rcRectdes);
     Blitten(lpDDSScape, lpDDSBack, false); //Landschaft zeichnen
 
     ZeichneObjekte();
@@ -2418,7 +2425,8 @@ function ZeichnePanel()
     Blitten(lpDDSTextFeld, lpDDSBack, false);
 }
 
-function DrawString(string, x, y, Art) {
+function DrawString(string, x, y, Art)
+{
     let Breite, Hoehe;
 
     if (Art === 1) {
@@ -2483,7 +2491,8 @@ function DrawString(string, x, y, Art) {
     }
 }
 
-function DrawText(Text, Bereich, Art) {
+function DrawText(Text, Bereich, Art)
+{
     let BBreite, BHoehe;
     let StdString2;//Zur Variablenausgabe
     let Anzahl; //Zur Variablenausgabe
@@ -2572,12 +2581,14 @@ function DrawText(Text, Bereich, Art) {
     return Erg;
 }
 
-function Textloeschen(Bereich) {
+function Textloeschen(Bereich)
+{
     TextBereich[Bereich].Aktiv = false;
     fill_dest([255, 0, 255], lpDDSSchrift);
 }
 
-function DrawSchatzkarte() {
+function DrawSchatzkarte()
+{
     Textloeschen(TXTPAPIER);
     TextBereich[TXTPAPIER].Aktiv = true;
     PapierText = SKARTEY;
@@ -2613,13 +2624,15 @@ function CalcRect(rcBereich) {
     }
 }
 
-function MarkRoute(Mark) {
+function MarkRoute(Mark)
+{
     for (let i = 0; i < RouteLaenge; i++) {
         Scape[Route[i].x][Route[i].y].Markiert = Mark;
     }
 }
 
-function CheckSpzButton() {
+function CheckSpzButton()
+{
     if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= FELD) && (Scape[Guy.Pos.x][Guy.Pos.y].Objekt <= FEUERSTELLE) &&
         (Scape[Guy.Pos.x][Guy.Pos.y].Phase >= Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Anzahl) &&
         (Bmp[BUTTSTOP].Phase === -1)) {
@@ -2637,7 +2650,8 @@ function CheckSpzButton() {
     } else Bmp[BUTTABLEGEN].Phase = -1;
 }
 
-function CheckRohstoff() {
+function CheckRohstoff()
+{
     let Benoetigt = 0; //Anzahl der Gesamtbenötigten Rohstoffe
     for (i = 0; i < BILDANZ; i++) Benoetigt += Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Rohstoff[i];
 
@@ -2670,7 +2684,8 @@ function CheckRohstoff() {
     return false;
 }
 
-function Event(Eventnr) {
+function Event(Eventnr)
+{
     if (Eventnr !== AKNICHTS) {
         MarkRoute(false);
         RouteZiel.x = -1;
@@ -3243,14 +3258,16 @@ function Meer()	//Das Meer und den Strand bestimmen
     }
 }
 
-function ChangeBootsFahrt() {
+function ChangeBootsFahrt()
+{
     BootsFahrt = !BootsFahrt;
     //Begehbarkeit umdrehen
     for (let y = 0; y < MAXYKACH; y++)
         for (let x = 0; x < MAXXKACH; x++) Scape[x][y].Begehbar = !Scape[x][y].Begehbar;
 }
 
-function Fade(RP, GP, BP) {
+function Fade(RP, GP, BP)
+{
     /*
 	for(let blackloop=0; blackloop<256; blackloop++)
 	{
@@ -3263,7 +3280,8 @@ function Fade(RP, GP, BP) {
     // TODO: do fading
 }
 
-function CheckRohr(x, y) {
+function CheckRohr(x, y)
+{
     Scape[x][y].Phase = 1;
     if (Scape[x][y].Art === 0) Scape[x][y].Art = 4;
     if (Scape[x - 1][y].Art === 0) Scape[x - 1][y].Art = 4;
@@ -3281,7 +3299,8 @@ function CheckRohr(x, y) {
     if ((Scape[x][y + 1].Objekt === ROHR) && (Scape[x][y + 1].Phase === 0)) CheckRohr(x, y + 1);
 }
 
-function FillRohr() {
+function FillRohr()
+{
     for (let y = 0; y < MAXYKACH; y++) {
         for (let x = 0; x < MAXXKACH; x++) {
             if ((Scape[x][y].Objekt === ROHR) && (Scape[x][y].Phase < Bmp[ROHR].Anzahl))
@@ -3649,7 +3668,8 @@ function Baeume(Prozent)
     }
 }
 
-function Piratenwrack() {
+function Piratenwrack()
+{
     let x, y;
 
     let Richtung = rand() % 3;
@@ -3687,8 +3707,8 @@ function Piratenwrack() {
     Scape[x][y].ObPos.y = Bmp[WRACK2].rcDes.top;
 }
 
-function Schatz() {
-    console.log("Schatz()");
+function Schatz()
+{
     while (1) {
         let x = rand() % (MAXXKACH - 1);
         let y = rand() % (MAXYKACH - 1);
@@ -3984,7 +4004,8 @@ function CheckRoute(x, y, save, Laenge) //Nachprüfen ob auf aktuellem Teil in d
 }
 
 
-function SortRoute() {
+function SortRoute()
+{
     let Pos = ZWEID();
     Pos.x = RouteStart.x;
     Pos.y = RouteStart.y;
@@ -4053,7 +4074,8 @@ function SortRoute() {
     }
 }
 
-function ShortRoute(Zielx, Ziely) {
+function ShortRoute(Zielx, Ziely)
+{
     RouteLaenge = 1;
     Route[0].x = Guy.Pos.x;
     Route[0].y = Guy.Pos.y;
@@ -4073,7 +4095,8 @@ function ShortRoute(Zielx, Ziely) {
     Step = 0;
 }
 
-function CheckBenutze(Objekt) {
+function CheckBenutze(Objekt)
+{
     if (((Objekt === ROHSTEIN) && (TwoClicks === ROHAST)) ||
         ((Objekt === ROHAST) && (TwoClicks === ROHSTEIN))) {
         if (Guy.Inventar[ROHAXT] < 1) {
@@ -4125,7 +4148,8 @@ function CheckBenutze(Objekt) {
     TwoClicks = -1;
 }
 
-function Animationen() {
+function Animationen()
+{
     for (let y = 0; y < MAXYKACH; y++) {
         for (let x = 0; x < MAXXKACH; x++) {
             let j = Scape[x][y].Objekt;
@@ -4180,7 +4204,8 @@ function Animationen() {
     }
 }
 
-function CalcGuyKoor() {
+function CalcGuyKoor()
+{
     if (Step >= Steps) {
         RoutePunkt++;
 
@@ -4262,7 +4287,8 @@ function CalcGuyKoor() {
     }
 }
 
-function Entdecken() {
+function Entdecken()
+{
     let Aenderung = false;
 
     for (let i = -1; i <= 1; i++) {
@@ -4277,7 +4303,8 @@ function Entdecken() {
     if (Aenderung) Generate();
 }
 
-function CalcKoor() {
+function CalcKoor()
+{
     // Bildschirmkoordinaten berechnen und speichern
     for (let y = 0; y < MAXYKACH; y++) {
         for (let x = 0; x < MAXXKACH; x++) {
@@ -4341,7 +4368,8 @@ function frame(now)
         Zeige();//Das Bild zeichnen
         if (Spielbeenden) return 0;
 
-    } else if (Spielzustand === SZABSPANN) {
+    }
+    else if (Spielzustand === SZABSPANN) {
         if (CheckKey() === 0) return 0;
         AbspannCalc();
         ZeigeAbspann();
