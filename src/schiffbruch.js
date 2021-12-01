@@ -132,6 +132,25 @@ let cur_mouse_state = {
 };
 let keymap = {};
 
+function set_cursor(type)
+{
+    CursorTyp = type;
+    switch (type) {
+        case CUPFEIL:
+            canvas.style.cursor = "url(gfx/cursor1.png) 0 0, default";
+            break;
+        case CUUHR:
+            canvas.style.cursor = "url(gfx/cursor3.png) 9 9, default";
+            break;
+        case CURICHTUNG:
+            canvas.style.cursor = "url(gfx/cursor2.png) 9 9, default";
+            break;
+        default:
+            // other images
+            break;
+    }
+}
+
 function copy_zweid(d, s)
 {
     d.x = s.x;
@@ -368,10 +387,11 @@ function InitDInput()
 {
     console.log("InitDInput");
     canvas.onmousemove = e => {
-        cur_mouse_state.lX = e.clientX - cur_mouse_state.x;
-        cur_mouse_state.lY = e.clientY - cur_mouse_state.y;
-        cur_mouse_state.x = e.clientX;
-        cur_mouse_state.y = e.clientY;
+        let rect = canvas.getBoundingClientRect();
+        cur_mouse_state.lX = e.clientX - cur_mouse_state.x - rect.left;
+        cur_mouse_state.lY = e.clientY - cur_mouse_state.y - rect.top;
+        cur_mouse_state.x = e.clientX - rect.left;
+        cur_mouse_state.y = e.clientY - rect.top;
     };
 
     canvas.onmousedown = e => {
@@ -415,9 +435,9 @@ function CheckMouse()
     if (TwoClicks === -1) {
         if (Guy.Aktiv) {
             if (InRect(MousePosition.x, MousePosition.y, Bmp[BUTTSTOP].rcDes) &&
-                (Bmp[BUTTSTOP].Phase !== -1)) CursorTyp = CUPFEIL;
-            else CursorTyp = CUUHR;
-        } else CursorTyp = CUPFEIL;
+                (Bmp[BUTTSTOP].Phase !== -1)) set_cursor(CUPFEIL);
+            else set_cursor(CUUHR);
+        } else set_cursor(CUPFEIL);
     }
     Button = -1;
 
@@ -456,7 +476,7 @@ function CheckMouse()
     if (PapierText !== -1) {
         if (Frage === 0) {
             if (InRect(MousePosition.x, MousePosition.y, Bmp[JA].rcDes)) {
-                CursorTyp = CUPFEIL;
+                set_cursor(CUPFEIL);
                 if ((Button === 0) && (Push === 1)) {
                     Frage = 1;
                     Textloeschen(TXTPAPIER);
@@ -465,7 +485,7 @@ function CheckMouse()
                     PlaySound(WAVKLICK2, 100);
                 }
             } else if (InRect(MousePosition.x, MousePosition.y, Bmp[NEIN].rcDes)) {
-                CursorTyp = CUPFEIL;
+                set_cursor(CUPFEIL);
                 if ((Button === 0) && (Push === 1)) {
                     Frage = 2;
                     Textloeschen(TXTPAPIER);
@@ -813,7 +833,7 @@ function MouseInSpielflaeche(Button, Push, xDiff, yDiff)
     if ((Button === 1) && (Push === 0)) {
         Camera.x += xDiff;
         Camera.y += yDiff;
-        CursorTyp = CURICHTUNG;
+        set_cursor(CURICHTUNG);
     }
 
     //Wenn Maustaste gedrückt wird
@@ -1420,7 +1440,7 @@ function MouseInPanel(Button, Push)
             if (InRect(MousePosition.x, MousePosition.y, Bmp[i].rcDes) && (Guy.Inventar[i] > 0)) {
                 if ((Button === 0) && (Push === 1)) {
                     if (TwoClicks === -1) {
-                        CursorTyp = i;
+                        set_cursor(i);
                         TwoClicks = i;
                     } else CheckBenutze(i);
                 }
@@ -1853,12 +1873,22 @@ function Zeige()
         Fade(100, 100, 100);
     }
 
+    /*
     //Cursor
-    if (CursorTyp === CUPFEIL) ZeichneBilder(MousePosition.x, MousePosition.y,
-        CursorTyp, rcGesamt, false, -1);
-    else ZeichneBilder(MousePosition.x - Bmp[CursorTyp].Breite / 2,
-        MousePosition.y - Bmp[CursorTyp].Hoehe / 2,
-        CursorTyp, rcGesamt, false, -1);
+    if (CursorTyp === CUPFEIL)
+        ZeichneBilder(
+            MousePosition.x, MousePosition.y,
+            CursorTyp, rcGesamt, false, -1
+        );
+    else
+        ZeichneBilder(
+            MousePosition.x - Bmp[CursorTyp].Breite / 2,
+            MousePosition.y - Bmp[CursorTyp].Hoehe / 2,
+            CursorTyp, rcGesamt, false, -1
+        );
+
+    TODO: maybe draw resource cursor image
+    */
 
     if (Nacht) Fade(100, 100, 100); //Das muss hier stehen, damit man die Textnachricht in der Nacht lesen kann
 }

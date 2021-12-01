@@ -2230,7 +2230,7 @@ function InitStructs()
         Guy.Inventar[i]   = 0;
     }
 
-    CursorTyp = CUPFEIL;
+    set_cursor(CUPFEIL);
     Gitter = false;
     MouseAktiv = true;
     PapierText = -1;
