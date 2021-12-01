@@ -1,5 +1,7 @@
 # schiffbruch.js
 
+![Schiffbruch](./gfx/logo.png)
+
 Hello!
 
 Here I'm trying to port the retro-style top-down survival game [Schiffbruch](https://www.dplate.de/games/schiffbruch) (Shipwreck)
