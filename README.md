@@ -1,6 +1,6 @@
 # schiffbruch.js
 
-![Schiffbruch](./gfx/logo.png)
+![Schiffbruch](./gfx/logo-transparent.png)
 
 Hello!
 
