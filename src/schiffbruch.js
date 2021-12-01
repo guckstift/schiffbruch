@@ -29,6 +29,7 @@ let Gitter;			//Gitternetz an/aus
 let ScapeGrenze = RECT();     //Diese Koordinaten zeigen die Größe der Landschaft an
 let Flusslaenge = new Array(FLUSSANZAHL);
 let CursorTyp;		//Welcher Cursortyp?
+let LastCursorType;
 let Button0down;	//linke Maustaste gedrückt gehalten
 let Button1down;	//rechte Maustaste gedrückt gehalten
 let RouteLaenge;	//Länge
@@ -132,22 +133,17 @@ let cur_mouse_state = {
 };
 let keymap = {};
 
+function is_int(n)
+{
+    return n % 1 === 0;
+}
+
 function set_cursor(type)
 {
-    CursorTyp = type;
-    switch (type) {
-        case CUPFEIL:
-            canvas.style.cursor = "url(gfx/cursor1.png) 0 0, default";
-            break;
-        case CUUHR:
-            canvas.style.cursor = "url(gfx/cursor3.png) 9 9, default";
-            break;
-        case CURICHTUNG:
-            canvas.style.cursor = "url(gfx/cursor2.png) 9 9, default";
-            break;
-        default:
-            // other images
-            break;
+    if(CursorTyp !== type) {
+        console.log("set cursor to ", type);
+        LastCursorType = CursorTyp;
+        CursorTyp = type;
     }
 }
 
@@ -354,32 +350,44 @@ function LoadGame()
 
 function Blitten(lpDDSVon, lpDDSNach, Transp)
 {
+    if(!is_int(rcRectsrc.left) || !is_int(rcRectsrc.top) ||
+        !is_int(rcRectsrc.right) || !is_int(rcRectsrc.bottom) ||
+        !is_int(rcRectdes.left) || !is_int(rcRectdes.top) ||
+        !is_int(rcRectdes.right) || !is_int(rcRectdes.bottom))
+    {
+    }
     // TODO: handle transparency?
     lpDDSNach.ctx.drawImage(
         lpDDSVon,
-        rcRectsrc.left,
-        rcRectsrc.top,
-        rcRectsrc.right - rcRectsrc.left,
-        rcRectsrc.bottom - rcRectsrc.top,
-        rcRectdes.left,
-        rcRectdes.top,
-        rcRectdes.right - rcRectdes.left,
-        rcRectdes.bottom - rcRectdes.top
+        rcRectsrc.left | 0,
+        rcRectsrc.top | 0,
+        (rcRectsrc.right - rcRectsrc.left) | 0,
+        (rcRectsrc.bottom - rcRectsrc.top) | 0,
+        rcRectdes.left | 0,
+        rcRectdes.top | 0,
+        (rcRectdes.right - rcRectdes.left) | 0,
+        (rcRectdes.bottom - rcRectdes.top) | 0
     );
 }
 
 function Blit_destrect(lpDDSVon, lpDDSNach)
 {
+    if(!is_int(rcRectsrc.left) || !is_int(rcRectsrc.top) ||
+        !is_int(rcRectsrc.right) || !is_int(rcRectsrc.bottom) ||
+        !is_int(rcRectdes.left) || !is_int(rcRectdes.top) ||
+        !is_int(rcRectdes.right) || !is_int(rcRectdes.bottom))
+    {
+    }
     lpDDSNach.ctx.drawImage(
         lpDDSVon,
+        rcRectdes.left | 0,
+        rcRectdes.top | 0,
+        (rcRectdes.right - rcRectdes.left) | 0,
+        (rcRectdes.bottom - rcRectdes.top) | 0,
         rcRectdes.left,
         rcRectdes.top,
-        rcRectdes.right - rcRectdes.left,
-        rcRectdes.bottom - rcRectdes.top,
-        rcRectdes.left,
-        rcRectdes.top,
-        rcRectdes.right - rcRectdes.left,
-        rcRectdes.bottom - rcRectdes.top
+        (rcRectdes.right - rcRectdes.left) | 0,
+        (rcRectdes.bottom - rcRectdes.top) | 0
     );
 }
 
@@ -404,12 +412,12 @@ function InitDInput()
         if (e.button === 2) cur_mouse_state.rgbButtons[1] = 0;
     };
 
-    canvas.onkeydown = e => {
+    window.onkeydown = e => {
         console.log("keydown ", e.key)
         keymap[e.key] = true;
     };
 
-    canvas.onkeyup = e => {
+    window.onkeyup = e => {
         keymap[e.key] = false;
     };
     console.log("...done");
@@ -549,18 +557,20 @@ function CheckKey()
             Scape[Guy.Pos.x - 2][Guy.Pos.y].ObPos.x = Bmp[WRACK].rcDes.left;
             Scape[Guy.Pos.x - 2][Guy.Pos.y].ObPos.y = Bmp[WRACK].rcDes.top;
 
-            Guy.PosScreen.x =
+            Guy.PosScreen.x = floor(
                 (Scape[Guy.Pos.x][Guy.Pos.y].xScreen + EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][0].x +
-                    Scape[Guy.Pos.x][Guy.Pos.y].xScreen + EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][2].x) / 2;
-            Guy.PosScreen.y =
+                    Scape[Guy.Pos.x][Guy.Pos.y].xScreen + EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][2].x) / 2
+            );
+            Guy.PosScreen.y = floor(
                 (Scape[Guy.Pos.x][Guy.Pos.y].yScreen + EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][1].y +
-                    Scape[Guy.Pos.x][Guy.Pos.y].yScreen + EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][3].y) / 2;
+                    Scape[Guy.Pos.x][Guy.Pos.y].yScreen + EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][3].y) / 2
+            );
             RouteStart.x = -1;
             RouteStart.y = -1;
             RouteZiel.x = -1;
             RouteZiel.y = -1;
-            Camera.x = Guy.PosScreen.x - rcSpielflaeche.right / 2;
-            Camera.y = Guy.PosScreen.y - rcSpielflaeche.bottom / 2;
+            Camera.x = Guy.PosScreen.x - floor(rcSpielflaeche.right / 2);
+            Camera.y = Guy.PosScreen.y - floor(rcSpielflaeche.bottom / 2);
             if (BootsFahrt) ChangeBootsFahrt();
             Guy.Zustand = GUYLINKS;
             Guy.Aktion = AKNICHTS;
@@ -886,10 +896,14 @@ function MouseInPanel(Button, Push)
     if ((InRect(MousePosition.x, MousePosition.y, rcKarte)) && (Button === 0) && (Push !== -1)) {
         mx = MousePosition.x - rcKarte.left;
         my = MousePosition.y - rcKarte.top;
-        Camera.x = ((KXPIXEL / 4) * (mx - my) + MAXXKACH * KXPIXEL / 2)
-            - (rcSpielflaeche.right - rcSpielflaeche.left) / 2;
-        Camera.y = ((KXPIXEL / 7) * (my + mx))
-            - (rcSpielflaeche.bottom - rcSpielflaeche.top) / 2;
+        Camera.x = floor(
+            ((KXPIXEL / 4) * (mx - my) + MAXXKACH * KXPIXEL / 2)
+            - (rcSpielflaeche.right - rcSpielflaeche.left) / 2
+        );
+        Camera.y = floor(
+            ((KXPIXEL / 7) * (my + mx))
+            - (rcSpielflaeche.bottom - rcSpielflaeche.top) / 2
+        );
     } else if (InRect(MousePosition.x, MousePosition.y, Bmp[BUTTGITTER].rcDes)) {
         if (Gitter) DrawText(messages.GITTERAUS, TXTTEXTFELD, 2);
         else DrawText(messages.GITTERAN, TXTTEXTFELD, 2);
@@ -1561,10 +1575,10 @@ function fill_dest(color, dest = null)
     if (dest === null) dest = lpDDSBack;
     ctx.fillStyle = "rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")";
     dest.ctx.fillRect(
-        rcRectdes.left,
-        rcRectdes.top,
-        rcRectdes.right - rcRectdes.left,
-        rcRectdes.bottom - rcRectdes.top,
+        rcRectdes.left | 0,
+        rcRectdes.top | 0,
+        (rcRectdes.right - rcRectdes.left) | 0,
+        (rcRectdes.bottom - rcRectdes.top) | 0,
     );
 }
 
@@ -1572,10 +1586,10 @@ function clear_dest(dest = null)
 {
     if (dest === null) dest = lpDDSBack;
     dest.ctx.clearRect(
-        rcRectdes.left,
-        rcRectdes.top,
-        rcRectdes.right - rcRectdes.left,
-        rcRectdes.bottom - rcRectdes.top,
+        rcRectdes.left | 0,
+        rcRectdes.top | 0,
+        (rcRectdes.right - rcRectdes.left) | 0,
+        (rcRectdes.bottom - rcRectdes.top) | 0,
     );
 }
 
@@ -1637,16 +1651,18 @@ function NeuesSpiel(neu)
 
         //Guy Position
         Guy.Pos.x = 1;
-        Guy.Pos.y = MAXYKACH / 2;
-        Guy.PosScreen.x =
+        Guy.Pos.y = floor(MAXYKACH / 2);
+        Guy.PosScreen.x = floor(
             (Scape[Guy.Pos.x][Guy.Pos.y].xScreen + EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][0].x +
-                Scape[Guy.Pos.x][Guy.Pos.y].xScreen + EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][2].x) / 2;
-        Guy.PosScreen.y =
+                Scape[Guy.Pos.x][Guy.Pos.y].xScreen + EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][2].x) / 2
+        );
+        Guy.PosScreen.y = floor(
             (Scape[Guy.Pos.x][Guy.Pos.y].yScreen + EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][1].y +
-                Scape[Guy.Pos.x][Guy.Pos.y].yScreen + EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][3].y) / 2;
+                Scape[Guy.Pos.x][Guy.Pos.y].yScreen + EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][3].y) / 2
+        );
 
-        Camera.x = Guy.PosScreen.x - rcGesamt.right / 2;
-        Camera.y = Guy.PosScreen.y - rcGesamt.bottom / 2;
+        Camera.x = Guy.PosScreen.x - floor(rcGesamt.right / 2);
+        Camera.y = Guy.PosScreen.y - floor(rcGesamt.bottom / 2);
 
         Chance = 0;
 
@@ -1889,6 +1905,23 @@ function Zeige()
 
     TODO: maybe draw resource cursor image
     */
+    if(LastCursorType !== CursorTyp) {
+        switch (CursorTyp) {
+            case CUPFEIL:
+                canvas.style.cursor = "url(gfx/cursor1.png) 0 0, default";
+                break;
+            case CUUHR:
+                canvas.style.cursor = "url(gfx/cursor3.png) 9 9, default";
+                break;
+            case CURICHTUNG:
+                canvas.style.cursor = "url(gfx/cursor2.png) 9 9, default";
+                break;
+            default:
+                // other images
+                break;
+        }
+        LastCursorType = CursorTyp;
+    }
 
     if (Nacht) Fade(100, 100, 100); //Das muss hier stehen, damit man die Textnachricht in der Nacht lesen kann
 }
@@ -1940,7 +1973,7 @@ function ZeigeAbspann()
 
     if (AbspannZustand === 0) {
         ZeichneBilder(
-            MAXX / 2 - Bmp[AbspannListe[AbspannNr][0].Bild].Breite / 2,
+            floor(MAXX / 2 - Bmp[AbspannListe[AbspannNr][0].Bild].Breite / 2),
             100,
             AbspannListe[AbspannNr][0].Bild,
             rcGesamt,
@@ -1972,8 +2005,8 @@ function ZeigeAbspann()
         rcRectsrc.right = Bmp[AbspannNr].Breite + 4;
         rcRectsrc.bottom = Bmp[AbspannNr].Hoehe + 4;
 
-        rcRectdes.left = MAXX / 2 - rcRectsrc.right * 10 / 2;
-        rcRectdes.top = MAXY / 2 - rcRectsrc.bottom * 10 / 2;
+        rcRectdes.left = floor(MAXX / 2 - rcRectsrc.right * 10 / 2);
+        rcRectdes.top = floor(MAXY / 2 - rcRectsrc.bottom * 10 / 2);
         rcRectdes.right = rcRectdes.left + rcRectsrc.right * 10;
         rcRectdes.bottom = rcRectdes.top + rcRectsrc.bottom * 10;
 
@@ -2008,10 +2041,10 @@ function ZeigeLogo()
     rcRectsrc.right = 500;
     rcRectsrc.top = 0;
     rcRectsrc.bottom = 500;
-    rcRectdes.left = MAXX / 2 - 250;
-    rcRectdes.right = MAXX / 2 + 250;
-    rcRectdes.top = MAXY / 2 - 250;
-    rcRectdes.bottom = MAXY / 2 + 250;
+    rcRectdes.left = Math.floor(MAXX / 2) - 250;
+    rcRectdes.right = Math.floor(MAXX / 2) + 250;
+    rcRectdes.top = Math.floor(MAXY / 2) - 250;
+    rcRectdes.bottom = Math.floor(MAXY / 2) + 250;
 
 
     Blitten(lpDDSLogo, lpDDSBack, false);
@@ -2064,7 +2097,7 @@ function AbspannCalc()
             }
             if (Bmp[AbspannListe[AbspannNr][k].Bild].rcDes.top < 0) {
                 AbspannListe[AbspannNr][k].Aktiv = false;
-                Bmp[AbspannListe[AbspannNr][k].Bild].rcDes.top = MAXY - Bmp[AbspannListe[AbspannNr][k].Bild].Hoehe / 2;
+                Bmp[AbspannListe[AbspannNr][k].Bild].rcDes.top = floor(MAXY - Bmp[AbspannListe[AbspannNr][k].Bild].Hoehe / 2);
                 if (!AbspannListe[AbspannNr][k + 1].Aktiv) {
                     if (AbspannListe[AbspannNr + 1][0].Bild !== -1) {
                         AbspannNr++;
@@ -4334,8 +4367,8 @@ function CalcGuyKoor()
         Guy.PosScreen.y = GuyPosScreenStart.y + ROUND(Step * Schritty);
         if ((Spielzustand === SZINTRO) || (Spielzustand === SZGERETTET)) //Beim Intro führt die Kamera mit
         {
-            Camera.x = Guy.PosScreen.x - rcGesamt.right / 2;
-            Camera.y = Guy.PosScreen.y - rcGesamt.bottom / 2;
+            Camera.x = Guy.PosScreen.x - floor(rcGesamt.right / 2);
+            Camera.y = Guy.PosScreen.y - floor(rcGesamt.bottom / 2);
         }
     }
 }
@@ -4380,7 +4413,7 @@ function frame(now)
     requestAnimationFrame(frame);
 
     //console.log("frame spielzustand = ", Spielzustand);
-    frametime.innerText = "fps " + LastBild;
+    //frametime.innerText = "fps " + LastBild;
 
     Bild++;
     let Zeitsave = now / 1000;
@@ -4443,4 +4476,11 @@ function main()
     requestAnimationFrame(frame);
 }
 
-addEventListener("load", main);
+//addEventListener("load", main);
+
+function start_game()
+{
+    start_button.style.display = "none";
+    start_logo.style.display = "none";
+    main();
+}

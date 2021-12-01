@@ -35,6 +35,7 @@ const FLUSSANZAHL = 1; //Wieviele Flüsse? Mehr als 1 funktioniert seltsamerweis
 const SKARTEX = 370; //Schatzkartenbreite
 const SKARTEY = 370; //Schatzkartenhöhe
 const ROUND = Math.round; //Zahlen runden Macro
+const floor = Math.floor;
 
 const MEERWELLEN  = 0;
 const FLUSS1	= MEERWELLEN+1;

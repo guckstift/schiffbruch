@@ -2182,7 +2182,7 @@ function InitStructs()
     Wav[WAVLOGO].Volume	= 100;
     Wav[WAVLOGO].Loop	= true;
 
-    Wav[WAVWOLF].Dateiname = "sfx/wolve.ogg";
+    Wav[WAVWOLF].Dateiname = "sfx/wolf.ogg";
     Wav[WAVWOLF].Volume	= 90;
 
     Wav[WAVERFINDUNG].Dateiname = "sfx/invention.ogg";

@@ -6,9 +6,56 @@
 		<script src="src/actions.js"></script>
 		<script src="src/init_structs.js"></script>
 		<script src="src/schiffbruch.js"></script>
+		<style>
+			body {
+				background: #333;
+			}
+			#game_screen {
+				width: 800px;
+				height: 600px;
+				position: absolute;
+				left: 50%;
+				top: 64px;
+				transform: translate(-50%, 0);
+			}
+			#canvas {
+				width: 800px;
+				height: 600px;
+				position: absolute;
+			}
+			#start_logo {
+				position: absolute;
+				left: 50%;
+				top: 50%;
+				transform: translate(-50%, -50%);
+				filter: grayscale(0.75);
+			}
+			#start_button {
+				position: absolute;
+				width: 100px;
+				height: 100px;
+				background: none;
+				border: none;
+				padding: 0;
+				left: 420px;
+				top: 300px;
+				transform: translate(-50%, -50%);
+			}
+			#arrow {
+				position: absolute;
+				left: 0;
+				top: 0;
+				cursor: pointer;
+			}
+		</style>
 	</head>
 	<body>
-		<canvas id="canvas" width="800" height="600" tabindex='1'></canvas>
-		<div id="frametime"></div>
+	<div id="game_screen">
+		<canvas id="canvas" width="800" height="600"></canvas>
+		<img src="gfx/logo-transparent.png" id="start_logo" alt="Schiffbruch Logo">
+		<button id="start_button" onclick="start_game();">
+			<img src="gfx/play-arrow.png" alt="Start Game" id="arrow">
+		</button>
+	</div>
 	</body>
 </html>
