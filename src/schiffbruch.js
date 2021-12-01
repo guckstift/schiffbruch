@@ -144,6 +144,10 @@ function copy_rect(d, s)
     d.right = s.right;
     d.top = s.top;
     d.bottom = s.bottom;
+    if(
+        d.left === undefined ||
+        d.right === undefined || d.top === undefined || d.bottom === undefined)
+            throw "rect undefined";
 }
 
 function rand()
@@ -247,17 +251,20 @@ function LoadSound(Sound)
     // lpdsbWav[Sound]->SetVolume((long)(-10000+100*Wav[Sound].Volume));
 }
 
-function PlaySound(Sound, Volume, doLoop = false)
+function PlaySound(Sound, Volume)
 {
     //console.log("play sound ", Sound, " volume ", Volume);
     if (lpdsbWav[Sound] && !lpdsbWav[Sound].src) {
         const source = audioCtx.createBufferSource();
         source.buffer = lpdsbWav[Sound];
         source.connect(audioCtx.destination);
-        if(Wav[Sound].Loop || doLoop) source.loop = true;
+        if(Wav[Sound].Loop) source.loop = true;
         console.log("sound", Sound, "looped", Wav[Sound].Loop);
         source.start();
         source.buffer.src = source;
+        source.onended = () => {
+            lpdsbWav[Sound].src = null;
+        };
     }
 
     /*
@@ -1541,6 +1548,17 @@ function fill_dest(color, dest = null)
     );
 }
 
+function clear_dest(dest = null)
+{
+    if (dest === null) dest = lpDDSBack;
+    dest.ctx.clearRect(
+        rcRectdes.left,
+        rcRectdes.top,
+        rcRectdes.right - rcRectdes.left,
+        rcRectdes.bottom - rcRectdes.top,
+    );
+}
+
 function NeuesSpiel(neu)
 {
     console.log("NeuesSpiel");
@@ -1557,7 +1575,8 @@ function NeuesSpiel(neu)
         rcRectdes.right = MAXX;
         rcRectdes.bottom = MAXY;
         fill_dest([70, 70, 100]);
-        fill_dest([255, 0, 255]);
+        //fill_dest([255, 0, 255]);
+        clear_dest(lpDDSScape);
 
         //Landschaft erzeugen
 
@@ -1630,7 +1649,8 @@ function NeuesSpiel(neu)
     rcRectdes.top = 0;
     rcRectdes.right = MAXX;
     rcRectdes.bottom = MAXY;
-    fill_dest([255, 0, 255], lpDDSSchrift);
+    // fill_dest([255, 0, 255], lpDDSSchrift);
+    clear_dest(lpDDSSchrift);
 
     let Anitmp = LAnimation;
     let Entdeckttmp = Array.from(Array(MAXXKACH), x => Array(MAXYKACH));
@@ -1672,6 +1692,7 @@ function Generate()
     rcRectdes.right = MAXSCAPEX;
     rcRectdes.bottom = MAXSCAPEY;
     fill_dest([0, 0, 0], lpDDSScape);
+    //clear_dest(lpDDSScape);
 
     for (let y = 0; y < MAXYKACH; y++) {
         for (let x = 0; x < MAXXKACH; x++) {
@@ -2545,7 +2566,7 @@ function DrawText(Text, Bereich, Art)
                     rcRectdes.top = Posy + 50;
                     rcRectdes.right = rcRectdes.left + Bmp[JA].Breite;
                     rcRectdes.bottom = rcRectdes.top + Bmp[JA].Hoehe;
-                    Bmp[JA].rcDes = rcRectdes;
+                    copy_rect(Bmp[JA].rcDes, rcRectdes);
                     Blitten(Bmp[JA].Surface, lpDDSSchrift, false);
 
                     copy_rect(rcRectsrc, Bmp[NEIN].rcSrc);
@@ -2553,7 +2574,7 @@ function DrawText(Text, Bereich, Art)
                     rcRectdes.top = Posy + 50;
                     rcRectdes.right = rcRectdes.left + Bmp[NEIN].Breite;
                     rcRectdes.bottom = rcRectdes.top + Bmp[NEIN].Hoehe;
-                    Bmp[NEIN].rcDes = rcRectdes;
+                    copy_rect(Bmp[NEIN].rcDes, rcRectdes);
                     Blitten(Bmp[NEIN].Surface, lpDDSSchrift, false);
                     Posy += 115;
                     break;
@@ -2567,7 +2588,7 @@ function DrawText(Text, Bereich, Art)
         }
         if (Posnext === -1) Posnext = Text.length;
         StdString = Text.slice(Pos, Posnext);
-        if (Posx + BBreite * ((Posnext - Text) - Pos) > TextBereich[Bereich].rcText.right) {
+        if (Posx + BBreite * (Posnext - Pos) > TextBereich[Bereich].rcText.right) {
             Posx = TextBereich[Bereich].rcText.left - BBreite;
             Posy += BHoehe + 3;
         }
@@ -2584,7 +2605,9 @@ function DrawText(Text, Bereich, Art)
 function Textloeschen(Bereich)
 {
     TextBereich[Bereich].Aktiv = false;
-    fill_dest([255, 0, 255], lpDDSSchrift);
+    //fill_dest([255, 0, 255], lpDDSSchrift);
+    copy_rect(rcRectdes, TextBereich[Bereich].rcText)
+    clear_dest(lpDDSSchrift);
 }
 
 function DrawSchatzkarte()
