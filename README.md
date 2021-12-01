@@ -11,3 +11,5 @@ If you are Dirk Plate, I hope you are okay with my intentions. If not, then plea
 I enjoyed your game a lot back in the days. Now I want to make it playable again. :)
 
 I'm simply trying to transcribe the C++ code to JavaScript. Changing the DirectX backend to using Web APIs like 2d Canvas or WebAudio.
+
+[Play it](https://guckstift.github.io/schiffbruch.js/)
