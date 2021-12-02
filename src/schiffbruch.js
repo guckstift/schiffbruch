@@ -2051,31 +2051,13 @@ function ZeigeLogo()
 
 function AbspannBlt(Bild, Prozent)
 {
-    lock_canvas(lpDDSBack);
-
-    for (let x = 0; x < Bmp[Bild].Breite; x++) {
-        for (let y = 0; y < Bmp[Bild].Hoehe; y++) {
-            if ((x + Bmp[Bild].rcDes.left >= MAXX) || (x + Bmp[Bild].rcDes.left <= 0) ||
-                (y + Bmp[Bild].rcDes.top >= MAXY) || (y + Bmp[Bild].rcDes.top <= 0)) continue;
-            let rgbalt = GetPixel((x + Bmp[Bild].rcDes.left),
-                (y + Bmp[Bild].rcDes.top), lpDDSBack);
-            let rgbStruct = GetPixel((x + Bmp[Bild].rcSrc.left),
-                (y + Bmp[Bild].rcSrc.top), lpDDSBack);
-            if ((rgbalt[0] === 0) && (rgbalt[1] === 0) && (rgbalt[2] === 0)) continue;
-            PutPixel(
-                (x + Bmp[Bild].rcDes.left),
-                (y + Bmp[Bild].rcDes.top),
-                [
-                    rgbalt[0] + (rgbStruct[0] - rgbalt[0]) * Prozent / 100,
-                    rgbalt[1] + (rgbStruct[1] - rgbalt[1]) * Prozent / 100,
-                    rgbalt[2] + (rgbStruct[2] - rgbalt[2]) * Prozent / 100
-                ],
-                lpDDSBack
-            );
-        }
-    }
-
-    upload_canvas(lpDDSBack);
+    ctx.globalAlpha = Prozent / 100;
+    copy_rect(rcRectdes, Bmp[Bild].rcDes);
+    rcRectdes.right = rcRectdes.left + Bmp[Bild].Breite;
+    rcRectdes.bottom = rcRectdes.top + Bmp[Bild].Hoehe;
+    copy_rect(rcRectsrc,  Bmp[Bild].rcSrc);
+    Blitten(Bmp[Bild].Surface, lpDDSBack, false);
+    ctx.globalAlpha = 1;
 }
 
 function AbspannCalc()
