@@ -1435,7 +1435,7 @@ function AkBoot()
         case 3:
             ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+28,
                 Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+19);
-            Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[BOOT].Anzahl+1);
+            Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[BOOT].Anzahl+1);
             break;
         case 4: case 5: case 6: case 8: case 9: case 10: case 12: case 13: case 14:
         Guy.Aktiv   = true;
@@ -1447,12 +1447,12 @@ function AkBoot()
         case 7:
             ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+22,
                 Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+16);
-            Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[BOOT].Anzahl+2);
+            Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[BOOT].Anzahl+2);
             break;
         case 11:
             ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+14,
                 Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+11);
-            Scape[Guy.Pos.x][Guy.Pos.y].Phase = (short)(Bmp[BOOT].Anzahl+3);
+            Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[BOOT].Anzahl+3);
             break;
         case 15:
             ShortRoute(Guy.PosAlt.x,Guy.PosAlt.y);

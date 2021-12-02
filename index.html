@@ -23,6 +23,15 @@
 				height: 600px;
 				position: absolute;
 			}
+			#gamma_curtain {
+				width: 800px;
+				height: 600px;
+				position: absolute;
+				background: #fff;
+				mix-blend-mode: multiply;
+				pointer-events: none;
+				display: none;
+			}
 			#start_logo {
 				position: absolute;
 				left: 50%;
@@ -52,9 +61,10 @@
 	<body>
 	<div id="game_screen">
 		<canvas id="canvas" width="800" height="600"></canvas>
-		<img src="gfx/logo-transparent.png" id="start_logo" alt="Schiffbruch Logo">
+		<div id="gamma_curtain"></div>
+		<img src="./gfx/logo-transparent.png" id="start_logo" alt="Schiffbruch Logo">
 		<button id="start_button" onclick="start_game();">
-			<img src="gfx/play-arrow.png" alt="Start Game" id="arrow">
+			<img src="./gfx/play-arrow.png" alt="Start Game" id="arrow">
 		</button>
 	</div>
 	</body>

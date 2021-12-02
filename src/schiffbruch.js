@@ -1960,9 +1960,6 @@ function ZeigeIntro()
 
 function ZeigeAbspann()
 {
-    //HRESULT				ddrval;
-    //short				z;
-
     PlaySound(WAVABSPANN, 100);
 
     rcRectdes.left = 0;
@@ -1984,8 +1981,8 @@ function ZeigeAbspann()
             if (AbspannListe[AbspannNr][z].Aktiv)
                 AbspannBlt(
                     AbspannListe[AbspannNr][z].Bild,
-                    (100 * sin(pi / MAXY * (Bmp[AbspannListe[AbspannNr][z].Bild].rcDes.top +
-                        Bmp[AbspannListe[AbspannNr][z].Aktiv].Hoehe / 2)))
+                    (100 * Math.sin(pi / MAXY * (Bmp[AbspannListe[AbspannNr][z].Bild].rcDes.top +
+                        Bmp[+AbspannListe[AbspannNr][z].Aktiv].Hoehe / 2)))
                 );
         }
     } else if (AbspannZustand === 1) {
@@ -2028,9 +2025,6 @@ function ZeigeAbspann()
 
 function ZeigeLogo()
 {
-    //HRESULT				ddrval;
-    //short				z;
-
     rcRectdes.left = 0;
     rcRectdes.top = 0;
     rcRectdes.right = MAXX;
@@ -2062,7 +2056,7 @@ function AbspannBlt(Bild, Prozent)
                 (y + Bmp[Bild].rcDes.top >= MAXY) || (y + Bmp[Bild].rcDes.top <= 0)) continue;
             let rgbalt = GetPixel((x + Bmp[Bild].rcDes.left),
                 (y + Bmp[Bild].rcDes.top), lpDDSBack);
-            let rgbStruct = GetPixel((short)(x + Bmp[Bild].rcSrc.left),
+            let rgbStruct = GetPixel((x + Bmp[Bild].rcSrc.left),
                 (y + Bmp[Bild].rcSrc.top), lpDDSBack);
             if ((rgbalt[0] === 0) && (rgbalt[1] === 0) && (rgbalt[2] === 0)) continue;
             PutPixel(
@@ -2739,13 +2733,13 @@ function CheckSpzButton()
 function CheckRohstoff()
 {
     let Benoetigt = 0; //Anzahl der Gesamtbenötigten Rohstoffe
-    for (i = 0; i < BILDANZ; i++) Benoetigt += Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Rohstoff[i];
+    for (let i = 0; i < BILDANZ; i++) Benoetigt += Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Rohstoff[i];
 
     //Soviel Rohstoffe werden für diesen Schritt benötigt
     let GebrauchtTmp = Benoetigt / Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].AkAnzahl;
     //Soviel Rohstoffe werden für diesen Schritt benötigt
-    let Gebraucht = (GebrauchtTmp * Scape[Guy.Pos.x][Guy.Pos.y].AkNummer -
-        (GebrauchtTmp * (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer - 1)));
+    let Gebraucht = floor(GebrauchtTmp * Scape[Guy.Pos.x][Guy.Pos.y].AkNummer -
+        floor(GebrauchtTmp * (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer - 1)));
 
     while (1) {
         //Wenn kein Rohstoff mehr vorhanden nur noch einmal die While-Schleife
@@ -3354,16 +3348,13 @@ function ChangeBootsFahrt()
 
 function Fade(RP, GP, BP)
 {
-    /*
-	for(let blackloop=0; blackloop<256; blackloop++)
-	{
-		DDGammaRamp.red[blackloop]=DDGammaOld.red[blackloop]*RP/100;
-		DDGammaRamp.green[blackloop]=DDGammaOld.green[blackloop]*GP/100;
-		DDGammaRamp.blue[blackloop]=DDGammaOld.blue[blackloop]*BP/100;
-	}
-	lpDDGammaControl->SetGammaRamp(0, &DDGammaRamp);
-	 */
-    // TODO: do fading
+    if(RP === 100 && GP === 100 && BP === 100) {
+        gamma_curtain.style.display = "none";
+    }
+    else {
+        gamma_curtain.style.display = "block";
+        gamma_curtain.style.backgroundColor = `rgb(${RP*255/100}, ${GP*255/100}, ${BP*255/100})`;
+    }
 }
 
 function CheckRohr(x, y)
