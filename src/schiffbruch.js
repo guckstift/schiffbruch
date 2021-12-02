@@ -312,12 +312,11 @@ function SaveGame()
         Spielzustand, Stunden, Tag, TextBereich, SchatzGef, Bmp
     };
 
-    //window.localStorage.setItem('save.dat', JSON.stringify(data));
+    window.localStorage.setItem('save.dat', JSON.stringify(data));
 }
 
 function LoadGame()
 {
-    return false;
     let data = window.localStorage.getItem('save.dat');
     if (!data) return false;
     data = JSON.parse(data);
@@ -1547,6 +1546,8 @@ function InRect(x, y, rcRect)
 
 function PutPixel(x, y, color, dest)
 {
+    x = x | 0;
+    y = y | 0;
     let offset = 4 * (x + y * dest.width);
     dest.data.data[offset] = color[0];
     dest.data.data[offset + 1] = color[1];
@@ -1566,6 +1567,8 @@ function upload_canvas(src)
 
 function GetPixel(x, y, src)
 {
+    x = x | 0;
+    y = y | 0;
     let offset = 4 * (x + y * src.width);
     return src.data.data.slice(offset, offset + 4);
 }
@@ -1573,7 +1576,7 @@ function GetPixel(x, y, src)
 function fill_dest(color, dest = null)
 {
     if (dest === null) dest = lpDDSBack;
-    ctx.fillStyle = "rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")";
+    dest.ctx.fillStyle = "rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")";
     dest.ctx.fillRect(
         rcRectdes.left | 0,
         rcRectdes.top | 0,
@@ -1848,7 +1851,7 @@ function Zeige()
     //Die TagesZeit ausgeben
     Textloeschen(TXTTAGESZEIT);
     TextBereich[TXTTAGESZEIT].Aktiv = true;
-    let Stringsave1 = "" + Stunden + 6;
+    let Stringsave1 = "" + (Stunden + 6);
     let Stringsave2 = "" + Minuten;
     StdString = "";
     if (Stunden + 6 < 10) StdString += "0";
@@ -2121,12 +2124,14 @@ function ZeichneBilder(x, y, i, Ziel, Reverse, Frucht)
 {
     let Phase;
 
-    if (Frucht === -1) Phase = Bmp[i].Phase; else Phase = Frucht;
+    if (Frucht === -1) Phase = floor(Bmp[i].Phase); else Phase = floor(Frucht);
     copy_rect(rcRectsrc, Bmp[i].rcSrc);
     if (!Reverse) {
-        rcRectsrc.top += Phase * (Bmp[i].Hoehe);
+        rcRectsrc.top += floor(Phase * (Bmp[i].Hoehe));
     } else {
-        rcRectsrc.top = Bmp[i].rcSrc.top + (Bmp[i].Anzahl - 1) * Bmp[i].Hoehe - Phase * Bmp[i].Hoehe;
+        rcRectsrc.top = floor(
+            Bmp[i].rcSrc.top + (Bmp[i].Anzahl - 1) * Bmp[i].Hoehe - Phase * Bmp[i].Hoehe
+        );
     }
     rcRectsrc.bottom = rcRectsrc.top + (Bmp[i].Hoehe);
     rcRectdes.left = x;
@@ -2490,7 +2495,7 @@ function ZeichnePanel()
     TextBereich[TXTCHANCE].Aktiv = true;
     TextBereich[TXTCHANCE].rcText.top = Bmp[RING].rcDes.top + Ringtmp + Bmp[RING].Hoehe;
     TextBereich[TXTCHANCE].rcText.bottom = TextBereich[TXTCHANCE].rcText.top + S2YPIXEL;
-    StdString = "" + Chance;
+    StdString = "" + Chance.toFixed(1);
     DrawString(StdString, (TextBereich[TXTCHANCE].rcText.left),
         (TextBereich[TXTCHANCE].rcText.top), 2);
 
@@ -2599,19 +2604,19 @@ function DrawText(Text, Bereich, Art)
             let scratch = Text[Posnext2 + 1]; //Zur Variablenausgabe
             switch (scratch) {
                 case 'a':
-                    StdString2 = " " + Tag;
+                    StdString2 = " " + floor(Tag);
                     Anzahl = StdString2.length;
                     DrawString(StdString2, Posx, Posy, Art);
                     Posx += BBreite * (Anzahl);
                     break;
                 case 'b':
-                    StdString2 = " " + Guy.Resource[GESUNDHEIT];
+                    StdString2 = " " + floor(Guy.Resource[GESUNDHEIT]);
                     Anzahl = StdString2.length;
                     DrawString(StdString2, Posx, Posy, Art);
                     Posx += BBreite * (Anzahl);
                     break;
                 case 'c':
-                    StdString2 = " " + Chance;
+                    StdString2 = " " + Chance.toFixed(2);
                     Anzahl = StdString2.length;
                     DrawString(StdString2, Posx, Posy, Art);
                     Posx += BBreite * (Anzahl);
