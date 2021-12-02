@@ -656,7 +656,7 @@ function AddTime(h, m)
     if ((Spielzustand === SZSPIEL) && (!BootsFahrt)) {
         for (let i = 0; i <= (60 * h + m); i++) {
             if (Chance === 0) break;
-            if (rand() % ((int)(1 / (Chance / 72000))) === 1) {
+            if (rand() % (1 / (Chance / 72000)) === 1) {
                 Guy.Aktiv = false;
                 Guy.AkNummer = 0;
                 Guy.Aktion = AKGERETTET;
@@ -825,7 +825,9 @@ function MouseInSpielflaeche(Button, Push, xDiff, yDiff)
                 (Scape[Erg.x][Erg.y].Objekt <= FEUERSTELLE)) {
                 //Baufortschrittanzeigen
                 Text += " (";
-                Text += (Scape[Erg.x][Erg.y].AkNummer * 100) / Bmp[Scape[Erg.x][Erg.y].Objekt].AkAnzahl;
+                Text += floor(
+                    (Scape[Erg.x][Erg.y].AkNummer * 100) / Bmp[Scape[Erg.x][Erg.y].Objekt].AkAnzahl
+                );
                 Text += "%)";
                 //benötigte Rohstoffe anzeigen
                 MakeRohString(Erg.x, Erg.y, -1);
@@ -1569,6 +1571,7 @@ function GetPixel(x, y, src)
 {
     x = x | 0;
     y = y | 0;
+    if(x < 0 || y < 0 || x >= src.width || y >= src.height) return [0,0,0,0];
     let offset = 4 * (x + y * src.width);
     return src.data.data.slice(offset, offset + 4);
 }
@@ -3814,7 +3817,6 @@ function Schatz()
             rcRectdes.bottom = rcRectdes.top + Bmp[KREUZ].Hoehe;
             Blitten(Bmp[KREUZ].Surface, lpDDSSchatzkarte, true);
 
-
             lock_canvas(lpDDSSchatzkarte);
 
             //Weichzeichnen
@@ -3829,9 +3831,12 @@ function Schatz()
                         PutPixel(
                             i, j,
                             [
-                                (rgbleft.r + rgbtop.r + rgbright.r + rgbbottom.r + rgbStruct.r) / 5,
-                                (rgbleft.g + rgbtop.g + rgbright.g + rgbbottom.g + rgbStruct.g) / 5,
-                                (rgbleft.b + rgbtop.b + rgbright.b + rgbbottom.b + rgbStruct.b) / 5
+                                (rgbleft[0] + rgbtop[0] + rgbright[0] + rgbbottom[0] +
+                                    rgbStruct[0]) / 5,
+                                (rgbleft[1] + rgbtop[1] + rgbright[1] + rgbbottom[1] +
+                                    rgbStruct[1]) / 5,
+                                (rgbleft[2] + rgbtop[2] + rgbright[2] + rgbbottom[2] +
+                                    rgbStruct[2]) / 5
                             ],
                             lpDDSSchatzkarte
                         );
@@ -3839,6 +3844,7 @@ function Schatz()
                 }
             }
             upload_canvas(lpDDSSchatzkarte);
+
             break;
         }
     }
