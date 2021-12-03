@@ -141,7 +141,6 @@ function is_int(n)
 function set_cursor(type)
 {
     if(CursorTyp !== type) {
-        console.log("set cursor to ", type);
         LastCursorType = CursorTyp;
         CursorTyp = type;
     }
@@ -198,7 +197,6 @@ function LoadString(id)
 
 function InitDDraw()
 {
-    console.log("InitDDraw");
     // Set the video mode to 800x600
     canvas.width = MAXX;
     canvas.height = MAXY;
@@ -245,14 +243,11 @@ function InitDDraw()
     lpDDSSchrift = createSurface(MAXX, MAXY);
     //In diese Surface soll die Schatzkarte gespeichert werden
     lpDDSSchatzkarte = createSurface(SKARTEX, SKARTEY);
-    console.log("...done");
 }
 
 function InitDSound()
 {
-    console.log("InitDSound");
     audioCtx = new AudioContext();
-    console.log("...done");
 }
 
 function LoadSound(Sound)
@@ -268,13 +263,11 @@ function LoadSound(Sound)
 
 function PlaySound(Sound, Volume)
 {
-    //console.log("play sound ", Sound, " volume ", Volume);
     if (lpdsbWav[Sound] && !lpdsbWav[Sound].src) {
         const source = audioCtx.createBufferSource();
         source.buffer = lpdsbWav[Sound];
         source.connect(audioCtx.destination);
         if(Wav[Sound].Loop) source.loop = true;
-        console.log("sound", Sound, "looped", Wav[Sound].Loop);
         source.start();
         source.buffer.src = source;
         source.onended = () => {
@@ -392,7 +385,6 @@ function Blit_destrect(lpDDSVon, lpDDSNach)
 
 function InitDInput()
 {
-    console.log("InitDInput");
     canvas.onmousemove = e => {
         let rect = canvas.getBoundingClientRect();
         cur_mouse_state.lX = e.clientX - cur_mouse_state.x - rect.left;
@@ -412,14 +404,12 @@ function InitDInput()
     };
 
     window.onkeydown = e => {
-        console.log("keydown ", e.key)
         keymap[e.key] = true;
     };
 
     window.onkeyup = e => {
         keymap[e.key] = false;
     };
-    console.log("...done");
 }
 
 function CheckMouse()
@@ -1601,7 +1591,6 @@ function clear_dest(dest = null)
 
 function NeuesSpiel(neu)
 {
-    console.log("NeuesSpiel");
     let LoadOK = false;
 
     InitStructs();
@@ -1716,7 +1705,6 @@ function NeuesSpiel(neu)
     LAnimation = Anitmp;
     Generate(); //Und nochmal ohne das die Gegend entdeckt ist
     Guy.PosAlt = Guy.PosScreen;
-    console.log("NeuesSpiel...done");
 }
 
 function Generate()
@@ -2069,7 +2057,7 @@ function AbspannCalc()
         for (let k = 1; k < 10; k++) {
             if (AbspannListe[AbspannNr][k].Bild === -1) break;
             if (!AbspannListe[AbspannNr][k].Aktiv) continue;
-            let i = 150 / LastBild;
+            let i = floor(150 / LastBild);
             Bmp[AbspannListe[AbspannNr][k].Bild].rcDes.top -= i;
 
             if (Bmp[AbspannListe[AbspannNr][k].Bild].rcDes.top < MAXY - 400) {
@@ -2087,12 +2075,13 @@ function AbspannCalc()
                     } else {
                         AbspannNr = GUYLINKS;
                         AbspannZustand = 1;
+                        return;
                     }
                 }
             }
         }
     } else if (AbspannZustand === 1) {
-        let i = LastBild / Bmp[AbspannNr].Geschwindigkeit;
+        let i = floor(LastBild / Bmp[AbspannNr].Geschwindigkeit);
         if (i < 1) i = 1;
         if (Bild % i === 0) {
             Bmp[AbspannNr].Phase++;
@@ -4395,10 +4384,6 @@ function CalcKoor()
 function frame(now)
 {
     requestAnimationFrame(frame);
-
-    //console.log("frame spielzustand = ", Spielzustand);
-    //frametime.innerText = "fps " + LastBild;
-
     Bild++;
     let Zeitsave = now / 1000;
     const test_period_sec = 5;
