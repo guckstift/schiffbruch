@@ -35,27 +35,46 @@
 			}
 			#start_logo {
 				position: absolute;
-				left: 50%;
+				left: 0;
 				top: 50%;
-				transform: translate(-50%, -50%);
+				transform: translate(0, -50%);
 				filter: grayscale(0.75);
+				width: 250px;
+				height: 250px;
 			}
-			#start_button {
+			#select_lang_panel {
 				position: absolute;
-				width: 100px;
-				height: 100px;
-				background: none;
+				top: 50%;
+				left: 300px;
+				transform: translate(0, -50%);
+				width: 464px;
+				height: 500px;
+				background-image: url("./gfx/select-paper.png");
+			}
+			#start_button_de,
+			#start_button_en {
+				position: absolute;
 				border: none;
 				padding: 0;
-				left: 420px;
-				top: 300px;
-				transform: translate(-50%, -50%);
-			}
-			#arrow {
-				position: absolute;
-				left: 0;
-				top: 0;
+				width: 297px;
+				height: 89px;
+				background: none;
 				cursor: pointer;
+				filter: grayscale(0.75);
+			}
+			#start_button_de:hover,
+			#start_button_en:hover {
+				filter: none;
+			}
+			#start_button_de {
+				left: 95px;
+				top: 125px;
+				background-image: url("./gfx/select-lang-de.png");
+			}
+			#start_button_en {
+				left: 95px;
+				top: 285px;
+				background-image: url("./gfx/select-lang-en.png");
 			}
 		</style>
 	</head>
@@ -64,9 +83,10 @@
 		<canvas id="canvas" width="800" height="600"></canvas>
 		<div id="gamma_curtain"></div>
 		<img src="./gfx/logo-transparent.png" id="start_logo" alt="Schiffbruch Logo">
-		<button id="start_button" onclick="start_game();">
-			<img src="./gfx/play-arrow.png" alt="Start Game" id="arrow">
-		</button>
+		<div id="select_lang_panel">
+			<button id="start_button_de" onclick="start_game('de');"></button>
+			<button id="start_button_en" onclick="start_game('en');"></button>
+		</div>
 	</div>
 	</body>
 </html>

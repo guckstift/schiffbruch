@@ -217,7 +217,9 @@ const TESTSPIELER	   = PROGRAMMIERUNG+11;
 const SCHWARZ		   = PROGRAMMIERUNG+12;
 const MUSIK		   = PROGRAMMIERUNG+13;
 const DPSOFTWARE	 =   PROGRAMMIERUNG+14;
-const BILDANZ		  =  DPSOFTWARE+1; //Wieviele Bilder
+const TRANSLATION	 =   PROGRAMMIERUNG+15;
+const MARK	 =   PROGRAMMIERUNG+16;
+const BILDANZ		  =  MARK+1; //Wieviele Bilder
 
 //Sounds
 const WAVNICHTS	 = 0;
@@ -415,7 +417,7 @@ const Bau		= "BAU";
 const Credits	= "CREDITS";
 const Logo		= "LOGO";
 
-const messages = {
+const messages_de = {
 	GITTERAN                : "Gitternetz anschalten",
 	GITTERAUS               : "Gitternetz ausschalten",
 	MEAKTIONAUF             : "Oeffnet das Aktionsmenue",
@@ -599,6 +601,211 @@ const messages = {
 	SOUNDAN                 : "Sound anstellen",
 	SOUNDAUS                : "Sound austellen",
 	KEINSOUND               : "Leider kein Sound",
+};
+
+const messages_en = {
+	GITTERAN                : "Turn grid on",
+	GITTERAUS               : "Turn grid off",
+	MEAKTIONAUF             : "Opens the Action Menu",
+	MEAKTIONZU              : "Closes the Action Menu",
+	BEGINNSUCHEN            : "Search the surroundings",
+	BEGINNFAELLEN           : "Cut tree",
+	SOSPAET                 : "It's that late?",
+	BEGINNESSEN             : "Eat and drink",
+	MEINVENTARAUF           : "Opens the Inventory",
+	MEINVENTARZU            : "Closes the Inventory",
+	FREI                    : ".",
+	AST                     : "Branch",
+	STEIN                   : "Stone",
+	ROHASTGEFUNDEN          : "After searching forever in the blazing sun, I found a branch-- " +
+		"exactly what I've been looking for. The search was worth it.",
+	ROHASTZUVIEL            : "After digging around laboriously in the area, I found a beautiful " +
+		"branch. I'm carrying around so many branches already that I end up throwing it away.",
+	ROHSTEINGEFUNDEN        : "In the tropical heat I looked more closely at the surrounding area " +
+		"these past few minutes. These beautiful stones caught my attention. I could use these " +
+		"three quite well and take them along.",
+	ROHSTEINZUVIEL          : "YESSS!! Another stone!! I have plenty of them already in my " +
+		"pockets and decide to throw the extra stones into the sea (Hopefully I didn't hit a " +
+		"rescue ship with them!).",
+	NICHTSGEFUNDEN          : "After looking through the area very closely, I managed to find " +
+		"absolutely nothing. ",
+	AXT                     : "Ax",
+	KEINESSENTRINKEN        : "There is neither anything to eat nor to drink here.",
+	BAUEAXT                 : "With great skill, I combined a stone with a branch and made an " +
+		"ax. With this, I'm now in a situation where I can prepare wood, for example:  chop down " +
+		"trees. /z I bet I could build something else from a branch and a stone.",
+	STEINPLUSASTNICHTS      : "Unfortunately, there's nothing else that I can build with a stone " +
+		"and a branch.",
+	NICHTBASTELN            : "I can't build anything sensible from these two things.  " +
+		"Maybe I could try a couple of other things?",
+	ROHBLATTGEFUNDEN        : "Hmmmm, that's a big leaf! I could use that, I bet:  I'd better " +
+		"take it along just to be safe.  Who knows whether I'll ever come across something this " +
+		"unusual again?",
+	ROHBLATTZUVIEL          : "Yet another very rare leaf.  They show up quite frequently.  " +
+		"Therefore, I won't bother taking it along.",
+	BLATT                   : "Leaf",
+	ROHSTAMMZUVIEL          : "I don't need any more tree trunks right now. ",
+	MEBAUENAUF              : "Opens the Build Menu",
+	MEBAUENZU               : "Closes the Build Menu",
+	BEGINNFELD              : "Plow field",
+	GEGENDNICHT             : "This area is not suitable, unfortunately.",
+	BAUEEGGE                : "After tying an oblong stone to a branch, the whole thing looks " +
+		"like a harrow or a hoe. With this, I should be able to cultivate a field so that I don't " +
+		"have rely upon looking for these tedious bushes.",
+	EGGE                    : "Hoe",
+	TAGENDE1                : "Day /a is over. Unfortunately, I haven't been successful in " +
+		"building a comfortable place to sleep.  Therefore, I have to sleep under the open sky " +
+		"tonight.  These wild animals won't leave me alone and my health has dropped to /b %. " +
+		"My chance of being rescued is /c %.",
+	GERETTET                : "Finally, a ship!! Thanks to my intense efforts, I've been found " +
+		"and the ship has now dropped anchor at the island.  Should I leave this desolate " +
+		"island? /d ",
+	BEGINNZELT              : "Build tent",
+	ROHSTOFFNICHT           : "I don't have enough raw materials to build this.",
+	KEINBAUM                : "There isn't a tree here.",
+	WEITER                  : "Continue process",
+	STOP                    : "Interrupt process",
+	TAGENDE2                : "Day /a is over now. Fortunately, I reached my tent on time, and " +
+		"the bats will leave my alone, at least. Unfortuantely, the wild animals are biting at " +
+		"my feet and my health has fallen to /b %. The chance of being rescued is /c %.",
+	BEGINNSCHLAFEN          : "Sleep 1 hour",
+	WIESETEXT               : "Plain",
+	MEERTEXT                : "Sea",
+	STRANDTEXT              : "Beach",
+	TREIBSANDTEXT           : "Quicksand",
+	FEUCHTEWIESETEXT        : "Damp plain",
+	BAUMTEXT                : "Tree",
+	FELDTEXT                : "Field",
+	ZELTTEXT                : "Tent",
+	BUSCHTEXT               : "Bush",
+	MIT                     : "with",
+	LIANE                   : "Liana ",
+	ROHLIANEGEFUNDEN        : "With a lot of effort, I've managed to tear off a liana from the " +
+		"tree. You can use lianas for many things.  Therefore, I'll take it and carry it with me " +
+		"right now..",
+	ROHLIANEZUVIEL          : "Lianas aren't that useful now and I don't need to carry any more " +
+		"of them.",
+	ANGEL                   : "Rod",
+	BAUEANGEL               : "This thin, flexible branch and this liana have been combined to " +
+		"make an excellent fishing rod.  Finally, I don't have to live as a strict vegetarian " +
+		"and can try catching a few fat trout.",
+	BEGINNANGELN            : "Fish",
+	KEINWASSER              : "How can I fish here?",
+	BOOTTEXT                : "Dug-out",
+	BEGINNBOOT              : "Build dug-out",
+	STAMM                   : "Tree trunk",
+	BEGINNABLEGEN           : "Go on/off board",
+	TAGENDE3                : "Day /a is over now. It is pitch black.  I'm lost and will surely " +
+		"die.  Let that be a lesson to me. ",
+	FLUSSTEXT               : "River",
+	BEGINNROHR              : "Build irrigation",
+	ROHRTEXT                : "Irrigation pipe",
+	BEGINNDESTROY           : "Tear down structure",
+	KEINBAUWERK             : "There isn't any structure here to tear down.",
+	BEGINNSOS               : "Write S.O.S.",
+	SOSTEXT                 : "S.O.S.",
+	BAUMZUGROSS             : "This tree is a bit too big.",
+	BEGINNHAUS1             : "Build ladder for treehouse",
+	HAUS1TEXT               : "Tree and ladder",
+	HAMMER                  : "Hammer",
+	BEGINNHAUS2             : "Build a platform for treehouse",
+	HAUS2TEXT               : "Tree and platform",
+	HAUS3TEXT               : "Tree and treehouse",
+	BEGINNHAUS3             : "Build treehouse",
+	TAGENDE4                : "Day /a is over now. I'm quite glad that I built this beautiful " +
+		"treehouse. The wild animals are leaving me alone now.  I'm sleeping very well and my " +
+		"health has risen to /b %. My chances of being saved are at /c %.",
+	BAUMZUKLEIN             : "This tree is a bit too small.",
+	NICHTOHNELEITER         : "Without a ladder, I can't build a platform.",
+	NICHTOHNEPLATTFORM      : "I can only build a treehouse on a platform.",
+	CHANCETEXT              : "My chances of being saved today",
+	BAUMGROSSTEXT           : "Big tree",
+	FEUERSTELLETEXT         : "Bonfire",
+	BEGINNFEUERSTELLE       : "Pile up wood for bonfire",
+	FEUERTEXT               : "Smoke signal",
+	BEGINNANZUENDEN         : "Light bonfire",
+	KEINEFEUERST            : "I can only light bonfires",
+	BEGINNAUSSCHAU          : "Look for rescue ships",
+	FERNROHR                : "Telescope",
+	BEGINNSCHATZKARTE       : "Examine treasure map",
+	SCHAUFEL                : "Shovel",
+	STREICHHOLZ             : "Matches",
+	BEGINNSCHATZ            : "Dig for treasure",
+	SCHATZGEFUNDEN          : "Hurrah!! I've found an old pirate treasure.  With my hopes set on " +
+		"a gigantic treasure, I opened the old, musty chest and found.... only a box of " +
+		"matches.  Well, I can't buy anything here, anyhow.",
+	KEINSCHATZ              : "Although I dug around the entire area, I didn't find any " +
+		"treasure.  Perhaps I should first take a look at a treasure map.",
+	WRACKTEXT               : "Shipwreck",
+	FERNROHRGEFUNDEN        : "I searched the entire wreck.  After diving into the captain's " +
+		"cabin, I found this old telescope.  With this, I can be on the lookout for passing " +
+		"ships and the chances of being saved have risen. /z On the way out, I also found a " +
+		"hammer and a few nails from the ship's carpenter.  With these, I could build a more " +
+		"stable type of housing.",
+	INTROTEXT               : "I'm in a mess now:  stranded on a lonely island out in the middle " +
+		"of the Pacific.  I'd better look for some fresh water and food as soon as possible.  " +
+		"Maybe I could build a few tools as well.",
+	NICHTSGEFUNDEN2         : "I searched all over the ground, but I didn't find anything of " +
+		"interest.",
+	KARTE                   : "Treasure map",
+	KARTEGEFUNDEN           : "After diving into the ancient pirate ship without finding a " +
+		"single thing, suddenly I found the skeleton of the captain.  In his hand, he was " +
+		"holding a surprisingly well-preserved treasure map.  After taking it, I found a shovel " +
+		"and took that as well.  Now I can fill my idle time by searching for treasure! ",
+	ANIMATIONAUS            : "Turn off water animation",
+	ANIMATIONAN             : "Turn on water animation",
+	ASTPLUSLIANENICHTS      : "I can't build anything else with a liana and a branch.",
+	SCHLEUDER               : "Slingshot",
+	STEINPLUSLIANENICHTS    : "I can't think of anything else that I could build with a liana " +
+		"and a stone.",
+	BAUESCHLEUDER           : "I made a knot and loop in the liana and now I can misuse it as a " +
+		"slingshot.  Just put a stone in the loop and I'll be able to go off on a hunt.  It " +
+		"seems as though there are only birds on this island in the daytime.  I should restrict " +
+		"myself to shooting them while they're in the trees.",
+	KEINVOGEL               : "There are no birds here.",
+	BEGINNSCHLEUDER         : "Hunt for birds",
+	NICHTAUFWASSERSCHLAFEN  : "It's too dangerous to go to sleep in this small boat.",
+	WELLENZUHOCH            : "The waves are too high to see anything.",
+	GRABENBEDINGUNGEN       : "I can only dig for treasure on an open and flat area.",
+	FELDBEDINGUNGEN         : "I can only lay out fields on flat, damp, and open meadows.",
+	ZELTBEDINGUNGEN         : "I can build tents only on flat and open areas.",
+	BOOTBEDINGUNGEN         : "I can build boats only on an open beach.",
+	ROHRBEDINGUNGEN         : "I can build pipes only on flat and open areas.",
+	SOSBEDINGUNGEN          : "I can only write SOS on a flat and open area.",
+	FEUERSTELLENBEDINGUNGEN : "I can only build bonfires on flat and open landscapes.",
+	BOOTHILFE               : "I've built my first boat, a dug-out.  (To go on board or off " +
+		"board, click on the 'Anchor' button.)  I can only go off board when nothing else is in " +
+		"the way on the beach.  I should also keep my eye on the time, because I could never " +
+		"survive a night on the high seas.",
+	FELDHILFE               : "My first field is ready.  The grain will grow on its own and when " +
+		"it turns yellow, I will be able to eat it. ",
+	FEUERSTELLEHILFE        : "I've built this huge pile of wood for a bonfire, but how can I " +
+		"light it?  The fire would burn for quite a while and would increase my chances of being " +
+		"rescued.  The higher that the bonfire is located, the better.",
+	HAUS3HILFE              : "My treehouse is finally finished.  I can go to sleep here at any " +
+		"time and recover my health.  If I want to spend the night here, I should be in this " +
+		"immediate area by 1800 hours (6 p.m.), before it gets dark.",
+	ROHRHILFE               : "Now I own an irrigation system. They will fill up with water if I " +
+		"have built it near the river.  The plains can be irrigated with water so that I can lay " +
+		"out a field here.  These will disappear, of course, if I tear down the pipe.",
+	SOSHILFE                : "Passing planes should be able to notice me now and could send for " +
+		"help.  The SOS is especially easy to read on the beach.",
+	ZELTHILFE               : "Finally, I have a roof over my head. I can go to sleep here at " +
+		"any time. If I want to use this at night, I have to be in the immediate area when it " +
+		"gets dark (1800 hours or 6 p.m.)",
+	SPIELVERLASSEN          : "Do you really want to exit the game? /z (The game will be saved " +
+		"automatically) /d ",
+	BEENDEN                 : "End the game",
+	NEUBEGINNEN             : "Do you want to start a new game? /d ",
+	NEU                     : "Start new game",
+	TAGNEU                  : "Would you like to begin the day over again? /d ",
+	TOD                     : "Suddenly, I'm feeling very strange.  I think that I'm dying...",
+	TAGENDE5                : "DDay /a is over now. I don't feel too well and probably won't " +
+		"survive through the night. ",
+	TAGNEU2                 : "Begin a new day",
+	SOUNDAN                 : "Turn on sound",
+	SOUNDAUS                : "Turn off sound",
+	KEINSOUND               : "Sorry. No sound",
 };
 
 const TerrainInfoLabels = [

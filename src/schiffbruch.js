@@ -1,3 +1,9 @@
+let language = "de";
+let messages = messages_de;
+let gui_img_name = "gui.png";
+let paper_img_name = "paper.png";
+let credits_img_name = "credits.png";
+
 //ddraw
 let lpDDSPrimary = null;   // DirectDraw primary surface
 let lpDDSBack = null;      // DirectDraw back surface
@@ -172,6 +178,10 @@ function rand()
 function loadImage(alias)
 {
     let url = BMP_FILENAMES[alias];
+    return loadImage_url(url);
+}
+function loadImage_url(url)
+{
     let img = document.createElement("img");
     img.is_ready = false;
     img.onload = () => {
@@ -206,7 +216,7 @@ function InitDDraw()
     //In diese Surface sollen die Bausteine geladen werden
     lpDDSMisc = loadImage(Misc);
     //In diese Surface sollen das Panel geladen werden
-    lpDDSPanel = loadImage(Panel);
+    lpDDSPanel = loadImage_url("gfx/" + gui_img_name);
     //In diese Surface sollen die Animation der Figur gespeichert werden
     lpDDSGuyAni = loadImage(GuyAni);
     //In diese Surface sollen die Landschaftsanimationen gespeichert werden
@@ -216,7 +226,7 @@ function InitDDraw()
     //In diese Surface soll die Schrift2 gespeichert werden
     lpDDSSchrift2 = loadImage(Schrift2);
     //In diese Surface soll das Papier gespeichert werden
-    lpDDSPapier = loadImage(Papier);
+    lpDDSPapier = loadImage_url("gfx/" + paper_img_name);
     //In diese Surface solln die B�ume gespeichert werden
     lpDDSBaum = loadImage(Baum);
     //In diese Surface solln die Cursor gespeichert werden
@@ -230,7 +240,7 @@ function InitDDraw()
     //In diese Surface solln die Bauwerke gespeichert werden
     lpDDSBau = loadImage(Bau);
     //In diese Surface solln die Credits gespeichert werden
-    lpDDSCredits = loadImage(Credits);
+    lpDDSCredits = loadImage_url("gfx/" + credits_img_name);
     //In diese Surface solln das Logo gespeichert werden
     lpDDSLogo = loadImage(Logo);
 
@@ -4447,9 +4457,22 @@ function main()
 
 //addEventListener("load", main);
 
-function start_game()
+function start_game(_language)
 {
-    start_button.style.display = "none";
+    language = _language;
+    select_lang_panel.style.display = "none";
     start_logo.style.display = "none";
+    if(language === "en") {
+        messages = messages_en;
+        gui_img_name = "gui_en.png";
+        paper_img_name = "paper_en.png";
+        credits_img_name = "credits_en.png";
+    }
+    else if(language === "de") {
+        messages = messages_de;
+        gui_img_name = "gui.png";
+        paper_img_name = "paper.png";
+        credits_img_name = "credits.png";
+    }
     main();
 }

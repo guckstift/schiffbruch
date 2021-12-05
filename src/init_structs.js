@@ -1032,7 +1032,7 @@ function InitStructs()
     Bmp[BAUM4].Breite = (Bmp[BAUM4].rcSrc.right - Bmp[BAUM4].rcSrc.left);
     Bmp[BAUM4].Hoehe = (Bmp[BAUM4].rcSrc.bottom - Bmp[BAUM4].rcSrc.top);
 
-    //Baumgro�
+    //Baumgroß
     Bmp[BAUMGROSS].rcSrc.left = 238;
     Bmp[BAUMGROSS].rcSrc.top = 0;
     Bmp[BAUMGROSS].rcSrc.right = 238+26;
@@ -1840,23 +1840,40 @@ function InitStructs()
 
     //JA
     Bmp[JA].Anzahl = 1;
-    Bmp[JA].rcSrc.left = 0;
-    Bmp[JA].rcSrc.top  = 154;
-    Bmp[JA].rcSrc.right= Bmp[JA].rcSrc.left+41;
-    Bmp[JA].rcSrc.bottom=Bmp[JA].rcSrc.top +42;
-    Bmp[JA].Breite = (Bmp[JA].rcSrc.right - Bmp[JA].rcSrc.left);
-    Bmp[JA].Hoehe = (Bmp[JA].rcSrc.bottom - Bmp[JA].rcSrc.top);
     Bmp[JA].Surface = lpDDSPapier;
-
     //NEIN
     Bmp[NEIN].Anzahl = 1;
-    Bmp[NEIN].rcSrc.left = 41;
-    Bmp[NEIN].rcSrc.top  = 154;
-    Bmp[NEIN].rcSrc.right= Bmp[NEIN].rcSrc.left+100;
-    Bmp[NEIN].rcSrc.bottom=Bmp[NEIN].rcSrc.top +39;
+    Bmp[NEIN].Surface = lpDDSPapier;
+
+    if (language === "en") {
+        //JA
+        Bmp[JA].rcSrc.left = 0;
+        Bmp[JA].rcSrc.top = 154;
+        Bmp[JA].rcSrc.right = Bmp[JA].rcSrc.left + 68;
+        Bmp[JA].rcSrc.bottom = Bmp[JA].rcSrc.top + 42;
+        //NEIN
+        Bmp[NEIN].rcSrc.left = 68;
+        Bmp[NEIN].rcSrc.top = 154;
+        Bmp[NEIN].rcSrc.right = Bmp[NEIN].rcSrc.left + 68;
+        Bmp[NEIN].rcSrc.bottom = Bmp[NEIN].rcSrc.top + 42;
+    }
+    else if(language === "de") {
+        //JA
+        Bmp[JA].rcSrc.left = 0;
+        Bmp[JA].rcSrc.top = 154;
+        Bmp[JA].rcSrc.right = Bmp[JA].rcSrc.left + 41;
+        Bmp[JA].rcSrc.bottom = Bmp[JA].rcSrc.top + 42;
+        //NEIN
+        Bmp[NEIN].rcSrc.left = 41;
+        Bmp[NEIN].rcSrc.top = 154;
+        Bmp[NEIN].rcSrc.right = Bmp[NEIN].rcSrc.left + 100;
+        Bmp[NEIN].rcSrc.bottom = Bmp[NEIN].rcSrc.top + 39;
+
+    }
+    Bmp[JA].Breite = (Bmp[JA].rcSrc.right - Bmp[JA].rcSrc.left);
+    Bmp[JA].Hoehe = (Bmp[JA].rcSrc.bottom - Bmp[JA].rcSrc.top);
     Bmp[NEIN].Breite = (Bmp[NEIN].rcSrc.right - Bmp[NEIN].rcSrc.left);
     Bmp[NEIN].Hoehe = (Bmp[NEIN].rcSrc.bottom - Bmp[NEIN].rcSrc.top);
-    Bmp[NEIN].Surface = lpDDSPapier;
 
     //Sonne
     Bmp[SONNE].Anzahl = 1;
@@ -1878,6 +1895,10 @@ function InitStructs()
     Bmp[PROGRAMMIERUNG].rcSrc.top  = 0;
     Bmp[PROGRAMMIERUNG].rcSrc.right= Bmp[PROGRAMMIERUNG].rcSrc.left+348;
     Bmp[PROGRAMMIERUNG].rcSrc.bottom=Bmp[PROGRAMMIERUNG].rcSrc.top +49;
+    if(language === "en") {
+        Bmp[PROGRAMMIERUNG].rcSrc.right= Bmp[PROGRAMMIERUNG].rcSrc.left+284;
+        Bmp[PROGRAMMIERUNG].rcSrc.bottom=Bmp[PROGRAMMIERUNG].rcSrc.top +49;
+    }
     Bmp[PROGRAMMIERUNG].Breite = (Bmp[PROGRAMMIERUNG].rcSrc.right - Bmp[PROGRAMMIERUNG].rcSrc.left);
     Bmp[PROGRAMMIERUNG].Hoehe = (Bmp[PROGRAMMIERUNG].rcSrc.bottom - Bmp[PROGRAMMIERUNG].rcSrc.top);
     Bmp[PROGRAMMIERUNG].rcDes.left = MAXX/2-Bmp[PROGRAMMIERUNG].Breite/2;
@@ -1920,6 +1941,10 @@ function InitStructs()
     Bmp[TESTSPIELER].rcSrc.top  = 143;
     Bmp[TESTSPIELER].rcSrc.right= Bmp[TESTSPIELER].rcSrc.left+210;
     Bmp[TESTSPIELER].rcSrc.bottom=Bmp[TESTSPIELER].rcSrc.top +55;
+    if(language === "en") {
+        Bmp[TESTSPIELER].rcSrc.right= Bmp[TESTSPIELER].rcSrc.left+146;
+        Bmp[TESTSPIELER].rcSrc.bottom=Bmp[TESTSPIELER].rcSrc.top +55;
+    }
     Bmp[TESTSPIELER].Breite = (Bmp[TESTSPIELER].rcSrc.right - Bmp[TESTSPIELER].rcSrc.left);
     Bmp[TESTSPIELER].Hoehe = (Bmp[TESTSPIELER].rcSrc.bottom - Bmp[TESTSPIELER].rcSrc.top);
     Bmp[TESTSPIELER].rcDes.left = MAXX/2-Bmp[TESTSPIELER].Breite/2;
@@ -1931,9 +1956,9 @@ function InitStructs()
     //TOBIAS
     Bmp[TOBIAS].Anzahl = 1;
     Bmp[TOBIAS].rcSrc.left = 0;
-    Bmp[TOBIAS].rcSrc.top  = 198;
+    Bmp[TOBIAS].rcSrc.top  = 199;
     Bmp[TOBIAS].rcSrc.right= Bmp[TOBIAS].rcSrc.left+273;
-    Bmp[TOBIAS].rcSrc.bottom=Bmp[TOBIAS].rcSrc.top +56;
+    Bmp[TOBIAS].rcSrc.bottom=Bmp[TOBIAS].rcSrc.top +55;
     Bmp[TOBIAS].Breite = (Bmp[TOBIAS].rcSrc.right - Bmp[TOBIAS].rcSrc.left);
     Bmp[TOBIAS].Hoehe = (Bmp[TOBIAS].rcSrc.bottom - Bmp[TOBIAS].rcSrc.top);
     Bmp[TOBIAS].rcDes.left = MAXX/2-Bmp[TOBIAS].Breite/2;
@@ -2018,6 +2043,10 @@ function InitStructs()
     Bmp[WEITEREHILFE].rcSrc.top  = 562;
     Bmp[WEITEREHILFE].rcSrc.right= Bmp[WEITEREHILFE].rcSrc.left+258;
     Bmp[WEITEREHILFE].rcSrc.bottom=Bmp[WEITEREHILFE].rcSrc.top +46;
+    if (language === "en") {
+        Bmp[WEITEREHILFE].rcSrc.right= Bmp[WEITEREHILFE].rcSrc.left+339;
+        Bmp[WEITEREHILFE].rcSrc.bottom=Bmp[WEITEREHILFE].rcSrc.top +59;
+    }
     Bmp[WEITEREHILFE].Breite = (Bmp[WEITEREHILFE].rcSrc.right - Bmp[WEITEREHILFE].rcSrc.left);
     Bmp[WEITEREHILFE].Hoehe = (Bmp[WEITEREHILFE].rcSrc.bottom - Bmp[WEITEREHILFE].rcSrc.top);
     Bmp[WEITEREHILFE].rcDes.left = MAXX/2-Bmp[WEITEREHILFE].Breite/2;
@@ -2030,6 +2059,10 @@ function InitStructs()
     Bmp[DPSOFTWARE].Anzahl = 1;
     Bmp[DPSOFTWARE].rcSrc.left = 0;
     Bmp[DPSOFTWARE].rcSrc.top  = 608;
+    if (language === "en") {
+        Bmp[DPSOFTWARE].rcSrc.left = 0;
+        Bmp[DPSOFTWARE].rcSrc.top  = 622;
+    }
     Bmp[DPSOFTWARE].rcSrc.right= Bmp[DPSOFTWARE].rcSrc.left+291;
     Bmp[DPSOFTWARE].rcSrc.bottom=Bmp[DPSOFTWARE].rcSrc.top +99;
     Bmp[DPSOFTWARE].Breite = (Bmp[DPSOFTWARE].rcSrc.right - Bmp[DPSOFTWARE].rcSrc.left);
@@ -2039,6 +2072,34 @@ function InitStructs()
     Bmp[DPSOFTWARE].rcDes.right= Bmp[DPSOFTWARE].rcDes.left+Bmp[DPSOFTWARE].Breite;
     Bmp[DPSOFTWARE].rcDes.bottom=Bmp[DPSOFTWARE].rcDes.top+Bmp[DPSOFTWARE].Hoehe;
     Bmp[DPSOFTWARE].Surface = lpDDSCredits;
+
+    //TRANSLATION
+    Bmp[TRANSLATION].Anzahl = 1;
+    Bmp[TRANSLATION].rcSrc.left = 212;
+    Bmp[TRANSLATION].rcSrc.top  = 49;
+    Bmp[TRANSLATION].rcSrc.right= Bmp[TRANSLATION].rcSrc.left+229;
+    Bmp[TRANSLATION].rcSrc.bottom=Bmp[TRANSLATION].rcSrc.top +47;
+    Bmp[TRANSLATION].Breite = (Bmp[TRANSLATION].rcSrc.right - Bmp[TRANSLATION].rcSrc.left);
+    Bmp[TRANSLATION].Hoehe = (Bmp[TRANSLATION].rcSrc.bottom - Bmp[TRANSLATION].rcSrc.top);
+    Bmp[TRANSLATION].rcDes.left = MAXX/2-Bmp[TRANSLATION].Breite/2;
+    Bmp[TRANSLATION].rcDes.top  = MAXY-Bmp[TRANSLATION].Hoehe/2;
+    Bmp[TRANSLATION].rcDes.right= Bmp[TRANSLATION].rcDes.left+Bmp[TRANSLATION].Breite;
+    Bmp[TRANSLATION].rcDes.bottom=Bmp[TRANSLATION].rcDes.top+Bmp[TRANSLATION].Hoehe;
+    Bmp[TRANSLATION].Surface = lpDDSCredits;
+
+    //MARK
+    Bmp[MARK].Anzahl = 1;
+    Bmp[MARK].rcSrc.left = 156;
+    Bmp[MARK].rcSrc.top  = 143;
+    Bmp[MARK].rcSrc.right= Bmp[MARK].rcSrc.left+289;
+    Bmp[MARK].rcSrc.bottom=Bmp[MARK].rcSrc.top +47;
+    Bmp[MARK].Breite = (Bmp[MARK].rcSrc.right - Bmp[MARK].rcSrc.left);
+    Bmp[MARK].Hoehe = (Bmp[MARK].rcSrc.bottom - Bmp[MARK].rcSrc.top);
+    Bmp[MARK].rcDes.left = MAXX/2-Bmp[MARK].Breite/2;
+    Bmp[MARK].rcDes.top  = MAXY-Bmp[MARK].Hoehe/2;
+    Bmp[MARK].rcDes.right= Bmp[MARK].rcDes.left+Bmp[MARK].Breite;
+    Bmp[MARK].rcDes.bottom=Bmp[MARK].rcDes.top+Bmp[MARK].Hoehe;
+    Bmp[MARK].Surface = lpDDSCredits;
 
     //SCHWARZ
     Bmp[SCHWARZ].Anzahl = 1;
@@ -2072,6 +2133,10 @@ function InitStructs()
     Bmp[MUSIK].Anzahl = 1;
     Bmp[MUSIK].rcSrc.left = 160;
     Bmp[MUSIK].rcSrc.top  = 310;
+    if (language === "en") {
+        Bmp[DPSOFTWARE].rcSrc.left = 0;
+        Bmp[DPSOFTWARE].rcSrc.top  = 622;
+    }
     Bmp[MUSIK].rcSrc.right= Bmp[MUSIK].rcSrc.left+124;
     Bmp[MUSIK].rcSrc.bottom=Bmp[MUSIK].rcSrc.top +39;
     Bmp[MUSIK].Breite = (Bmp[MUSIK].rcSrc.right - Bmp[MUSIK].rcSrc.left);
@@ -2101,11 +2166,23 @@ function InitStructs()
     AbspannListe[3][3].Bild = SIGRID;
     AbspannListe[4][0].Bild = PATHFINDING;
     AbspannListe[4][1].Bild = JOHN;
-    AbspannListe[5][0].Bild = WEITEREHILFE;
-    AbspannListe[5][1].Bild = HEIKO;
-    AbspannListe[5][2].Bild = GISELA;
-    AbspannListe[6][0].Bild = SCHWARZ;
-    AbspannListe[6][1].Bild = DPSOFTWARE;
+
+    if(language === "en") {
+        AbspannListe[5][0].Bild = TRANSLATION;
+        AbspannListe[5][1].Bild = MARK;
+        AbspannListe[6][0].Bild = WEITEREHILFE;
+        AbspannListe[6][1].Bild = HEIKO;
+        AbspannListe[6][2].Bild = GISELA;
+        AbspannListe[7][0].Bild = SCHWARZ;
+        AbspannListe[7][1].Bild = DPSOFTWARE;
+    }
+    else {
+        AbspannListe[5][0].Bild = WEITEREHILFE;
+        AbspannListe[5][1].Bild = HEIKO;
+        AbspannListe[5][2].Bild = GISELA;
+        AbspannListe[6][0].Bild = SCHWARZ;
+        AbspannListe[6][1].Bild = DPSOFTWARE;
+    }
 
     //Sounds
     for(let i=0; i<WAVANZ; i++) {
