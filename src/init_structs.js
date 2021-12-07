@@ -2186,83 +2186,83 @@ function InitStructs()
 
     //Sounds
     for(let i=0; i<WAVANZ; i++) {
-        Wav[i].Dateiname = "sfx/click1.ogg";
+        Wav[i].Dateiname = "./sfx/click1.ogg";
         Wav[i].Loop		 = false;
         Wav[i].Volume    = 100;
     }
 
-    Wav[WAVSTURM].Dateiname = "sfx/storm.ogg";
+    Wav[WAVSTURM].Dateiname = "./sfx/storm.ogg";
     Wav[WAVSTURM].Volume	= 85;
 
-    Wav[WAVSCHWIMMEN].Dateiname = "sfx/swim.ogg";
+    Wav[WAVSCHWIMMEN].Dateiname = "./sfx/swim.ogg";
     Wav[WAVSCHWIMMEN].Volume	= 90;
 
-    Wav[WAVPLATSCH].Dateiname = "sfx/splash.ogg";
+    Wav[WAVPLATSCH].Dateiname = "./sfx/splash.ogg";
     Wav[WAVPLATSCH].Volume	= 95;
 
-    Wav[WAVFAELLEN].Dateiname = "sfx/log.ogg";
+    Wav[WAVFAELLEN].Dateiname = "./sfx/log.ogg";
     Wav[WAVFAELLEN].Volume	= 100;
 
-    Wav[WAVSCHLAGEN].Dateiname = "sfx/beat.ogg";
+    Wav[WAVSCHLAGEN].Dateiname = "./sfx/beat.ogg";
     Wav[WAVSCHLAGEN].Volume	= 100;
 
-    Wav[WAVSCHLEUDER].Dateiname = "sfx/slingshot.ogg";
+    Wav[WAVSCHLEUDER].Dateiname = "./sfx/slingshot.ogg";
     Wav[WAVSCHLEUDER].Volume	= 100;
 
-    Wav[WAVSCHAUFELN].Dateiname = "sfx/shovel.ogg";
+    Wav[WAVSCHAUFELN].Dateiname = "./sfx/shovel.ogg";
     Wav[WAVSCHAUFELN].Volume	= 90;
 
-    Wav[WAVHAMMER].Dateiname = "sfx/hammer.ogg";
+    Wav[WAVHAMMER].Dateiname = "./sfx/hammer.ogg";
     Wav[WAVHAMMER].Volume	= 100;
 
-    Wav[WAVCRASH].Dateiname = "sfx/crash.ogg";
+    Wav[WAVCRASH].Dateiname = "./sfx/crash.ogg";
     Wav[WAVCRASH].Volume	= 100;
 
-    Wav[WAVSCHNARCHEN].Dateiname = "sfx/snore.ogg";
+    Wav[WAVSCHNARCHEN].Dateiname = "./sfx/snore.ogg";
     Wav[WAVSCHNARCHEN].Volume	= 90;
 
-    Wav[WAVTRINKEN].Dateiname = "sfx/drink.ogg";
+    Wav[WAVTRINKEN].Dateiname = "./sfx/drink.ogg";
     Wav[WAVTRINKEN].Volume	= 95;
 
-    Wav[WAVKNISTERN].Dateiname = "sfx/rustle.ogg";
+    Wav[WAVKNISTERN].Dateiname = "./sfx/rustle.ogg";
     Wav[WAVKNISTERN].Volume	= 90;
 
-    Wav[WAVANGEL].Dateiname = "sfx/fishingrod.ogg";
+    Wav[WAVANGEL].Dateiname = "./sfx/fishingrod.ogg";
     Wav[WAVANGEL].Volume	= 100;
 
-    Wav[WAVWALD].Dateiname = "sfx/forest.ogg";
+    Wav[WAVWALD].Dateiname = "./sfx/forest.ogg";
     Wav[WAVWALD].Volume	= 90;
 
-    Wav[WAVFEUER].Dateiname = "sfx/fire.ogg";
+    Wav[WAVFEUER].Dateiname = "./sfx/fire.ogg";
     Wav[WAVFEUER].Volume	= 100;
 
-    Wav[WAVBRANDUNG].Dateiname = "sfx/shore.ogg";
+    Wav[WAVBRANDUNG].Dateiname = "./sfx/shore.ogg";
     Wav[WAVBRANDUNG].Volume	= 100;
 
-    Wav[WAVBAUMFAELLT].Dateiname = "sfx/treefall.ogg";
+    Wav[WAVBAUMFAELLT].Dateiname = "./sfx/treefall.ogg";
     Wav[WAVBAUMFAELLT].Volume	= 100;
 
-    Wav[WAVFLUSS].Dateiname = "sfx/stream.ogg";
+    Wav[WAVFLUSS].Dateiname = "./sfx/stream.ogg";
     Wav[WAVFLUSS].Volume	= 85;
 
-    Wav[WAVKLICK].Dateiname = "sfx/click1.ogg";
+    Wav[WAVKLICK].Dateiname = "./sfx/click1.ogg";
     Wav[WAVKLICK].Volume	= 95;
 
-    Wav[WAVKLICK2].Dateiname = "sfx/click2.ogg";
+    Wav[WAVKLICK2].Dateiname = "./sfx/click2.ogg";
     Wav[WAVKLICK2].Volume	= 95;
 
-    Wav[WAVABSPANN].Dateiname = "sfx/outro.ogg";
+    Wav[WAVABSPANN].Dateiname = "./sfx/outro.ogg";
     Wav[WAVABSPANN].Volume	= 100;
     Wav[WAVABSPANN].Loop	= true;
 
-    Wav[WAVLOGO].Dateiname = "sfx/mainscreen.ogg";
+    Wav[WAVLOGO].Dateiname = "./sfx/mainscreen.ogg";
     Wav[WAVLOGO].Volume	= 100;
     Wav[WAVLOGO].Loop	= true;
 
-    Wav[WAVWOLF].Dateiname = "sfx/wolf.ogg";
+    Wav[WAVWOLF].Dateiname = "./sfx/wolf.ogg";
     Wav[WAVWOLF].Volume	= 90;
 
-    Wav[WAVERFINDUNG].Dateiname = "sfx/invention.ogg";
+    Wav[WAVERFINDUNG].Dateiname = "./sfx/invention.ogg";
     Wav[WAVERFINDUNG].Volume	= 95;
 
     //Testweise alle Sounds gleich in den Speicher laden

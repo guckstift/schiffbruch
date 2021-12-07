@@ -216,7 +216,7 @@ function InitDDraw()
     //In diese Surface sollen die Bausteine geladen werden
     lpDDSMisc = loadImage(Misc);
     //In diese Surface sollen das Panel geladen werden
-    lpDDSPanel = loadImage_url("gfx/" + gui_img_name);
+    lpDDSPanel = loadImage_url("./gfx/" + gui_img_name);
     //In diese Surface sollen die Animation der Figur gespeichert werden
     lpDDSGuyAni = loadImage(GuyAni);
     //In diese Surface sollen die Landschaftsanimationen gespeichert werden
@@ -226,7 +226,7 @@ function InitDDraw()
     //In diese Surface soll die Schrift2 gespeichert werden
     lpDDSSchrift2 = loadImage(Schrift2);
     //In diese Surface soll das Papier gespeichert werden
-    lpDDSPapier = loadImage_url("gfx/" + paper_img_name);
+    lpDDSPapier = loadImage_url("./gfx/" + paper_img_name);
     //In diese Surface solln die B�ume gespeichert werden
     lpDDSBaum = loadImage(Baum);
     //In diese Surface solln die Cursor gespeichert werden
@@ -343,7 +343,7 @@ function LoadGame()
 
     for (let i = 0; i < BILDANZ; i++) {
         Bmp[i].Animation = data.Bmp[i].Animation;
-        Bmp[i].Phase = data.Bmp[i].Animation;
+        Bmp[i].Phase = data.Bmp[i].Phase;
         Bmp[i].First = data.Bmp[i].First;
     }
 
@@ -1893,22 +1893,6 @@ function Zeige()
         Fade(100, 100, 100);
     }
 
-    /*
-    //Cursor
-    if (CursorTyp === CUPFEIL)
-        ZeichneBilder(
-            MousePosition.x, MousePosition.y,
-            CursorTyp, rcGesamt, false, -1
-        );
-    else
-        ZeichneBilder(
-            MousePosition.x - Bmp[CursorTyp].Breite / 2,
-            MousePosition.y - Bmp[CursorTyp].Hoehe / 2,
-            CursorTyp, rcGesamt, false, -1
-        );
-
-    TODO: maybe draw resource cursor image
-    */
     if(LastCursorType !== CursorTyp) {
         switch (CursorTyp) {
             case CUPFEIL:
@@ -1925,6 +1909,14 @@ function Zeige()
                 break;
         }
         LastCursorType = CursorTyp;
+    }
+
+    if (CursorTyp !== CUPFEIL && CursorTyp !== CUUHR && CursorTyp !== CURICHTUNG) {
+        ZeichneBilder(
+            MousePosition.x - Bmp[CursorTyp].Breite / 2,
+            MousePosition.y - Bmp[CursorTyp].Hoehe / 2,
+            CursorTyp, rcGesamt, false, -1
+        );
     }
 
     if (Nacht) Fade(100, 100, 100); //Das muss hier stehen, damit man die Textnachricht in der Nacht lesen kann
