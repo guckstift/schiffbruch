@@ -1,23 +1,22 @@
+// localization
 let language = "de";
 let messages = messages_de;
 let gui_img_name = "gui.png";
 let paper_img_name = "paper.png";
 let credits_img_name = "credits.png";
 
-//ddraw
-let lpDDSPrimary = null;   // DirectDraw primary surface
-let lpDDSBack = null;      // DirectDraw back surface
-let lpDDSMisc = null;      // DirectDraw Bilder surface
-let lpDDSPanel = null;     // DirectDraw Panel surface
-let lpDDSGuyAni = null;    // DirectDraw GuyAni surface
-let lpDDSAnimation = null; // DirectDraw Animation surface
+// gfx
+let img_terrain = null;      // DirectDraw Bilder surface
+let img_gui = null;     // DirectDraw Panel surface
+let img_player = null;    // DirectDraw GuyAni surface
+let img_animations = null; // DirectDraw Animation surface
 let lpDDSKarte = null;      // DirectDraw MiniMap surface
 let lpDDSSchrift = null;    // DirectDraw Schrift surface
-let lpDDSSchrift1 = null;   // DirectDraw Schrift1 surface
-let lpDDSSchrift2 = null;   // DirectDraw Schrift2 surface
-let lpDDSTextFeld = null;   // DirectDraw TextFeld surface
-let lpDDSPapier = null;     // DirectDraw Paier surface
-let lpDDSBaum = null;      // DirectDraw Bäume surface
+let img_font1 = null;   // DirectDraw Schrift1 surface
+let img_font2 = null;   // DirectDraw Schrift2 surface
+let img_statusbar = null;   // DirectDraw TextFeld surface
+let img_paper = null;     // DirectDraw Paier surface
+let img_trees = null;      // DirectDraw Bäume surface
 let lpDDSBau = null;       // DirectDraw Bauwerke surface
 let lpDDSCredits = null;   // DirectDraw Credits surface
 let lpDDSLogo = null;		// DirectDraw Logo surface
@@ -74,29 +73,22 @@ class TEXTBEREICH {
 
 let TextBereich = Array.from(Array(TEXTANZ), x => new TEXTBEREICH());
 
-let Camera = ZWEID();					//aktueller Kartenausschnitt
-let MousePosition = ZWEID();			//     "    Mauskoordinaten
-let RouteZiel = ZWEID(), RouteStart = ZWEID();	// Koordinaten des Starts und des Endes der Route
-let Route = Array.from(Array(MAXXKACH * MAXYKACH), x => ZWEID());	// Liste der Routenpunkte
-let RouteKoor = Array.from(Array(2 * MAXXKACH * MAXYKACH), x => ZWEID()); // Liste der Routenkoordinaten
-let SaveRoute = Array.from(Array(2 * MAXXKACH * MAXYKACH), x => ZWEID()); // Zum zwischenspeichern der Route
-let NewPos = ZWEID();					// Nur innerhalb des Pathfindings benutzt
-let GuyPosScreenStart = ZWEID();	    // Absolute StartPosition bei einem Schritt (Für CalcGuyKoor)
-let SchatzPos = ZWEID();				//Hier ist der Schatz vergraben
-
-let RGBSTRUCT = (r = 0, g = 0, b = 0) => ({
-    r, g, b,
-    copy: function () {
-        return RGBSTRUCT(this.r, this.g, this.b);
-    },
-});
+let Camera = vec2();					//aktueller Kartenausschnitt
+let MousePosition = vec2();			//     "    Mauskoordinaten
+let RouteZiel = vec2(), RouteStart = vec2();	// Koordinaten des Starts und des Endes der Route
+let Route = Array.from(Array(MAXXKACH * MAXYKACH), x => vec2());	// Liste der Routenpunkte
+let RouteKoor = Array.from(Array(2 * MAXXKACH * MAXYKACH), x => vec2()); // Liste der Routenkoordinaten
+let SaveRoute = Array.from(Array(2 * MAXXKACH * MAXYKACH), x => vec2()); // Zum zwischenspeichern der Route
+let NewPos = vec2();					// Nur innerhalb des Pathfindings benutzt
+let GuyPosScreenStart = vec2();	    // Absolute StartPosition bei einem Schritt (Für CalcGuyKoor)
+let SchatzPos = vec2();				//Hier ist der Schatz vergraben
 
 let Guy = {
     Aktiv: false,//Ist er aktiv?
     Aktion: 0, //Welche Aktion (Suchen, fischen ...) (übergeordnet über Zustand)
-    Pos: ZWEID(),	// KachelPosition der Spielfigur
-    PosAlt: ZWEID(), //Die ursprünglich Position in der Kachel (für die Aktionsprozeduren)
-    PosScreen: ZWEID(), // Absolute Position der Spielfigur
+    Pos: vec2(),	// KachelPosition der Spielfigur
+    PosAlt: vec2(), //Die ursprünglich Position in der Kachel (für die Aktionsprozeduren)
+    PosScreen: vec2(), // Absolute Position der Spielfigur
     Zustand: 0, //Was macht er gerade? (Animation)(linkslaufen,rechtslaufen...,angeln..)
     AkNummer: 0, //Bei welcher Aktion (für die Aktionsprozeduren)
     Resource: [0, 0, 0],	//Wieviel Wasservorrat usw
@@ -117,8 +109,8 @@ let AbspannListe = Array.from(Array(10), x => Array.from(Array(10), x => ({Aktiv
 
 class SCAPE {
     constructor() {
-        this.ObPos = ZWEID();		//Die Koordinaten des Objekts (relativ zu xScreen und yScreen)
-        this.GPosAlt = ZWEID();		// Damit der Guy an der richtigen Stelle (x,y) weiterbaut
+        this.ObPos = vec2();		//Die Koordinaten des Objekts (relativ zu xScreen und yScreen)
+        this.GPosAlt = vec2();		// Damit der Guy an der richtigen Stelle (x,y) weiterbaut
         this.Rohstoff = Array.from(BILDANZ, x => 0); //Anzahl des i.Rohstoffs, den man noch zum bauen braucht
     }
 }
@@ -175,18 +167,9 @@ function rand()
     return Math.floor(Math.random() * 0xffFFffFF);
 }
 
-function loadImage(alias)
-{
-    let url = BMP_FILENAMES[alias];
-    return loadImage_url(url);
-}
-function loadImage_url(url)
+function loadImage(url)
 {
     let img = document.createElement("img");
-    img.is_ready = false;
-    img.onload = () => {
-        img.is_ready = true;
-    };
     img.src = url;
     return img;
 }
@@ -196,7 +179,7 @@ function createSurface(w, h)
     let off = document.createElement("canvas");
     off.width = w;
     off.height = h;
-    off.ctx = off.getContext("2d", {alpha: false});
+    off.ctx = off.getContext("2d", {alpha: true});
     return off;
 }
 
@@ -205,7 +188,7 @@ function LoadString(id)
     return messages[id];
 }
 
-function InitDDraw()
+function init_gfx()
 {
     // Set the video mode to 800x600
     canvas.width = MAXX;
@@ -214,35 +197,35 @@ function InitDDraw()
     canvas.ctx = ctx;
 
     //In diese Surface sollen die Bausteine geladen werden
-    lpDDSMisc = loadImage(Misc);
+    img_terrain = loadImage("./gfx/terrain.png");
     //In diese Surface sollen das Panel geladen werden
-    lpDDSPanel = loadImage_url("./gfx/" + gui_img_name);
+    img_gui = loadImage("./gfx/" + gui_img_name);
     //In diese Surface sollen die Animation der Figur gespeichert werden
-    lpDDSGuyAni = loadImage(GuyAni);
+    img_player = loadImage("./gfx/player.png");
     //In diese Surface sollen die Landschaftsanimationen gespeichert werden
-    lpDDSAnimation = loadImage(Animation);
+    img_animations = loadImage("./gfx/animations.png");
     //In diese Surface soll die Schrift1 gespeichert werden
-    lpDDSSchrift1 = loadImage(Schrift1);
+    img_font1 = loadImage("./gfx/font1.png");
     //In diese Surface soll die Schrift2 gespeichert werden
-    lpDDSSchrift2 = loadImage(Schrift2);
+    img_font2 = loadImage("./gfx/font2.png");
     //In diese Surface soll das Papier gespeichert werden
-    lpDDSPapier = loadImage_url("./gfx/" + paper_img_name);
+    img_paper = loadImage("./gfx/" + paper_img_name);
     //In diese Surface solln die B�ume gespeichert werden
-    lpDDSBaum = loadImage(Baum);
+    img_trees = loadImage("./gfx/trees.png");
     //In diese Surface solln die Cursor gespeichert werden
-    lpDDSCursor = loadImage(Cursorbmp);
+    lpDDSCursor = loadImage("./gfx/cursors.png");
     //In diese Surface solln die Buttons gespeichert werden
-    lpDDSButtons = loadImage(Buttons);
+    lpDDSButtons = loadImage("./gfx/buttons.png");
     //In diese Surface solln das TextFeld gespeichert werden
-    lpDDSTextFeld = loadImage(TextFeld);
+    img_statusbar = loadImage("./gfx/statusbar.png");
     //In diese Surface solln das Inventar gespeichert werden
-    lpDDSInventar = loadImage(Inventarbmp);
+    lpDDSInventar = loadImage("./gfx/inventory.png");
     //In diese Surface solln die Bauwerke gespeichert werden
-    lpDDSBau = loadImage(Bau);
+    lpDDSBau = loadImage("./gfx/buildings.png");
     //In diese Surface solln die Credits gespeichert werden
-    lpDDSCredits = loadImage_url("gfx/" + credits_img_name);
+    lpDDSCredits = loadImage("gfx/" + credits_img_name);
     //In diese Surface solln das Logo gespeichert werden
-    lpDDSLogo = loadImage(Logo);
+    lpDDSLogo = loadImage("./gfx/logo.png");
 
     //In diese Surface soll die MiniMap gespeichert werden
     lpDDSKarte = createSurface(2 * MAXXKACH, 2 * MAXYKACH);
@@ -255,7 +238,7 @@ function InitDDraw()
     lpDDSSchatzkarte = createSurface(SKARTEX, SKARTEY);
 }
 
-function InitDSound()
+function init_audio()
 {
     audioCtx = new AudioContext();
 }
@@ -393,7 +376,7 @@ function Blit_destrect(lpDDSVon, lpDDSNach)
     );
 }
 
-function InitDInput()
+function init_input()
 {
     canvas.onmousemove = e => {
         let rect = canvas.getBoundingClientRect();
@@ -694,7 +677,7 @@ function LimitScroll()
 
 function GetKachel(PosX, PosY)
 {
-    let Erg = ZWEID();
+    let Erg = vec2();
 
     for (let y = 0; y < MAXYKACH; y++) {
         for (let x = 0; x < MAXXKACH; x++) {		//Die in Betracht kommenden Kacheln rausfinden
@@ -1578,7 +1561,7 @@ function GetPixel(x, y, src)
 
 function fill_dest(color, dest = null)
 {
-    if (dest === null) dest = lpDDSBack;
+    if (dest === null) dest = canvas;
     dest.ctx.fillStyle = "rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")";
     dest.ctx.fillRect(
         rcRectdes.left | 0,
@@ -1590,7 +1573,7 @@ function fill_dest(color, dest = null)
 
 function clear_dest(dest = null)
 {
-    if (dest === null) dest = lpDDSBack;
+    if (dest === null) dest = canvas;
     dest.ctx.clearRect(
         rcRectdes.left | 0,
         rcRectdes.top | 0,
@@ -1624,7 +1607,7 @@ function NeuesSpiel(neu)
         rcRectdes.top = 0;
         rcRectdes.right = MAXX;
         rcRectdes.bottom = MAXY;
-        Blit_destrect(lpDDSSchrift, lpDDSPrimary);
+        Blit_destrect(lpDDSSchrift, canvas);
         Compute(200, 600);
 
         DrawString("Ueberflute Land...", 5, 35, 2);
@@ -1632,7 +1615,7 @@ function NeuesSpiel(neu)
         rcRectdes.top = 0;
         rcRectdes.right = MAXX;
         rcRectdes.bottom = MAXY;
-        Blit_destrect(lpDDSSchrift, lpDDSPrimary);
+        Blit_destrect(lpDDSSchrift, canvas);
         Meer();
 
         DrawString("Lege Fluss fest...", 5, 65, 2);
@@ -1640,7 +1623,7 @@ function NeuesSpiel(neu)
         rcRectdes.top = 0;
         rcRectdes.right = MAXX;
         rcRectdes.bottom = MAXY;
-        Blit_destrect(lpDDSSchrift, lpDDSPrimary);
+        Blit_destrect(lpDDSSchrift, canvas);
         Fluss();
         CalcKoor();
 
@@ -1649,7 +1632,7 @@ function NeuesSpiel(neu)
         rcRectdes.top = 0;
         rcRectdes.right = MAXX;
         rcRectdes.bottom = MAXY;
-        Blit_destrect(lpDDSSchrift, lpDDSPrimary);
+        Blit_destrect(lpDDSSchrift, canvas);
         Baeume(30);
 
         Piratenwrack();
@@ -1774,7 +1757,7 @@ function Generate()
                 }
             }
             //Landschaftskacheln zeichnen
-            Blitten(lpDDSMisc, lpDDSScape, true);
+            Blitten(img_terrain, lpDDSScape, true);
 
             //Gitter drüberlegen
             if (Gitter) {
@@ -1782,7 +1765,7 @@ function Generate()
                 rcRectsrc.right = KXPIXEL * Scape[x][y].Typ + KXPIXEL;
                 rcRectsrc.top = 1 * KYPIXEL;
                 rcRectsrc.bottom = 1 * KYPIXEL + KYPIXEL;
-                Blitten(lpDDSMisc, lpDDSScape, true);
+                Blitten(img_terrain, lpDDSScape, true);
             }
 
             //Landschaftsobjekte zeichnen (falls Animationen ausgeschaltet sind)
@@ -1803,7 +1786,7 @@ function Generate()
                     rcRectdes.top = Scape[x][y].yScreen + Bmp[Scape[x][y].Objekt].rcDes.top;
                     rcRectdes.bottom = Scape[x][y].yScreen + Bmp[Scape[x][y].Objekt].rcDes.bottom;
                     //Landschaftsobjekt zeichnen
-                    Blitten(lpDDSAnimation, lpDDSScape, true);
+                    Blitten(img_animations, lpDDSScape, true);
                 }
             }
 
@@ -1843,7 +1826,7 @@ function Zeige()
     rcRectdes.right = rcSpielflaeche.right;
     rcRectdes.bottom = rcSpielflaeche.bottom;
 
-    Blitten(lpDDSScape, lpDDSBack, false); //Landschaft zeichnen
+    Blitten(lpDDSScape, canvas, false); //Landschaft zeichnen
 
     ZeichneObjekte();
 
@@ -1874,7 +1857,7 @@ function Zeige()
         if (!TextBereich[i].Aktiv) continue; //Die nicht aktiven Felder auslassen
         copy_rect(rcRectsrc, TextBereich[i].rcText);
         copy_rect(rcRectdes, TextBereich[i].rcText);
-        Blitten(lpDDSSchrift, lpDDSBack, true);
+        Blitten(lpDDSSchrift, canvas, true);
     }
     //Alles schwarz übermalen und nur das Papier mit Text anzeigen
     if (Nacht) {
@@ -1882,13 +1865,13 @@ function Zeige()
         rcRectdes.top = 0;
         rcRectdes.right = MAXX;
         rcRectdes.bottom = MAXY;
-        fill_dest([0, 0, 0], lpDDSBack);
+        fill_dest([0, 0, 0], canvas);
 
         if (PapierText !== -1) {
             ZeichnePapier();
             copy_rect(rcRectsrc, TextBereich[TXTPAPIER].rcText);
             copy_rect(rcRectdes, TextBereich[TXTPAPIER].rcText);
-            Blitten(lpDDSSchrift, lpDDSBack, true);
+            Blitten(lpDDSSchrift, canvas, true);
         }
         Fade(100, 100, 100);
     }
@@ -1928,7 +1911,7 @@ function ZeigeIntro()
     rcRectdes.top = 0;
     rcRectdes.right = MAXX;
     rcRectdes.bottom = MAXY;
-    fill_dest([0, 0, 0], lpDDSBack);
+    fill_dest([0, 0, 0], canvas);
 
     rcRectsrc.left = Camera.x + rcSpielflaeche.left;
     rcRectsrc.top = Camera.y + rcSpielflaeche.top;
@@ -1939,7 +1922,7 @@ function ZeigeIntro()
     rcRectdes.right = rcSpielflaeche.right;
     rcRectdes.bottom = rcSpielflaeche.bottom;
 
-    Blitten(lpDDSScape, lpDDSBack, false); //Landschaft zeichnen
+    Blitten(lpDDSScape, canvas, false); //Landschaft zeichnen
 
     ZeichneObjekte();
 
@@ -1950,7 +1933,7 @@ function ZeigeIntro()
         if (!TextBereich[i].Aktiv) continue; //Die nicht aktiven Felder auslassen
         copy_rect(rcRectsrc, TextBereich[i].rcText);
         copy_rect(rcRectdes, TextBereich[i].rcText);
-        Blitten(lpDDSSchrift, lpDDSBack, true);
+        Blitten(lpDDSSchrift, canvas, true);
     }
 }
 
@@ -1962,7 +1945,7 @@ function ZeigeAbspann()
     rcRectdes.top = 0;
     rcRectdes.right = MAXX;
     rcRectdes.bottom = MAXY;
-    fill_dest([0, 0, 0], lpDDSBack);
+    fill_dest([0, 0, 0], canvas);
 
     if (AbspannZustand === 0) {
         ZeichneBilder(
@@ -1991,7 +1974,7 @@ function ZeigeAbspann()
         rcRectdes.right = Bmp[AbspannNr].Breite + 2;
         rcRectdes.bottom = Bmp[AbspannNr].Hoehe + 2;
 
-        Blitten(Bmp[AbspannNr].Surface, lpDDSBack, true);
+        Blitten(Bmp[AbspannNr].Surface, canvas, true);
 
         rcRectsrc.left = 0;
         rcRectsrc.top = 0;
@@ -2003,7 +1986,7 @@ function ZeigeAbspann()
         rcRectdes.right = rcRectdes.left + rcRectsrc.right * 10;
         rcRectdes.bottom = rcRectdes.top + rcRectsrc.bottom * 10;
 
-        Blitten(lpDDSBack, lpDDSBack, false);
+        Blitten(canvas, canvas, false);
 
         rcRectsrc.left = 100;
         rcRectsrc.top = 2;
@@ -2015,7 +1998,7 @@ function ZeigeAbspann()
         rcRectdes.right = Bmp[AbspannNr].Breite + 2;
         rcRectdes.bottom = Bmp[AbspannNr].Hoehe + 2;
 
-        Blitten(lpDDSBack, lpDDSBack, false);
+        Blitten(canvas, canvas, false);
     }
 }
 
@@ -2025,7 +2008,7 @@ function ZeigeLogo()
     rcRectdes.top = 0;
     rcRectdes.right = MAXX;
     rcRectdes.bottom = MAXY;
-    fill_dest([0, 0, 0], lpDDSBack);
+    fill_dest([0, 0, 0], canvas);
 
     rcRectsrc.left = 0;
     rcRectsrc.right = 500;
@@ -2037,7 +2020,7 @@ function ZeigeLogo()
     rcRectdes.bottom = Math.floor(MAXY / 2) + 250;
 
 
-    Blitten(lpDDSLogo, lpDDSBack, false);
+    Blitten(lpDDSLogo, canvas, false);
 
     PlaySound(WAVLOGO, 100);
 }
@@ -2049,7 +2032,7 @@ function AbspannBlt(Bild, Prozent)
     rcRectdes.right = rcRectdes.left + Bmp[Bild].Breite;
     rcRectdes.bottom = rcRectdes.top + Bmp[Bild].Hoehe;
     copy_rect(rcRectsrc,  Bmp[Bild].rcSrc);
-    Blitten(Bmp[Bild].Surface, lpDDSBack, false);
+    Blitten(Bmp[Bild].Surface, canvas, false);
     ctx.globalAlpha = 1;
 }
 
@@ -2115,7 +2098,7 @@ function ZeichneBilder(x, y, i, Ziel, Reverse, Frucht)
     rcRectdes.right = x + (Bmp[i].Breite);
     rcRectdes.bottom = y + (Bmp[i].Hoehe);
     CalcRect(Ziel);
-    Blitten(Bmp[i].Surface, lpDDSBack, true);
+    Blitten(Bmp[i].Surface, canvas, true);
 }
 
 function ZeichneObjekte()
@@ -2144,7 +2127,7 @@ function ZeichneObjekte()
                 rcRectdes.top = Scape[x][y].yScreen - Camera.y;
                 rcRectdes.bottom = rcRectdes.top + KYPIXEL;
                 CalcRect(rcSpielflaeche);
-                Blitten(lpDDSMisc, lpDDSBack, true);
+                Blitten(img_terrain, canvas, true);
             }
             //Landschaftsanimationen malen (und Feld)
             if ((Scape[x][y].Objekt !== -1) && (LAnimation) &&
@@ -2234,11 +2217,11 @@ function ZeichnePapier()
     rcRectdes.top = TextBereich[TXTPAPIER].rcText.top - 30;
     rcRectdes.right = rcRectdes.left + 464;
     rcRectdes.bottom = rcRectdes.top + 77;
-    Blitten(lpDDSPapier, lpDDSBack, true);
+    Blitten(img_paper, canvas, true);
     rcRectdes.left = rcRectdes.left + 34;
     rcRectdes.top = rcRectdes.top + 77;
     rcRectdes.bottom = TextBereich[TXTPAPIER].rcText.top + PapierText;
-    fill_dest([236, 215, 179], lpDDSBack);
+    fill_dest([236, 215, 179], canvas);
     rcRectsrc.left = 0;
     rcRectsrc.top = 77;
     rcRectsrc.right = 464;
@@ -2247,7 +2230,7 @@ function ZeichnePapier()
     rcRectdes.top = rcRectdes.bottom - 47;
     rcRectdes.right = rcRectdes.left + 464;
     rcRectdes.bottom = rcRectdes.top + 77;
-    Blitten(lpDDSPapier, lpDDSBack, true);
+    Blitten(img_paper, canvas, true);
 }
 
 function ZeichnePanel()
@@ -2263,14 +2246,14 @@ function ZeichnePanel()
     rcRectdes.top = rcKarte.top;
     rcRectdes.right = rcKarte.right;
     rcRectdes.bottom = rcKarte.bottom;
-    Blitten(lpDDSKarte, lpDDSBack, false);
+    Blitten(lpDDSKarte, canvas, false);
 
     //Spielfigur
     rcRectdes.left = rcKarte.left + 2 * Guy.Pos.x;
     rcRectdes.top = rcKarte.top + 2 * Guy.Pos.y;
     rcRectdes.right = rcRectdes.left + 2;
     rcRectdes.bottom = rcRectdes.top + 2;
-    fill_dest([255, 0, 0], lpDDSBack);
+    fill_dest([255, 0, 0], canvas);
 
     //Position einmalen
     rcRectsrc.left = 205;
@@ -2282,7 +2265,7 @@ function ZeichnePanel()
     rcRectdes.right = rcRectdes.left + 65;
     rcRectdes.bottom = rcRectdes.top + 65;
     CalcRect(rcKarte);
-    Blitten(lpDDSPanel, lpDDSBack, true);
+    Blitten(img_gui, canvas, true);
 
     //Panel malen
     rcRectsrc.left = 0;
@@ -2293,7 +2276,7 @@ function ZeichnePanel()
     rcRectdes.top = rcPanel.top;
     rcRectdes.right = rcPanel.right;
     rcRectdes.bottom = rcPanel.bottom;
-    Blitten(lpDDSPanel, lpDDSBack, true);
+    Blitten(img_gui, canvas, true);
 
     //Gitternetzknopf
     if (Gitter) Bmp[BUTTGITTER].Phase = 1; else Bmp[BUTTGITTER].Phase = 0;
@@ -2431,7 +2414,7 @@ function ZeichnePanel()
     rcRectsrc.top += i;
     copy_rect(rcRectdes, Bmp[SAEULE1].rcDes);
     rcRectdes.top += i;
-    Blitten(Bmp[SAEULE1].Surface, lpDDSBack, true);
+    Blitten(Bmp[SAEULE1].Surface, canvas, true);
 
     //Säule2
     i = Bmp[SAEULE2].Hoehe - Guy.Resource[NAHRUNG] * Bmp[SAEULE2].Hoehe / 100;
@@ -2439,7 +2422,7 @@ function ZeichnePanel()
     rcRectsrc.top += i;
     copy_rect(rcRectdes, Bmp[SAEULE2].rcDes);
     rcRectdes.top += i;
-    Blitten(Bmp[SAEULE2].Surface, lpDDSBack, true);
+    Blitten(Bmp[SAEULE2].Surface, canvas, true);
 
     //Säule3
     i = Bmp[SAEULE3].Hoehe - Guy.Resource[GESUNDHEIT] * Bmp[SAEULE3].Hoehe / 100;
@@ -2447,7 +2430,7 @@ function ZeichnePanel()
     rcRectsrc.top += i;
     copy_rect(rcRectdes, Bmp[SAEULE3].rcDes);
     rcRectdes.top += i;
-    Blitten(Bmp[SAEULE3].Surface, lpDDSBack, true);
+    Blitten(Bmp[SAEULE3].Surface, canvas, true);
 
     //Sonnenanzeige
     let diffx = (Bmp[SONNE].rcDes.right - Bmp[SONNE].rcDes.left - Bmp[SONNE].Breite) / 2;
@@ -2481,7 +2464,7 @@ function ZeichnePanel()
     rcRectsrc.right = 605;
     rcRectsrc.bottom = 20;
     copy_rect(rcRectdes, rcTextFeld1);
-    Blitten(lpDDSTextFeld, lpDDSBack, false);
+    Blitten(img_statusbar, canvas, false);
 }
 
 function DrawString(string, x, y, Art)
@@ -2538,12 +2521,12 @@ function DrawString(string, x, y, Art)
         rcRectdes.bottom = y + Hoehe;
         //Zeichen zeichnen
         if (Art === 1) {
-            Blitten(lpDDSSchrift1, lpDDSSchrift, true);
+            Blitten(img_font1, lpDDSSchrift, true);
             //x Position weiterschieben
             x += S1ABSTAND;
         }
         if (Art === 2) {
-            Blitten(lpDDSSchrift2, lpDDSSchrift, true);
+            Blitten(img_font2, lpDDSSchrift, true);
             //x Position weiterschieben
             x += S2ABSTAND;
         }
@@ -3686,7 +3669,7 @@ function Fluss() //Anzahl der Flüsse und der minimale Länge
 
 function Baeume(Prozent)
 {
-    let Pos = ZWEID(); //Da steht der Baum
+    let Pos = vec2(); //Da steht der Baum
     let einGrosserBaum = false;	//gibt es bereits einen großen Baum
 
     //x,y Diese Kachel wird angeschaut
@@ -3932,9 +3915,9 @@ function FindTheWay()
     let Plist = Array(MAXXKACH * MAXYKACH); // Besuchte Punkte merken
     let Llist = Array(MAXXKACH * MAXYKACH); // Länge vom Punkt zum Ziel
 
-    let ShPos = ZWEID();
-    let BestLine = ZWEID();
-    let ShortKoor = ZWEID();
+    let ShPos = vec2();
+    let BestLine = vec2();
+    let ShortKoor = vec2();
 
     for (let AI = 0; AI < MAXYKACH; AI++) {
         for (let BI = 0; BI < MAXXKACH; BI++) {
@@ -3953,7 +3936,7 @@ function FindTheWay()
     Llist[0] = (DiffX * DiffX) + (DiffY * DiffY);
 
     LenMap[RouteStart.x][RouteStart.y] = 0;
-    let Pos = ZWEID();
+    let Pos = vec2();
     copy_zweid(Pos, RouteStart);
     copy_zweid(NewPos, Pos);
     let GoalReached = false;
@@ -4014,7 +3997,7 @@ function FindTheWay()
     {
         // TODO: what the heck does this code? it hangs always
         copy_zweid(Pos, RouteZiel);
-        let LineStartPos = ZWEID();
+        let LineStartPos = vec2();
         copy_zweid(LineStartPos, Pos);
         while ((Pos.x !== RouteStart.x) || (Pos.y !== RouteStart.y)) {
             copy_zweid(NewPos, Pos);
@@ -4067,7 +4050,7 @@ function CheckRoute(x, y, save, Laenge) //Nachprüfen ob auf aktuellem Teil in d
 
 function SortRoute()
 {
-    let Pos = ZWEID();
+    let Pos = vec2();
     Pos.x = RouteStart.x;
     Pos.y = RouteStart.y;
     for (let i = 0; i < RouteLaenge; i++) { //Alle Teile vom Start durchgehen
@@ -4395,41 +4378,40 @@ function frame(now)
         Bild = 0;
         if (LastBild === 0) LastBild = 60;
     }
-    if (Spielzustand === SZLOGO) {
-        if (CheckKey() === 2) return;		//Das Keyboard abfragen
-        ZeigeLogo(); //Bild auffrischen
-    }
-    else if ((Spielzustand === SZINTRO) || (Spielzustand === SZGERETTET)) {
-        if (CheckKey() === 0) return 0;		//Das Keyboard abfragen
 
-        Animationen();  //Animationen weiterschalten
-        if (!Guy.Aktiv) Event(Guy.Aktion); //Aktionen starten
-        if (Guy.Pos.x !== RouteStart.x) ZeigeIntro(); //Bild auffrischen (if-Abfrage nötig (seltsamerweise))
-
-    }
-    else if (Spielzustand === SZSPIEL) {
-        if ((Stunden >= 12) && (Minuten !== 0) && (Guy.Aktion !== AKTAGENDE))	//Hier ist der Tag zuende
-        {
-            if (Guy.Aktion === AKAUSSCHAU) Chance -= 1 + Scape[Guy.Pos.x][Guy.Pos.y].Hoehe;
-            Guy.Aktiv = false;
-            Guy.AkNummer = 0;
-            Guy.Aktion = AKTAGENDE;
-        }
-
-        CheckSpzButton();					//Die Spezialknöpfe umschalten
-        if (MouseAktiv) CheckMouse();		//Den MouseZustand abchecken
-        if (CheckKey() === 0) return 0;		//Das Keyboard abfragen
-        LimitScroll();						//Das Scrollen an die Grenzen der Landschaft anpassen
-        Animationen();						//Die Animationsphasen weiterschalten
-        if (!Guy.Aktiv) Event(Guy.Aktion);  //Die Aktionen starten
-        Zeige();//Das Bild zeichnen
-        if (Spielbeenden) return 0;
-
-    }
-    else if (Spielzustand === SZABSPANN) {
-        if (CheckKey() === 0) return 0;
-        AbspannCalc();
-        ZeigeAbspann();
+    switch (Spielzustand) {
+        case SZLOGO:
+            if (CheckKey() === 2) return; // Das Keyboard abfragen
+            ZeigeLogo(); //Bild auffrischen
+            break;
+        case SZINTRO: case SZGERETTET:
+            if (CheckKey() === 0) return 0; // Das Keyboard abfragen
+            Animationen(); // Animationen weiterschalten
+            if (!Guy.Aktiv) Event(Guy.Aktion); // Aktionen starten
+            if (Guy.Pos.x !== RouteStart.x) ZeigeIntro(); // Bild auffrischen (if-Abfrage nötig (seltsamerweise))
+            break;
+        case SZSPIEL:
+            if ((Stunden >= 12) && (Minuten !== 0) && (Guy.Aktion !== AKTAGENDE)) {
+                // Hier ist der Tag zu Ende
+                if (Guy.Aktion === AKAUSSCHAU) Chance -= 1 + Scape[Guy.Pos.x][Guy.Pos.y].Hoehe;
+                Guy.Aktiv = false;
+                Guy.AkNummer = 0;
+                Guy.Aktion = AKTAGENDE;
+            }
+            CheckSpzButton();                   // Die Spezialknöpfe umschalten
+            if (MouseAktiv) CheckMouse();       // Den MouseZustand abchecken
+            if (CheckKey() === 0) return 0;     // Das Keyboard abfragen
+            LimitScroll();                      // Das Scrollen an die Grenzen der Landschaft anpassen
+            Animationen();                      // Die Animationsphasen weiterschalten
+            if (!Guy.Aktiv) Event(Guy.Aktion);  // Die Aktionen starten
+            Zeige();                            // Das Bild zeichnen
+            if (Spielbeenden) return 0;
+            break;
+        case SZABSPANN:
+            if (CheckKey() === 0) return 0;
+            AbspannCalc();
+            ZeigeAbspann();
+            break;
     }
 }
 
@@ -4437,11 +4419,9 @@ function main()
 {
     canvas = document.querySelector("#canvas");
     canvas.oncontextmenu = () => false;
-    lpDDSBack = canvas;
-    lpDDSPrimary = canvas;
-    InitDInput();
-    InitDDraw();
-    InitDSound();
+    init_input();
+    init_gfx();
+    init_audio();
     Spielzustand = SZLOGO;
     InitStructs();
     requestAnimationFrame(frame);

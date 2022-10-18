@@ -309,26 +309,26 @@ const SZABSPANN	 = 3;
 const SZGERETTET	 = 4;
 const SZLOGO		 = 5;
 
-const ZWEID = (x = 0, y = 0) => ({
+const vec2 = (x = 0, y = 0) => ({
 	x, y,
 });
 
 //Die Eckkoordinaten der Kacheln (Achtung: mit überlappendem Rand)
 const EckKoor = [
 //		0				1				2				3				Ecke
-	[ZWEID(-1,29),	ZWEID(26,15),	ZWEID(54,30),	ZWEID(27,44)],//0
-	[ZWEID(-1,13),	ZWEID(26,15),	ZWEID(54,30),	ZWEID(27,28)],//1
-	[ZWEID(-1,29),	ZWEID(26,15),	ZWEID(54,14),	ZWEID(27,28)],//2
-	[ZWEID(-1,29),	ZWEID(26,-1),	ZWEID(54,14),	ZWEID(27,44)],//3
-	[ZWEID(-1,13),	ZWEID(26,-1),	ZWEID(54,30),	ZWEID(27,44)],//4
-	[ZWEID(-1,13),	ZWEID(26,15),	ZWEID(54,30),	ZWEID(27,44)],//5
-	[ZWEID(-1,29),	ZWEID(26,15),	ZWEID(54,30),	ZWEID(27,28)],//6		Kacheltyp
-	[ZWEID(-1,29),	ZWEID(26,15),	ZWEID(54,14),	ZWEID(27,44)],//7
-	[ZWEID(-1,29),	ZWEID(26,-1),	ZWEID(54,30),	ZWEID(27,44)],//8
-	[ZWEID(-1,13),	ZWEID(26,-1),	ZWEID(54,14),	ZWEID(27,44)],//9
-	[ZWEID(-1,13),	ZWEID(26,-1),	ZWEID(54,30),	ZWEID(27,28)],//10
-	[ZWEID(-1,13),	ZWEID(26,15),	ZWEID(54,14),	ZWEID(27,28)],//11
-	[ZWEID(-1,29),	ZWEID(26,-1),	ZWEID(54,14),	ZWEID(27,28)],//12
+	[vec2(-1,29),	vec2(26,15),	vec2(54,30),	vec2(27,44)],//0
+	[vec2(-1,13),	vec2(26,15),	vec2(54,30),	vec2(27,28)],//1
+	[vec2(-1,29),	vec2(26,15),	vec2(54,14),	vec2(27,28)],//2
+	[vec2(-1,29),	vec2(26,-1),	vec2(54,14),	vec2(27,44)],//3
+	[vec2(-1,13),	vec2(26,-1),	vec2(54,30),	vec2(27,44)],//4
+	[vec2(-1,13),	vec2(26,15),	vec2(54,30),	vec2(27,44)],//5
+	[vec2(-1,29),	vec2(26,15),	vec2(54,30),	vec2(27,28)],//6		Kacheltyp
+	[vec2(-1,29),	vec2(26,15),	vec2(54,14),	vec2(27,44)],//7
+	[vec2(-1,29),	vec2(26,-1),	vec2(54,30),	vec2(27,44)],//8
+	[vec2(-1,13),	vec2(26,-1),	vec2(54,14),	vec2(27,44)],//9
+	[vec2(-1,13),	vec2(26,-1),	vec2(54,30),	vec2(27,28)],//10
+	[vec2(-1,13),	vec2(26,15),	vec2(54,14),	vec2(27,28)],//11
+	[vec2(-1,29),	vec2(26,-1),	vec2(54,14),	vec2(27,28)],//12
 ];
 
 const Vierecke = [ //0=Passt nicht 1=1runter 2=gleiche Hoehe 3=1hoch
@@ -399,23 +399,6 @@ const Vierecke = [ //0=Passt nicht 1=1runter 2=gleiche Hoehe 3=1hoch
 		[0,0,2,0,0,0,0,2,0,0,0,2,0]
 	],
 ];
-
-//Bilder
-const Misc		= "MISC";
-const Panel		= "PANEL";
-const GuyAni	= "GUYANI";
-const Animation = "ANIMATION";
-const Schrift1	= "SCHRIFT1";
-const Schrift2	= "SCHRIFT2";
-const TextFeld	= "TEXTFELD";
-const Papier	= "PAPIER";
-const Baum		= "BAUM";
-const Cursorbmp = "CURSORBMP";
-const Buttons	= "BUTTONS";
-const Inventarbmp="INVENTARBMP";
-const Bau		= "BAU";
-const Credits	= "CREDITS";
-const Logo		= "LOGO";
 
 const messages_de = {
 	GITTERAN                : "Gitternetz anschalten",

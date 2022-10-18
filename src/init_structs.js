@@ -31,7 +31,7 @@ function InitStructs()
         Bmp[i].Anzahl = 4;
         Bmp[i].Geschwindigkeit = 20;
         Bmp[i].Phase = 0;
-        Bmp[i].Surface = lpDDSGuyAni;
+        Bmp[i].Surface = img_player;
         Bmp[i].rcSrc.left		= 7*(i-GUYLINKS);
         Bmp[i].rcSrc.right		= 7+7*(i-GUYLINKS);
         Bmp[i].rcSrc.top		= 0;
@@ -43,7 +43,7 @@ function InitStructs()
     for(let i=GUYSUCHEN; i<=GUYSCHLEUDER; i++) {
         Bmp[i].Animation = false;
         Bmp[i].Phase = 0;
-        Bmp[i].Surface = lpDDSGuyAni;
+        Bmp[i].Surface = img_player;
     }
 
     Bmp[GUYSUCHEN].Anzahl = 4;
@@ -560,7 +560,7 @@ function InitStructs()
         Bmp[i].Anzahl = 7;
         Bmp[i].Geschwindigkeit = 7;
         Bmp[i].Phase = 0;
-        Bmp[i].Surface = lpDDSAnimation;
+        Bmp[i].Surface = img_animations;
         Bmp[i].Sound = WAVFLUSS;
     }
 
@@ -997,7 +997,7 @@ function InitStructs()
         Bmp[i].Anzahl = 4;
         Bmp[i].Geschwindigkeit = 4;
         Bmp[i].Phase = 0;
-        Bmp[i].Surface = lpDDSBaum;
+        Bmp[i].Surface = img_trees;
         Bmp[i].Sound = WAVWALD;
     }
     //Baum1
@@ -1043,7 +1043,7 @@ function InitStructs()
     Bmp[BAUMGROSS].Anzahl = 1;
     Bmp[BAUMGROSS].Geschwindigkeit = 0;
     Bmp[BAUMGROSS].Phase = 0;
-    Bmp[BAUMGROSS].Surface = lpDDSBaum;
+    Bmp[BAUMGROSS].Surface = img_trees;
     Bmp[BAUMGROSS].Sound = WAVWALD;
 
     //Feuer
@@ -1110,7 +1110,7 @@ function InitStructs()
     Bmp[BUSCH].Anzahl = 3;
     Bmp[BUSCH].Geschwindigkeit = 0;
     Bmp[BUSCH].Phase = 0;
-    Bmp[BUSCH].Surface = lpDDSBaum;
+    Bmp[BUSCH].Surface = img_trees;
 
     //Buttons
 
@@ -1603,7 +1603,7 @@ function InitStructs()
     //SpzAni
     for (let i=BAUM1DOWN; i<=BAUM4DOWN; i++) {
         Bmp[i].Animation = true;
-        Bmp[i].Surface = lpDDSBaum;
+        Bmp[i].Surface = img_trees;
         Bmp[i].Phase  = 0;
         Bmp[i].rcDes.left = 0;
         Bmp[i].rcDes.top  = 0;
@@ -1658,7 +1658,7 @@ function InitStructs()
     Bmp[SAEULE1].rcDes.bottom=Bmp[SAEULE1].rcDes.top+95;
     Bmp[SAEULE1].Breite = (Bmp[SAEULE1].rcSrc.right - Bmp[SAEULE1].rcSrc.left);
     Bmp[SAEULE1].Hoehe = (Bmp[SAEULE1].rcSrc.bottom - Bmp[SAEULE1].rcSrc.top);
-    Bmp[SAEULE1].Surface = lpDDSPanel;
+    Bmp[SAEULE1].Surface = img_gui;
 
     //Säule2
     Bmp[SAEULE2].Anzahl = 1;
@@ -1672,7 +1672,7 @@ function InitStructs()
     Bmp[SAEULE2].rcDes.bottom=Bmp[SAEULE2].rcDes.top+95;
     Bmp[SAEULE2].Breite = (Bmp[SAEULE2].rcSrc.right - Bmp[SAEULE2].rcSrc.left);
     Bmp[SAEULE2].Hoehe = (Bmp[SAEULE2].rcSrc.bottom - Bmp[SAEULE2].rcSrc.top);
-    Bmp[SAEULE2].Surface = lpDDSPanel;
+    Bmp[SAEULE2].Surface = img_gui;
 
     //Säule3
     Bmp[SAEULE3].Anzahl = 1;
@@ -1686,7 +1686,7 @@ function InitStructs()
     Bmp[SAEULE3].rcDes.bottom=Bmp[SAEULE3].rcDes.top+95;
     Bmp[SAEULE3].Breite = (Bmp[SAEULE3].rcSrc.right - Bmp[SAEULE3].rcSrc.left);
     Bmp[SAEULE3].Hoehe = (Bmp[SAEULE3].rcSrc.bottom - Bmp[SAEULE3].rcSrc.top);
-    Bmp[SAEULE3].Surface = lpDDSPanel;
+    Bmp[SAEULE3].Surface = img_gui;
 
     //Rohstoffe
     for(i=ROHAST;i<=ROHSCHLEUDER;i++)
@@ -1826,7 +1826,7 @@ function InitStructs()
     Bmp[RING].rcDes.bottom=Bmp[RING].rcDes.top;
     Bmp[RING].Breite = (Bmp[RING].rcSrc.right - Bmp[RING].rcSrc.left);
     Bmp[RING].Hoehe = (Bmp[RING].rcSrc.bottom - Bmp[RING].rcSrc.top);
-    Bmp[RING].Surface = lpDDSPanel;
+    Bmp[RING].Surface = img_gui;
 
     //KREUZ
     Bmp[KREUZ].Anzahl = 1;
@@ -1836,14 +1836,14 @@ function InitStructs()
     Bmp[KREUZ].rcSrc.bottom=Bmp[KREUZ].rcSrc.top +22;
     Bmp[KREUZ].Breite = (Bmp[KREUZ].rcSrc.right - Bmp[KREUZ].rcSrc.left);
     Bmp[KREUZ].Hoehe = (Bmp[KREUZ].rcSrc.bottom - Bmp[KREUZ].rcSrc.top);
-    Bmp[KREUZ].Surface = lpDDSPanel;
+    Bmp[KREUZ].Surface = img_gui;
 
     //JA
     Bmp[JA].Anzahl = 1;
-    Bmp[JA].Surface = lpDDSPapier;
+    Bmp[JA].Surface = img_paper;
     //NEIN
     Bmp[NEIN].Anzahl = 1;
-    Bmp[NEIN].Surface = lpDDSPapier;
+    Bmp[NEIN].Surface = img_paper;
 
     if (language === "en") {
         //JA
@@ -1887,7 +1887,7 @@ function InitStructs()
     Bmp[SONNE].rcDes.bottom=Bmp[SONNE].rcDes.top+55;
     Bmp[SONNE].Breite = (Bmp[SONNE].rcSrc.right - Bmp[SONNE].rcSrc.left);
     Bmp[SONNE].Hoehe = (Bmp[SONNE].rcSrc.bottom - Bmp[SONNE].rcSrc.top);
-    Bmp[SONNE].Surface = lpDDSPanel;
+    Bmp[SONNE].Surface = img_gui;
 
     //PROGRAMMIERUNG
     Bmp[PROGRAMMIERUNG].Anzahl = 1;

@@ -276,7 +276,7 @@ function AkDestroy()
 
 function AkSuchen()
 {
-    let Ziel = ZWEID();
+    let Ziel = vec2();
 
     if (Guy.AkNummer === 0)
     {
@@ -949,7 +949,7 @@ function AkTagEnde()
             if ((Guy.Zustand === GUYSCHLAFZELT) || (Guy.Zustand === GUYSCHLAFEN) ||
                 (Guy.Zustand === GUYSCHLAFHAUS) || (BootsFahrt)) break;
             //Wohnbare Objekte in der Umgebung suchen
-            Erg = ZWEID();
+            Erg = vec2();
             Erg.x = -1;
             Erg.y = -1;
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === ZELT) || (Scape[Guy.Pos.x][Guy.Pos.y].Objekt === HAUS3))
