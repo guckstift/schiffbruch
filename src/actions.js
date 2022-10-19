@@ -23,8 +23,8 @@ function AkIntro()
             Guy.PosScreen.y -= 10;
             Guy.Aktiv   = true;
             Guy.Zustand = GUYSCHIFFDOWN;
-            PlaySound(WAVPLATSCH,100);
-            PlaySound(WAVCRASH,100);
+            play_sound(sfx_splash,100);
+            play_sound(sfx_crash,100);
             break;
         case 3:
             Scape[Guy.Pos.x][Guy.Pos.y].Objekt = WRACK;
@@ -41,7 +41,7 @@ function AkIntro()
                     Scape[Guy.Pos.x][Guy.Pos.y].yScreen+EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][1].y) /2));
             break;
         case 4:
-            StopSound(WAVSCHWIMMEN); //Sound hier sofort stoppen
+            stop_sound(sfx_swim); //Sound hier sofort stoppen
             Guy.Zustand = GUYLINKS;
             ShortRoute(((Scape[Guy.Pos.x][Guy.Pos.y].xScreen+EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][0].x +
                 Scape[Guy.Pos.x][Guy.Pos.y].xScreen+EckKoor[Scape[Guy.Pos.x][Guy.Pos.y].Typ][2].x) /2),
@@ -50,7 +50,7 @@ function AkIntro()
             break;
         case 5:
             Guy.PosAlt = Guy.PosScreen;
-            Spielzustand = SZSPIEL;
+            game_state = STATE_INGAME;
             Guy.Aktion = AKNICHTS;
             PapierText = DrawText(messages.INTROTEXT,TXTPAPIER,1);
             SaveGame();
@@ -149,8 +149,8 @@ function AkSpielverlassen()
             else Guy.Zustand = GUYLINKS;
             if (Frage === 1)
             {
-                if (Guy.Resource[GESUNDHEIT] > 10) SaveGame();
-                Spielzustand = SZABSPANN;
+                if (Guy.Resource[RES_HEALTH] > 10) SaveGame();
+                game_state = STATE_OUTRO;
             }
             Frage = -1;
             break;
@@ -195,7 +195,7 @@ function AkTod()
             Guy.Aktion = AKNICHTS;
             if (Frage === 2)
             {
-                Spielzustand = SZABSPANN;
+                game_state = STATE_OUTRO;
             }
             else  NeuesSpiel(false);
             Frage = -1;
@@ -241,15 +241,15 @@ function AkDestroy()
         case 2: case 4:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYFAELLEN;
-        AddResource(WASSER,-1);
-        AddResource(NAHRUNG,-1);
+        AddResource(RES_WATER,-1);
+        AddResource(RES_FOOD,-1);
         AddTime(0,5);
         break;
         case 3: case 5:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYSCHLAGEN;
-        AddResource(WASSER,-1);
-        AddResource(NAHRUNG,-1);
+        AddResource(RES_WATER,-1);
+        AddResource(RES_FOOD,-1);
         AddTime(0,5);
         break;
         case 6:
@@ -300,7 +300,7 @@ function AkSuchen()
                 Guy.Aktiv   = true;
                 Guy.PosScreen.y -= 2;
                 Guy.Zustand = GUYTAUCHEN1;
-                PlaySound(WAVPLATSCH,100);
+                play_sound(sfx_splash,100);
             }
         }
         else ShortRoute(Ziel.x,Ziel.y);
@@ -323,7 +323,7 @@ function AkSuchen()
             {
                 Guy.Aktiv   = true;
                 Guy.Zustand = GUYTAUCHEN3;
-                PlaySound(WAVPLATSCH,100);
+                play_sound(sfx_splash,100);
             }
             break;
         case 10:
@@ -463,7 +463,7 @@ function AkEssen()
         case 2: case 3:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYESSEN;
-        AddResource(NAHRUNG,15);
+        AddResource(RES_FOOD,15);
         AddTime(0,2);
         break;
         case 4:
@@ -496,7 +496,7 @@ function AkSchleuder()
             Guy.Zustand = GUYSCHLEUDER;
             Guy.PosScreen.x += 5;
             AddTime(0,2);
-            PlaySound(WAVSCHLEUDER,100);
+            play_sound(sfx_slingshot,100);
             break;
         case 3:
             Guy.PosScreen.x -= 5;
@@ -508,7 +508,7 @@ function AkSchleuder()
         case 4:
             Guy.Aktiv   = true;
             Guy.Zustand = GUYSUCHEN;
-            AddResource(NAHRUNG,5);
+            AddResource(RES_FOOD,5);
             AddTime(0,20);
             break;
         case 5:
@@ -536,7 +536,7 @@ function AkTrinken()
         case 2: case 3:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYTRINKEN;
-        AddResource(WASSER,30);
+        AddResource(RES_WATER,30);
         AddTime(0,3);
         break;
         case 4:
@@ -566,8 +566,8 @@ function AkFaellen()
         case 2: case 3: case 4: case 5: case 6:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYFAELLEN;
-        AddResource(WASSER,-2);
-        AddResource(NAHRUNG,-2);
+        AddResource(RES_WATER,-2);
+        AddResource(RES_FOOD,-2);
         AddTime(0,10);
         break;
         case 7:
@@ -577,7 +577,7 @@ function AkFaellen()
             Scape[Guy.Pos.x][Guy.Pos.y].Objekt = i;
             Scape[Guy.Pos.x][Guy.Pos.y].Phase = 0;
             Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x -= 17;
-            PlaySound(WAVBAUMFAELLT,100);
+            play_sound(sfx_treefall,100);
             break;
         case 8:
             ShortRoute(Guy.PosAlt.x,Guy.PosAlt.y);
@@ -645,7 +645,7 @@ function AkAngeln()
             break;
         case 2:
             Guy.Aktiv   = true;
-            PlaySound(WAVANGEL,100);
+            play_sound(sfx_fishingrod,100);
             if (BootsFahrt)
             {
                 Guy.PosScreen.y -= 2;
@@ -686,7 +686,7 @@ function AkAngeln()
             Guy.Zustand = GUYANGELN2UNTEN;
             break;
         }
-        Guy.Resource[GESUNDHEIT] += 2;
+        Guy.Resource[RES_HEALTH] += 2;
         AddTime(0,20);
         break;
         case 7:
@@ -713,7 +713,7 @@ function AkAngeln()
             ShortRoute(Guy.PosAlt.x,Guy.PosAlt.y);
             break;
         case 9:
-            Guy.Resource[NAHRUNG] += 20;
+            Guy.Resource[RES_FOOD] += 20;
             Guy.Aktion = AKNICHTS;
             break;
     }
@@ -812,8 +812,8 @@ function AkSchatz()
             break;
         case 2:
             AddTime(0,20);
-            AddResource(WASSER,-10);
-            AddResource(NAHRUNG,-10);
+            AddResource(RES_WATER,-10);
+            AddResource(RES_FOOD,-10);
             Guy.PosScreen.x += 5;
             Guy.PosScreen.y -= 1;
             ShortRoute(Guy.PosAlt.x,Guy.PosAlt.y);
@@ -861,40 +861,40 @@ function AkFeld()
             Scape[Guy.Pos.x][Guy.Pos.y].Phase = 4;
             ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+25,
                 Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+21);
-            AddResource(WASSER,-2);
-            AddResource(NAHRUNG,-2);
+            AddResource(RES_WATER,-2);
+            AddResource(RES_FOOD,-2);
             AddTime(0,30);
             break;
         case 7:
             Scape[Guy.Pos.x][Guy.Pos.y].Phase = 5;
             ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+28,
                 Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+19);
-            AddResource(WASSER,-2);
-            AddResource(NAHRUNG,-2);
+            AddResource(RES_WATER,-2);
+            AddResource(RES_FOOD,-2);
             AddTime(0,30);
             break;
         case 10:
             Scape[Guy.Pos.x][Guy.Pos.y].Phase = 6;
             ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+31,
                 Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+17);
-            AddResource(WASSER,-2);
-            AddResource(NAHRUNG,-2);
+            AddResource(RES_WATER,-2);
+            AddResource(RES_FOOD,-2);
             AddTime(0,30);
             break;
         case 13:
             Scape[Guy.Pos.x][Guy.Pos.y].Phase = 7;
             ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+34,
                 Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+15);
-            AddResource(WASSER,-2);
-            AddResource(NAHRUNG,-2);
+            AddResource(RES_WATER,-2);
+            AddResource(RES_FOOD,-2);
             AddTime(0,30);
             break;
         case 16:
             Scape[Guy.Pos.x][Guy.Pos.y].Phase = 8;
             ShortRoute(Scape[Guy.Pos.x][Guy.Pos.y].xScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.x+36,
                 Scape[Guy.Pos.x][Guy.Pos.y].yScreen+Scape[Guy.Pos.x][Guy.Pos.y].ObPos.y+13);
-            AddResource(WASSER,-2);
-            AddResource(NAHRUNG,-2);
+            AddResource(RES_WATER,-2);
+            AddResource(RES_FOOD,-2);
             AddTime(0,30);
             break;
         case 2: case 3: case 5: case 6: case 8: case 9: case 11: case 12: case 14: case 15: case 17: case 18:
@@ -1090,7 +1090,7 @@ function AkTagEnde()
             Nacht	= true;
             Stunden = 12;
             Minuten = 0;
-            PlaySound(WAVWOLF,100);
+            play_sound(sfx_wolf,100);
             //Falsche Objekte Löschen
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= BAUM1DOWN) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Objekt <= BAUM4DOWN))
@@ -1104,8 +1104,8 @@ function AkTagEnde()
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === ZELT) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Phase < Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Anzahl))
             {
-                AddResource(GESUNDHEIT,-5);
-                if (Guy.Resource[GESUNDHEIT] <= 0)
+                AddResource(RES_HEALTH,-5);
+                if (Guy.Resource[RES_HEALTH] <= 0)
                 {
                     Guy.Aktiv = true;
                     PapierText = DrawText(messages.TAGENDE5,TXTPAPIER,1);
@@ -1123,7 +1123,7 @@ function AkTagEnde()
             else if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === HAUS3) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Phase < Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Anzahl))
             {
-                AddResource(GESUNDHEIT,+20);
+                AddResource(RES_HEALTH,+20);
                 Guy.Aktiv = true;
                 PapierText = DrawText(messages.TAGENDE4,TXTPAPIER,1);
             }
@@ -1139,8 +1139,8 @@ function AkTagEnde()
             }
             else
             {
-                AddResource(GESUNDHEIT,-20);
-                if (Guy.Resource[GESUNDHEIT] <= 0)
+                AddResource(RES_HEALTH,-20);
+                if (Guy.Resource[RES_HEALTH] <= 0)
                 {
                     Guy.Aktiv = true;
                     PapierText = DrawText(messages.TAGENDE5,TXTPAPIER,1);
@@ -1192,7 +1192,7 @@ function AkTagEnde()
             Fade(70,60,60);
             Stunden = 0;
             Minuten = 0;
-            StopSound(WAVSCHNARCHEN);
+            stop_sound(sfx_snore);
             Guy.Aktiv = true;
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === HAUS3) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Phase < Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Anzahl))
@@ -1219,7 +1219,7 @@ function AkTagEnde()
             Minuten = 0;
             Guy.Zustand = GUYLINKS;
             Guy.Aktion = AKNICHTS;
-            if (Guy.Resource[GESUNDHEIT] > 10) SaveGame();
+            if (Guy.Resource[RES_HEALTH] > 10) SaveGame();
             break;
     }
 }
@@ -1248,7 +1248,7 @@ function AkGerettet()
                 Frage = -1;
                 break;
             }
-            Spielzustand = SZGERETTET;
+            game_state = STATE_RESCUED;
             Frage = -1;
             break;
         case 4:
@@ -1314,7 +1314,7 @@ function AkGerettet()
         case 9:
             Guy.Aktion = AKNICHTS;
             Guy.Zustand = GUYLINKS;
-            Spielzustand = SZABSPANN;
+            game_state = STATE_OUTRO;
             break;
     }
 }
@@ -1346,8 +1346,8 @@ function AkZelt()
         case 2: case 3: case 12: case 13:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYBINDENUNTEN;
-        AddResource(WASSER,-2);
-        AddResource(NAHRUNG,-2);
+        AddResource(RES_WATER,-2);
+        AddResource(RES_FOOD,-2);
         AddTime(0,15);
         break;
         case 4:
@@ -1367,8 +1367,8 @@ function AkZelt()
         case 7: case 8:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYBINDENOBEN;
-        AddResource(WASSER,-2);
-        AddResource(NAHRUNG,-2);
+        AddResource(RES_WATER,-2);
+        AddResource(RES_FOOD,-2);
         AddTime(0,15);
         break;
         case 9:
@@ -1440,8 +1440,8 @@ function AkBoot()
         case 4: case 5: case 6: case 8: case 9: case 10: case 12: case 13: case 14:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYSCHLAGEN;
-        AddResource(WASSER,-2);
-        AddResource(NAHRUNG,-2);
+        AddResource(RES_WATER,-2);
+        AddResource(RES_FOOD,-2);
         AddTime(0,15);
         break;
         case 7:
@@ -1529,15 +1529,15 @@ function AkRohr()
         case 4: case 5: case 6: case 11: case 12: case 13:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYSCHLAGEN;
-        AddResource(WASSER,-1);
-        AddResource(NAHRUNG,-1);
+        AddResource(RES_WATER,-1);
+        AddResource(RES_FOOD,-1);
         AddTime(0,5);
         break;
         case 7: case 8: case 9: case 14: case 15: case 16:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYFAELLEN;
-        AddResource(WASSER,-1);
-        AddResource(NAHRUNG,-1);
+        AddResource(RES_WATER,-1);
+        AddResource(RES_FOOD,-1);
         AddTime(0,5);
         break;
         case 10:
@@ -1615,16 +1615,16 @@ function AkSOS()
         Guy.Aktiv   = true;
         Guy.PosScreen.x += 4;
         Guy.Zustand = GUYHINLEGEN;
-        AddResource(WASSER,-1);
-        AddResource(NAHRUNG,-1);
+        AddResource(RES_WATER,-1);
+        AddResource(RES_FOOD,-1);
         AddTime(0,1);
         break;
         case 3: case 6: case 9: case 12: case 15: case 18:
         Guy.Aktiv   = true;
         Guy.PosScreen.x -= 4;
         Guy.Zustand = GUYAUFSTEHEN;
-        AddResource(WASSER,-1);
-        AddResource(NAHRUNG,-1);
+        AddResource(RES_WATER,-1);
+        AddResource(RES_FOOD,-1);
         AddTime(0,1);
         break;
         case 19:
@@ -1674,16 +1674,16 @@ function AkFeuerstelle()
             Guy.Aktiv   = true;
             Guy.PosScreen.x += 4;
             Guy.Zustand = GUYHINLEGEN;
-            AddResource(WASSER,-1);
-            AddResource(NAHRUNG,-1);
+            AddResource(RES_WATER,-1);
+            AddResource(RES_FOOD,-1);
             AddTime(0,1);
             break;
         case 3:
             Guy.Aktiv   = true;
             Guy.PosScreen.x -= 4;
             Guy.Zustand = GUYAUFSTEHEN;
-            AddResource(WASSER,-1);
-            AddResource(NAHRUNG,-1);
+            AddResource(RES_WATER,-1);
+            AddResource(RES_FOOD,-1);
             AddTime(0,1);
             Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[FEUERSTELLE].Anzahl+1);
             break;
@@ -1694,8 +1694,8 @@ function AkFeuerstelle()
         case 5: case 6: case 7:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYBINDENOBEN;
-        AddResource(WASSER,-1);
-        AddResource(NAHRUNG,-1);
+        AddResource(RES_WATER,-1);
+        AddResource(RES_FOOD,-1);
         AddTime(0,1);
         if (Scape[Guy.Pos.x][Guy.Pos.y].AkNummer !== 5)
             Scape[Guy.Pos.x][Guy.Pos.y].Phase =
@@ -1744,32 +1744,32 @@ function AkHaus1()
         case 2: case 3: case 4: case 5:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYHAMMER;
-        AddResource(NAHRUNG,-0.5);
-        AddResource(WASSER,-0.5);
+        AddResource(RES_FOOD,-0.5);
+        AddResource(RES_WATER,-0.5);
         AddTime(0,1);
         break;
         case 6: case 7: case 8: case 9:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYHAMMER;
         Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS1].Anzahl+1);
-        AddResource(NAHRUNG,-0.5);
-        AddResource(WASSER,-0.5);
+        AddResource(RES_FOOD,-0.5);
+        AddResource(RES_WATER,-0.5);
         AddTime(0,1);
         break;
         case 10: case 11: case 12: case 13:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYHAMMER;
         Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS1].Anzahl+2);
-        AddResource(NAHRUNG,-0.5);
-        AddResource(WASSER,-0.5);
+        AddResource(RES_FOOD,-0.5);
+        AddResource(RES_WATER,-0.5);
         AddTime(0,1);
         break;
         case 14: case 15: case 16: case 17:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYHAMMER;
         Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS1].Anzahl+3);
-        AddResource(NAHRUNG,-0.5);
-        AddResource(WASSER,-0.5);
+        AddResource(RES_FOOD,-0.5);
+        AddResource(RES_WATER,-0.5);
         AddTime(0,1);
         break;
         case 18:
@@ -1810,47 +1810,47 @@ function AkHaus2()
         case 2:
             Guy.Aktiv   = true;
             Guy.Zustand = GUYKLETTERN1;
-            AddResource(NAHRUNG,-1);
-            AddResource(WASSER,-1);
+            AddResource(RES_FOOD,-1);
+            AddResource(RES_WATER,-1);
             AddTime(0,1);
             break;
         case 3: case 4: case 5: case 6:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYHAMMER2;
-        AddResource(NAHRUNG,-0.5);
-        AddResource(WASSER,-0.5);
+        AddResource(RES_FOOD,-0.5);
+        AddResource(RES_WATER,-0.5);
         AddTime(0,1);
         break;
         case 7: case 8: case 9: case 10:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYHAMMER2;
         Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS2].Anzahl+1);
-        AddResource(NAHRUNG,-0.5);
-        AddResource(WASSER,-0.5);
+        AddResource(RES_FOOD,-0.5);
+        AddResource(RES_WATER,-0.5);
         AddTime(0,1);
         break;
         case 11: case 12: case 13: case 14:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYHAMMER2;
         Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS2].Anzahl+2);
-        AddResource(NAHRUNG,-0.5);
-        AddResource(WASSER,-0.5);
+        AddResource(RES_FOOD,-0.5);
+        AddResource(RES_WATER,-0.5);
         AddTime(0,1);
         break;
         case 15: case 16: case 17: case 18:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYHAMMER2;
         Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS2].Anzahl+3);
-        AddResource(NAHRUNG,-0.5);
-        AddResource(WASSER,-0.5);
+        AddResource(RES_FOOD,-0.5);
+        AddResource(RES_WATER,-0.5);
         AddTime(0,1);
         break;
         case 19:
             Guy.Aktiv   = true;
             Guy.Zustand = GUYKLETTERN2;
             Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS2].Anzahl+4);
-            AddResource(NAHRUNG,-1);
-            AddResource(WASSER,-1);
+            AddResource(RES_FOOD,-1);
+            AddResource(RES_WATER,-1);
             AddTime(0,1);
             break;
         case 20:
@@ -1891,47 +1891,47 @@ function AkHaus3()
         case 2:
             Guy.Aktiv   = true;
             Guy.Zustand = GUYKLETTERN1;
-            AddResource(NAHRUNG,-1);
-            AddResource(WASSER,-1);
+            AddResource(RES_FOOD,-1);
+            AddResource(RES_WATER,-1);
             AddTime(0,1);
             break;
         case 3: case 4: case 5: case 6:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYHAMMER2;
-        AddResource(NAHRUNG,-0.5);
-        AddResource(WASSER,-0.5);
+        AddResource(RES_FOOD,-0.5);
+        AddResource(RES_WATER,-0.5);
         AddTime(0,1);
         break;
         case 7: case 8: case 9: case 10:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYHAMMER2;
         Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS3].Anzahl+1);
-        AddResource(NAHRUNG,-0.5);
-        AddResource(WASSER,-0.5);
+        AddResource(RES_FOOD,-0.5);
+        AddResource(RES_WATER,-0.5);
         AddTime(0,1);
         break;
         case 11: case 12: case 13: case 14:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYHAMMER2;
         Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS3].Anzahl+2);
-        AddResource(NAHRUNG,-0.5);
-        AddResource(WASSER,-0.5);
+        AddResource(RES_FOOD,-0.5);
+        AddResource(RES_WATER,-0.5);
         AddTime(0,1);
         break;
         case 15: case 16: case 17: case 18:
         Guy.Aktiv   = true;
         Guy.Zustand = GUYHAMMER2;
         Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS3].Anzahl+3);
-        AddResource(NAHRUNG,-0.5);
-        AddResource(WASSER,-0.5);
+        AddResource(RES_FOOD,-0.5);
+        AddResource(RES_WATER,-0.5);
         AddTime(0,1);
         break;
         case 19:
             Guy.Aktiv   = true;
             Guy.Zustand = GUYKLETTERN2;
             Scape[Guy.Pos.x][Guy.Pos.y].Phase = (Bmp[HAUS3].Anzahl+4);
-            AddResource(NAHRUNG,-1);
-            AddResource(WASSER,-1);
+            AddResource(RES_FOOD,-1);
+            AddResource(RES_WATER,-1);
             AddTime(0,1);
             break;
         case 20:
@@ -1977,8 +1977,8 @@ function AkSchlafen()
             {
                 Guy.Aktiv   = true;
                 Guy.Zustand = GUYKLETTERN1;
-                AddResource(NAHRUNG,-1);
-                AddResource(WASSER,-1);
+                AddResource(RES_FOOD,-1);
+                AddResource(RES_WATER,-1);
             }
             break;
         case 3:
@@ -2016,12 +2016,12 @@ function AkSchlafen()
             Guy.Zustand = GUYSCHLAFHAUS;
         }
         else Guy.Zustand = GUYSCHLAFEN;
-        AddResource(GESUNDHEIT,5);
+        AddResource(RES_HEALTH,5);
         AddTime(0,30);
         break;
         case 6:
             Guy.Aktiv   = true;
-            StopSound(WAVSCHNARCHEN);
+            stop_sound(sfx_snore);
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === HAUS3) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Phase <  Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Anzahl))
             {
@@ -2036,8 +2036,8 @@ function AkSchlafen()
             {
                 Guy.Aktiv   = true;
                 Guy.Zustand = GUYKLETTERN2;
-                AddResource(NAHRUNG,-1);
-                AddResource(WASSER,-1);
+                AddResource(RES_FOOD,-1);
+                AddResource(RES_WATER,-1);
             }
             break;
         case 8:

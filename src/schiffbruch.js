@@ -1,4 +1,5 @@
 // localization
+
 let language = "de";
 let messages = messages_de;
 let gui_img_name = "gui.png";
@@ -6,28 +7,56 @@ let paper_img_name = "paper.png";
 let credits_img_name = "credits.png";
 
 // gfx
-let img_terrain = null;      // DirectDraw Bilder surface
-let img_gui = null;     // DirectDraw Panel surface
-let img_player = null;    // DirectDraw GuyAni surface
-let img_animations = null; // DirectDraw Animation surface
-let lpDDSKarte = null;      // DirectDraw MiniMap surface
-let lpDDSSchrift = null;    // DirectDraw Schrift surface
-let img_font1 = null;   // DirectDraw Schrift1 surface
-let img_font2 = null;   // DirectDraw Schrift2 surface
-let img_statusbar = null;   // DirectDraw TextFeld surface
-let img_paper = null;     // DirectDraw Paier surface
-let img_trees = null;      // DirectDraw Bäume surface
-let lpDDSBau = null;       // DirectDraw Bauwerke surface
-let lpDDSCredits = null;   // DirectDraw Credits surface
-let lpDDSLogo = null;		// DirectDraw Logo surface
-let lpDDSCursor = null;    // DirectDraw Cursor surface
-let lpDDSButtons = null;   // DirectDraw Buttons surface
-let lpDDSInventar = null;  // DirectDraw Inventar surface
-let lpDDSScape = null;      // DirectDraw Landschaft surface
-let lpDDSSchatzkarte = null;// SchatzkartenSurface
-let lpdsbWav = new Array(WAVANZ); //Wavedateispeicher
 
-let Spielzustand = SZNICHTS;	   // in welchem Zustand ist das Spiel?
+let img_terrain;
+let img_gui;
+let img_player;
+let img_animations;
+let img_font1;
+let img_font2;
+let img_statusbar;
+let img_paper;
+let img_trees;
+let img_buildings;
+let img_credits;
+let img_logo;
+let img_cursors;
+let img_buttons;
+let img_inventory;
+
+let minimap;
+let text_surface;
+let landscape;
+let treasure_map;
+
+// sfx
+
+let sfx_storm;
+let sfx_swim;
+let sfx_splash;
+let sfx_log;
+let sfx_beat;
+let sfx_slingshot;
+let sfx_shovel;
+let sfx_hammer;
+let sfx_crash;
+let sfx_snore;
+let sfx_drink;
+let sfx_rustle;
+let sfx_fishingrod;
+let sfx_forest;
+let sfx_fire;
+let sfx_shore;
+let sfx_treefall;
+let sfx_stream;
+let sfx_click1;
+let sfx_click2;
+let sfx_mainscreen;
+let sfx_outro;
+let sfx_wolf;
+let sfx_invention;
+
+let game_state = STATE_LOGO;
 let MouseAktiv = false;    // Mouse angestellt?
 let LAnimation = true;	   // Ist die Landschaftanimation angeschaltet?
 let Gitter;			//Gitternetz an/aus
@@ -104,7 +133,6 @@ class BMP {
 }
 
 let Bmp = Array.from(Array(BILDANZ), x => new BMP());
-let Wav = Array.from(Array(WAVANZ), x => ({}));
 let AbspannListe = Array.from(Array(10), x => Array.from(Array(10), x => ({Aktiv: false, Bild: 0})));	//Namenabfolge im Abspann
 
 class SCAPE {
@@ -119,8 +147,7 @@ let Scape = Array.from(Array(MAXYKACH), x => Array.from(Array(MAXXKACH), x => ne
 let Flusslauf = Array.from(Array(FLUSSANZAHL), x => Array.from(Array(MAXFLUSS), x => ({x: 0, y: 0})));
 
 let canvas = document.querySelector("#canvas");
-let ctx = null;
-let audioCtx = null;
+let audio_ctx = null;
 let cur_mouse_state = {
     x: 0,
     y: 0,
@@ -164,17 +191,17 @@ function copy_rect(d, s)
 
 function rand()
 {
-    return Math.floor(Math.random() * 0xffFFffFF);
+    return floor(Math.random() * 0xffFFffFF);
 }
 
-function loadImage(url)
+function load_image(url)
 {
     let img = document.createElement("img");
     img.src = url;
     return img;
 }
 
-function createSurface(w, h)
+function create_surface(w, h)
 {
     let off = document.createElement("canvas");
     off.width = w;
@@ -190,83 +217,111 @@ function LoadString(id)
 
 function init_gfx()
 {
-    // Set the video mode to 800x600
+    canvas = document.querySelector("#canvas");
+    canvas.oncontextmenu = () => false;
     canvas.width = MAXX;
     canvas.height = MAXY;
-    ctx = canvas.getContext("2d");
-    canvas.ctx = ctx;
+    canvas.ctx = canvas.getContext("2d");
 
-    //In diese Surface sollen die Bausteine geladen werden
-    img_terrain = loadImage("./gfx/terrain.png");
-    //In diese Surface sollen das Panel geladen werden
-    img_gui = loadImage("./gfx/" + gui_img_name);
-    //In diese Surface sollen die Animation der Figur gespeichert werden
-    img_player = loadImage("./gfx/player.png");
-    //In diese Surface sollen die Landschaftsanimationen gespeichert werden
-    img_animations = loadImage("./gfx/animations.png");
-    //In diese Surface soll die Schrift1 gespeichert werden
-    img_font1 = loadImage("./gfx/font1.png");
-    //In diese Surface soll die Schrift2 gespeichert werden
-    img_font2 = loadImage("./gfx/font2.png");
-    //In diese Surface soll das Papier gespeichert werden
-    img_paper = loadImage("./gfx/" + paper_img_name);
-    //In diese Surface solln die B�ume gespeichert werden
-    img_trees = loadImage("./gfx/trees.png");
-    //In diese Surface solln die Cursor gespeichert werden
-    lpDDSCursor = loadImage("./gfx/cursors.png");
-    //In diese Surface solln die Buttons gespeichert werden
-    lpDDSButtons = loadImage("./gfx/buttons.png");
-    //In diese Surface solln das TextFeld gespeichert werden
-    img_statusbar = loadImage("./gfx/statusbar.png");
-    //In diese Surface solln das Inventar gespeichert werden
-    lpDDSInventar = loadImage("./gfx/inventory.png");
-    //In diese Surface solln die Bauwerke gespeichert werden
-    lpDDSBau = loadImage("./gfx/buildings.png");
-    //In diese Surface solln die Credits gespeichert werden
-    lpDDSCredits = loadImage("gfx/" + credits_img_name);
-    //In diese Surface solln das Logo gespeichert werden
-    lpDDSLogo = loadImage("./gfx/logo.png");
+    img_terrain = load_image("./gfx/terrain.png");
+    img_gui = load_image("./gfx/" + gui_img_name);
+    img_player = load_image("./gfx/player.png");
+    img_animations = load_image("./gfx/animations.png");
+    img_font1 = load_image("./gfx/font1.png");
+    img_font2 = load_image("./gfx/font2.png");
+    img_paper = load_image("./gfx/" + paper_img_name);
+    img_trees = load_image("./gfx/trees.png");
+    img_cursors = load_image("./gfx/cursors.png");
+    img_buttons = load_image("./gfx/buttons.png");
+    img_statusbar = load_image("./gfx/statusbar.png");
+    img_inventory = load_image("./gfx/inventory.png");
+    img_buildings = load_image("./gfx/buildings.png");
+    img_credits = load_image("gfx/" + credits_img_name);
+    img_logo = load_image("./gfx/logo.png");
 
     //In diese Surface soll die MiniMap gespeichert werden
-    lpDDSKarte = createSurface(2 * MAXXKACH, 2 * MAXYKACH);
+    minimap = create_surface(2 * MAXXKACH, 2 * MAXYKACH);
     //In diese Surface soll die Landschaft gespeichert werden
-    lpDDSScape = createSurface(MAXSCAPEX, MAXSCAPEY);
-    //document.body.appendChild(lpDDSScape);
+    landscape = create_surface(MAXSCAPEX, MAXSCAPEY);
+    //document.body.appendChild(landscape);
     //In diese Surface soll die Schrift gespeichert werden
-    lpDDSSchrift = createSurface(MAXX, MAXY);
+    text_surface = create_surface(MAXX, MAXY);
     //In diese Surface soll die Schatzkarte gespeichert werden
-    lpDDSSchatzkarte = createSurface(SKARTEX, SKARTEY);
+    treasure_map = create_surface(SKARTEX, SKARTEY);
 }
 
-function init_audio()
+async function init_sfx()
 {
-    audioCtx = new AudioContext();
+    audio_ctx = new AudioContext();
+
+    sfx_storm = await load_sound("./sfx/storm.ogg", 85);
+    sfx_swim = await load_sound("./sfx/swim.ogg", 90);
+    sfx_splash = await load_sound("./sfx/splash.ogg", 95);
+    sfx_log = await load_sound("./sfx/log.ogg", 100);
+    sfx_beat = await load_sound("./sfx/beat.ogg", 100);
+    sfx_slingshot = await load_sound("./sfx/slingshot.ogg", 100);
+    sfx_shovel = await load_sound("./sfx/shovel.ogg", 90);
+    sfx_hammer = await load_sound("./sfx/hammer.ogg", 100);
+    sfx_crash = await load_sound("./sfx/crash.ogg", 100);
+    sfx_snore = await load_sound("./sfx/snore.ogg", 90);
+    sfx_drink = await load_sound("./sfx/drink.ogg", 95);
+    sfx_rustle = await load_sound("./sfx/rustle.ogg", 90);
+    sfx_fishingrod = await load_sound("./sfx/fishingrod.ogg", 100);
+    sfx_forest = await load_sound("./sfx/forest.ogg", 90);
+    sfx_fire = await load_sound("./sfx/fire.ogg", 100);
+    sfx_shore = await load_sound("./sfx/shore.ogg", 100);
+    sfx_treefall = await load_sound("./sfx/treefall.ogg", 100);
+    sfx_stream = await load_sound("./sfx/stream.ogg", 85);
+    sfx_click1 = await load_sound("./sfx/click1.ogg", 95);
+    sfx_click2 = await load_sound("./sfx/click2.ogg", 95);
+    sfx_mainscreen = await load_sound("./sfx/mainscreen.ogg", 100, true);
+    sfx_outro = await load_sound("./sfx/outro.ogg", 100, true);
+    sfx_wolf = await load_sound("./sfx/wolf.ogg", 90);
+    sfx_invention = await load_sound("./sfx/invention.ogg", 95);
 }
 
-function LoadSound(Sound)
+async function load_sound(url, def_volume, do_loop = false)
 {
-    fetch(Wav[Sound].Dateiname)
-        .then(response => response.arrayBuffer())
-        .then(buffer => audioCtx.decodeAudioData(buffer))
-        .then(sound => lpdsbWav[Sound] = sound);
+    return {
+        sound: await fetch(url)
+            .then(response => response.arrayBuffer())
+            .then(buffer => audio_ctx.decodeAudioData(buffer)),
+        def_volume,
+        do_loop,
+    };
+        // .then(sound => sounds[sound_id] = sound);
 
     //TODO: Die Standardlautstärke festlegen
-    // lpdsbWav[Sound]->SetVolume((long)(-10000+100*Wav[Sound].Volume));
+    // sounds[Sound]->SetVolume((long)(-10000+100*Wav[Sound].Volume));
 }
 
-function PlaySound(Sound, Volume)
+function play_sound(sound, Volume)
 {
-    if (lpdsbWav[Sound] && !lpdsbWav[Sound].src) {
-        const source = audioCtx.createBufferSource();
-        source.buffer = lpdsbWav[Sound];
-        source.connect(audioCtx.destination);
-        if(Wav[Sound].Loop) source.loop = true;
+    if(sound && sound.sound && !sound.sound.src) {
+        const source = audio_ctx.createBufferSource();
+        source.buffer = sound.sound;
+        source.connect(audio_ctx.destination);
+        if(sound.do_loop) source.loop = true;
         source.start();
         source.buffer.src = source;
         source.onended = () => {
-            lpdsbWav[Sound].src = null;
+            sound.sound.src = null;
         };
     }
+
+    /*
+    if (sounds[sound] && !sounds[sound].src) {
+        const source = audio_ctx.createBufferSource();
+        source.buffer = sounds[sound];
+        source.connect(audio_ctx.destination);
+        if(Wav[sound].Loop) source.loop = true;
+        source.start();
+        source.buffer.src = source;
+        source.onended = () => {
+            sounds[sound].src = null;
+        };
+    }
+    */
 
     /*
 	short z;
@@ -274,19 +329,19 @@ function PlaySound(Sound, Volume)
 	if ((Sound === 0) || (Soundzustand <= 0)) return;
 
 	z = -10000+100*Wav[Sound].Volume;
-	lpdsbWav[Sound]->SetVolume((long)(-10000+(10000+z)*Volume/100));
-	if (Wav[Sound].Loop) lpdsbWav[Sound]->Play(null,null,DSBPLAY_LOOPING);
-	else lpdsbWav[Sound]->Play(null,null,null);
+	sounds[Sound]->SetVolume((long)(-10000+(10000+z)*Volume/100));
+	if (Wav[Sound].Loop) sounds[Sound]->Play(null,null,DSBPLAY_LOOPING);
+	else sounds[Sound]->Play(null,null,null);
 	 */
 }
 
-function StopSound(Sound)
+function stop_sound(sound)
 {
-    if (lpdsbWav[Sound]) {
-        let src = lpdsbWav[Sound].src;
+    if (sound && sound.sound) {
+        let src = sound.sound.src;
         if (src) {
             src.stop();
-            lpdsbWav[Sound].src = null;
+            sound.sound.src = null;
         }
     }
 }
@@ -295,7 +350,7 @@ function SaveGame()
 {
     let data = {
         Scape, Guy, BootsFahrt, Camera, Chance, Gitter, HauptMenue, LAnimation, Minuten, ScapeGrenze, SchatzPos,
-        Spielzustand, Stunden, Tag, TextBereich, SchatzGef, Bmp
+        Spielzustand: game_state, Stunden, Tag, TextBereich, SchatzGef, Bmp
     };
 
     window.localStorage.setItem('save.dat', JSON.stringify(data));
@@ -318,7 +373,7 @@ function LoadGame()
     Minuten = data.Minuten;
     ScapeGrenze = data.ScapeGrenze;
     SchatzPos = data.SchatzPos;
-    Spielzustand = data.Spielzustand;
+    game_state = data.Spielzustand;
     Stunden = data.Stunden;
     Tag = data.Tag;
     TextBereich = data.TextBereich;
@@ -472,7 +527,7 @@ function CheckMouse()
                     Textloeschen(TXTPAPIER);
                     PapierText = -1;
                     Guy.Aktiv = false;
-                    PlaySound(WAVKLICK2, 100);
+                    play_sound(sfx_click2, 100);
                 }
             } else if (InRect(MousePosition.x, MousePosition.y, Bmp[NEIN].rcDes)) {
                 set_cursor(CUPFEIL);
@@ -481,9 +536,9 @@ function CheckMouse()
                     Textloeschen(TXTPAPIER);
                     PapierText = -1;
                     Guy.Aktiv = false;
-                    PlaySound(WAVKLICK2, 100);
+                    play_sound(sfx_click2, 100);
                 }
-            } else if ((Button === 0) && (Push === 1)) PlaySound(WAVKLICK, 100);
+            } else if ((Button === 0) && (Push === 1)) play_sound(sfx_click1, 100);
         } else if ((Button !== -1) && (Push === 1)) {
             Textloeschen(TXTPAPIER);
             PapierText = -1;
@@ -514,21 +569,21 @@ function CheckMouse()
 
 function CheckKey()
 {
-    if (Spielzustand === SZLOGO) {
+    if (game_state === STATE_LOGO) {
         if (keymap.Escape || keymap.Return || keymap[" "]) //Logo Abbrechen
         {
             keymap.Escape = false;
             keymap.Return = false;
             keymap[" "] = false;
-            StopSound(WAVLOGO);
+            stop_sound(sfx_mainscreen);
             NeuesSpiel(false);
             return 2;
         }
-    } else if (Spielzustand === SZINTRO) {
+    } else if (game_state === STATE_INTRO) {
         if (keymap.Escape || keymap.Return || keymap[" "]) //Intro Abbrechen
         {
-            StopSound(WAVSTURM); //Sound hier sofort stoppen
-            StopSound(WAVSCHWIMMEN); //Sound hier sofort stoppen
+            stop_sound(sfx_storm); //Sound hier sofort stoppen
+            stop_sound(sfx_swim); //Sound hier sofort stoppen
             Guy.Aktiv = false;
             for (let x = Guy.Pos.x; x < MAXXKACH; x++) {
                 Guy.Pos.x = x;
@@ -556,17 +611,17 @@ function CheckKey()
             if (BootsFahrt) ChangeBootsFahrt();
             Guy.Zustand = GUYLINKS;
             Guy.Aktion = AKNICHTS;
-            Spielzustand = SZSPIEL;
+            game_state = STATE_INGAME;
             Guy.PosAlt = Guy.PosScreen;
             SaveGame();
             return 1;
         }
-    } else if (Spielzustand === SZGERETTET) {
+    } else if (game_state === STATE_RESCUED) {
         if (keymap.Escape || keymap.Return || keymap[" "]) {
-            Spielzustand = SZABSPANN;
+            game_state = STATE_OUTRO;
             return 1;
         }
-    } else if (Spielzustand === SZSPIEL) {
+    } else if (game_state === STATE_INGAME) {
         if (keymap.ArrowRight) Camera.x += 10;
         if (keymap.ArrowLeft) Camera.x -= 10;
         if (keymap.ArrowDown) Camera.y += 10;
@@ -593,9 +648,9 @@ function CheckKey()
             if (Soundzustand === 0) Soundzustand = 1;
             else if (Soundzustand === 1) Soundzustand = 0;
         }
-    } else if (Spielzustand === SZABSPANN) {
+    } else if (game_state === STATE_OUTRO) {
         if (keymap.Escape || keymap.Return || keymap[" "]) {
-            StopSound(WAVABSPANN);
+            stop_sound(sfx_outro);
             return 0;
         }
     }
@@ -634,9 +689,9 @@ function AddTime(h, m)
                 Scape[x][y].Phase = Bmp[Scape[x][y].Objekt].Anzahl - 1;
         }
     }
-    AddResource(GESUNDHEIT, (60 * h + m) * (Guy.Resource[WASSER] - 50 + Guy.Resource[NAHRUNG] - 50) / 1000);
+    AddResource(RES_HEALTH, (60 * h + m) * (Guy.Resource[RES_WATER] - 50 + Guy.Resource[RES_FOOD] - 50) / 1000);
 
-    if ((Spielzustand === SZSPIEL) && (!BootsFahrt)) {
+    if ((game_state === STATE_INGAME) && (!BootsFahrt)) {
         for (let i = 0; i <= (60 * h + m); i++) {
             if (Chance === 0) break;
             if (rand() % (1 / (Chance / 72000)) === 1) {
@@ -655,8 +710,8 @@ function AddResource(Art, Anzahl) //Fügt wassser usw hinzu
     if (Guy.Resource[Art] > 100) Guy.Resource[Art] = 100;
     if (Guy.Resource[Art] < 0) Guy.Resource[Art] = 0;
     //Wann tod
-    if ((Guy.Resource[GESUNDHEIT] <= 0) && (Guy.Aktion !== AKTOD) &&
-        (Guy.Aktion !== AKTAGENDE) && (Spielzustand === SZSPIEL)) {
+    if ((Guy.Resource[RES_HEALTH] <= 0) && (Guy.Aktion !== AKTOD) &&
+        (Guy.Aktion !== AKTAGENDE) && (game_state === STATE_INGAME)) {
         Guy.Aktiv = false;
         Guy.AkNummer = 0;
         Guy.Aktion = AKTOD;
@@ -838,7 +893,7 @@ function MouseInSpielflaeche(Button, Push, xDiff, yDiff)
             (Erg.x > 0) && (Erg.x < MAXXKACH - 1) &&
             (Erg.y > 0) && (Erg.y < MAXYKACH - 1)) {
             //Klicksound abspielen
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if ((Erg.x === RouteZiel.x) && (Erg.y === RouteZiel.y)) {
                 MarkRoute(false);
                 Bmp[BUTTSTOP].Phase = 0;
@@ -861,7 +916,7 @@ function MouseInSpielflaeche(Button, Push, xDiff, yDiff)
                     RouteZiel.y = -1;
                 }
             }
-        } else PlaySound(WAVKLICK, 100);
+        } else play_sound(sfx_click1, 100);
     }
 }
 
@@ -893,7 +948,7 @@ function MouseInPanel(Button, Push)
         else DrawText(messages.GITTERAN, TXTTEXTFELD, 2);
 
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Gitter = !Gitter;
             Generate();
         }
@@ -902,7 +957,7 @@ function MouseInPanel(Button, Push)
         else DrawText(messages.ANIMATIONAN, TXTTEXTFELD, 2);
 
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             LAnimation = !LAnimation;
             Generate();
         }
@@ -913,18 +968,19 @@ function MouseInPanel(Button, Push)
 
         if ((Button === 0) && (Push === 1)) {
             if (Soundzustand === 1) {
-                for (i = 1; i < WAVANZ; i++) StopSound(i);
+                // for (i = 1; i < WAVANZ; i++) stop_sound(i);
+                // TODO: stop all sounds
                 Soundzustand = 0;
             } else if (Soundzustand === 0) {
                 Soundzustand = 1;
-                PlaySound(WAVKLICK2, 100);
-            } else PlaySound(WAVKLICK, 100);
+                play_sound(sfx_click2, 100);
+            } else play_sound(sfx_click1, 100);
         }
     } else if (InRect(MousePosition.x, MousePosition.y, Bmp[BUTTBEENDEN].rcDes)) {
         DrawText(messages.BEENDEN, TXTTEXTFELD, 2);
         Bmp[BUTTBEENDEN].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Guy.AkNummer = 0;
             Guy.Aktiv = false;
             Guy.Aktion = AKSPIELVERLASSEN;
@@ -933,7 +989,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.NEU, TXTTEXTFELD, 2);
         Bmp[BUTTNEU].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Guy.AkNummer = 0;
             Guy.Aktiv = false;
             Guy.Aktion = AKNEUBEGINNEN;
@@ -942,7 +998,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.TAGNEU2, TXTTEXTFELD, 2);
         Bmp[BUTTTAGNEU].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Guy.AkNummer = 0;
             Guy.Aktiv = false;
             Guy.Aktion = AKTAGNEUBEGINNEN;
@@ -952,7 +1008,7 @@ function MouseInPanel(Button, Push)
         else DrawText(messages.MEAKTIONAUF, TXTTEXTFELD, 2);
         Bmp[BUTTAKTION].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if (HauptMenue === MEAKTION) HauptMenue = MEKEINS;
             else HauptMenue = MEAKTION;
         }
@@ -962,7 +1018,7 @@ function MouseInPanel(Button, Push)
         else DrawText(messages.MEBAUENAUF, TXTTEXTFELD, 2);
         Bmp[BUTTBAUEN].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if (HauptMenue === MEBAUEN) HauptMenue = MEKEINS;
             else HauptMenue = MEBAUEN;
         }
@@ -971,7 +1027,7 @@ function MouseInPanel(Button, Push)
         else DrawText(messages.MEINVENTARAUF, TXTTEXTFELD, 2);
         Bmp[BUTTINVENTAR].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if (HauptMenue === MEINVENTAR) HauptMenue = MEKEINS;
             else HauptMenue = MEINVENTAR;
         }
@@ -981,7 +1037,7 @@ function MouseInPanel(Button, Push)
 
         Bmp[BUTTWEITER].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Bmp[BUTTSTOP].Phase = 0;
             MarkRoute(false);
             RouteZiel.x = -1;
@@ -1025,7 +1081,7 @@ function MouseInPanel(Button, Push)
 
         Bmp[BUTTSTOP].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Guy.AkNummer = 0;
             Guy.Aktion = AKABBRUCH;
             Bmp[BUTTSTOP].Phase = -1;
@@ -1035,7 +1091,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.BEGINNABLEGEN, TXTTEXTFELD, 2);
         Bmp[BUTTABLEGEN].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Guy.AkNummer = 0;
             if (Scape[Guy.Pos.x][Guy.Pos.y].Art !== 1) Guy.Aktion = AKABLEGEN;
             else Guy.Aktion = AKANLEGEN;
@@ -1046,7 +1102,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.BEGINNSUCHEN, TXTTEXTFELD, 2);
         Bmp[BUTTSUCHEN].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Guy.AkNummer = 0;
             Guy.Aktion = AKSUCHEN;
         }
@@ -1055,7 +1111,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.BEGINNESSEN, TXTTEXTFELD, 2);
         Bmp[BUTTESSEN].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Guy.AkNummer = 0;
             if (((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === BUSCH) ||
                 (Scape[Guy.Pos.x][Guy.Pos.y].Objekt === FELD)) &&
@@ -1072,7 +1128,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.BEGINNSCHLAFEN, TXTTEXTFELD, 2);
         Bmp[BUTTSCHLAFEN].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if (Scape[Guy.Pos.x][Guy.Pos.y].Art !== 1) {
                 Guy.AkNummer = 0;
                 Guy.Aktion = AKSCHLAFEN;
@@ -1083,7 +1139,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.BEGINNFAELLEN, TXTTEXTFELD, 2);
         Bmp[BUTTFAELLEN].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Guy.AkNummer = 0;
             if (Guy.Inventar[ROHSTAMM] <= 10) {
                 if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= BAUM1) &&
@@ -1101,7 +1157,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.BEGINNANGELN, TXTTEXTFELD, 2);
         Bmp[BUTTANGELN].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Guy.AkNummer = 0;
             if (((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= FLUSS1) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Objekt <= SCHLEUSE6)) ||
@@ -1113,7 +1169,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.BEGINNANZUENDEN, TXTTEXTFELD, 2);
         Bmp[BUTTANZUENDEN].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Guy.AkNummer = 0;
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === FEUERSTELLE) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Phase < Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Anzahl))
@@ -1125,7 +1181,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.BEGINNAUSSCHAU, TXTTEXTFELD, 2);
         Bmp[BUTTAUSSCHAU].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Guy.AkNummer = 0;
             if (Scape[Guy.Pos.x][Guy.Pos.y].Art !== 1) {
                 Guy.AkNummer = 0;
@@ -1137,7 +1193,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.BEGINNSCHATZ, TXTTEXTFELD, 2);
         Bmp[BUTTSCHATZ].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Guy.AkNummer = 0;
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Art !== 1) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Typ === 0) &&
@@ -1151,7 +1207,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.BEGINNSCHLEUDER, TXTTEXTFELD, 2);
         Bmp[BUTTSCHLEUDER].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             Guy.AkNummer = 0;
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= BAUM1) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Objekt <= BAUM4)) {
@@ -1168,7 +1224,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.BEGINNSCHATZKARTE, TXTTEXTFELD, 2);
         Bmp[BUTTSCHATZKARTE].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             DrawSchatzkarte();
         }
     } else if ((InRect(MousePosition.x, MousePosition.y, Bmp[BUTTFELD].rcDes)) &&
@@ -1182,7 +1238,7 @@ function MouseInPanel(Button, Push)
 
         Bmp[BUTTFELD].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === -1) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Typ === 0) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Art === 4)) {
@@ -1208,7 +1264,7 @@ function MouseInPanel(Button, Push)
 
         Bmp[BUTTZELT].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === -1) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Typ === 0) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Art !== -1)) {
@@ -1235,7 +1291,7 @@ function MouseInPanel(Button, Push)
 
         Bmp[BUTTBOOT].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === -1) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Art === 2) &&
                 ((Scape[Guy.Pos.x - 1][Guy.Pos.y].Art === 1) ||
@@ -1265,7 +1321,7 @@ function MouseInPanel(Button, Push)
 
         Bmp[BUTTROHR].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === -1) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Typ === 0)) {
                 Scape[Guy.Pos.x][Guy.Pos.y].AkNummer = 0;
@@ -1291,7 +1347,7 @@ function MouseInPanel(Button, Push)
 
         Bmp[BUTTSOS].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === -1) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Typ === 0)) {
                 Scape[Guy.Pos.x][Guy.Pos.y].AkNummer = 0;
@@ -1317,7 +1373,7 @@ function MouseInPanel(Button, Push)
 
         Bmp[BUTTHAUS1].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= BAUM1) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Objekt <= BAUM4))
                 PapierText = DrawText(messages.BAUMZUKLEIN, TXTPAPIER, 1);
@@ -1345,7 +1401,7 @@ function MouseInPanel(Button, Push)
 
         Bmp[BUTTHAUS2].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= BAUM1) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Objekt <= BAUM4))
                 PapierText = DrawText(messages.BAUMZUKLEIN, TXTPAPIER, 1);
@@ -1375,7 +1431,7 @@ function MouseInPanel(Button, Push)
 
         Bmp[BUTTHAUS3].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= BAUM1) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Objekt <= BAUM4))
                 PapierText = DrawText(messages.BAUMZUKLEIN, TXTPAPIER, 1);
@@ -1406,7 +1462,7 @@ function MouseInPanel(Button, Push)
 
         Bmp[BUTTFEUERST].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt === -1) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Typ === 0)) {
                 Scape[Guy.Pos.x][Guy.Pos.y].AkNummer = 0;
@@ -1426,7 +1482,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.BEGINNDESTROY, TXTTEXTFELD, 2);
         Bmp[BUTTDESTROY].Animation = true;
         if ((Button === 0) && (Push === 1)) {
-            PlaySound(WAVKLICK2, 100);
+            play_sound(sfx_click2, 100);
             if ((Scape[Guy.Pos.x][Guy.Pos.y].Objekt >= FELD) &&
                 (Scape[Guy.Pos.x][Guy.Pos.y].Objekt <= FEUERSTELLE)) {
                 Guy.AkNummer = 0;
@@ -1496,7 +1552,7 @@ function MouseInPanel(Button, Push)
         DrawText(messages.CHANCETEXT, TXTTEXTFELD, 2);
     else //TwoClicks löschen
     {
-        if ((Button === 0) && (Push === 1)) PlaySound(WAVKLICK, 100);
+        if ((Button === 0) && (Push === 1)) play_sound(sfx_click1, 100);
         TwoClicks = -1;
     }
 }
@@ -1571,6 +1627,12 @@ function fill_dest(color, dest = null)
     );
 }
 
+function fill_rect(rgb = [0,0,0], x = 0, y = 0, w = MAXX, h = MAXY, target = canvas)
+{
+    target.ctx.fillStyle = "rgb(" + rgb.join(", ") + ")";
+    target.ctx.fillRect(x, y, w, h);
+}
+
 function clear_dest(dest = null)
 {
     if (dest === null) dest = canvas;
@@ -1586,19 +1648,15 @@ function NeuesSpiel(neu)
 {
     let LoadOK = false;
 
-    InitStructs();
+    init_structs();
 
     if (!neu) LoadOK = LoadGame();
 
     if ((!LoadOK) || (neu)) {
         //Für die Statusanzeige
-        rcRectdes.left = 0;
-        rcRectdes.top = 0;
-        rcRectdes.right = MAXX;
-        rcRectdes.bottom = MAXY;
-        fill_dest([70, 70, 100]);
+        fill_rect([70, 70, 100]);
         //fill_dest([255, 0, 255]);
-        clear_dest(lpDDSScape);
+        clear_dest(landscape);
 
         //Landschaft erzeugen
 
@@ -1607,7 +1665,7 @@ function NeuesSpiel(neu)
         rcRectdes.top = 0;
         rcRectdes.right = MAXX;
         rcRectdes.bottom = MAXY;
-        Blit_destrect(lpDDSSchrift, canvas);
+        Blit_destrect(text_surface, canvas);
         Compute(200, 600);
 
         DrawString("Ueberflute Land...", 5, 35, 2);
@@ -1615,7 +1673,7 @@ function NeuesSpiel(neu)
         rcRectdes.top = 0;
         rcRectdes.right = MAXX;
         rcRectdes.bottom = MAXY;
-        Blit_destrect(lpDDSSchrift, canvas);
+        Blit_destrect(text_surface, canvas);
         Meer();
 
         DrawString("Lege Fluss fest...", 5, 65, 2);
@@ -1623,7 +1681,7 @@ function NeuesSpiel(neu)
         rcRectdes.top = 0;
         rcRectdes.right = MAXX;
         rcRectdes.bottom = MAXY;
-        Blit_destrect(lpDDSSchrift, canvas);
+        Blit_destrect(text_surface, canvas);
         Fluss();
         CalcKoor();
 
@@ -1632,7 +1690,7 @@ function NeuesSpiel(neu)
         rcRectdes.top = 0;
         rcRectdes.right = MAXX;
         rcRectdes.bottom = MAXY;
-        Blit_destrect(lpDDSSchrift, canvas);
+        Blit_destrect(text_surface, canvas);
         Baeume(30);
 
         Piratenwrack();
@@ -1661,7 +1719,7 @@ function NeuesSpiel(neu)
         Stunden = 0;
         Minuten = 0;
 
-        Spielzustand = SZINTRO;
+        game_state = STATE_INTRO;
         Guy.Aktiv = false;
         Guy.Zustand = GUYSCHIFF;
         Guy.AkNummer = 0;
@@ -1673,8 +1731,8 @@ function NeuesSpiel(neu)
     rcRectdes.top = 0;
     rcRectdes.right = MAXX;
     rcRectdes.bottom = MAXY;
-    // fill_dest([255, 0, 255], lpDDSSchrift);
-    clear_dest(lpDDSSchrift);
+    // fill_dest([255, 0, 255], text_surface);
+    clear_dest(text_surface);
 
     let Anitmp = LAnimation;
     let Entdeckttmp = Array.from(Array(MAXXKACH), x => Array(MAXYKACH));
@@ -1702,20 +1760,12 @@ function NeuesSpiel(neu)
 
 function Generate()
 {
-    //Die Kartehintergrundfarbe
-    rcRectdes.left = 0;
-    rcRectdes.top = 0;
-    rcRectdes.right = 2 * MAXXKACH;
-    rcRectdes.bottom = 2 * MAXYKACH;
-    fill_dest([247, 222, 191], lpDDSKarte);
+    // Die Kartehintergrundfarbe
+    fill_rect([247, 222, 191], 0, 0, 2*MAXXKACH, 2*MAXYKACH, minimap);
 
-    //Die Landschaftshintergrundfarbe
-    rcRectdes.left = 0;
-    rcRectdes.top = 0;
-    rcRectdes.right = MAXSCAPEX;
-    rcRectdes.bottom = MAXSCAPEY;
-    fill_dest([0, 0, 0], lpDDSScape);
-    //clear_dest(lpDDSScape);
+    // Die Landschaftshintergrundfarbe
+    fill_rect([0, 0, 0], 0, 0, MAXSCAPEX, MAXSCAPEY, landscape);
+    //clear_dest(landscape);
 
     for (let y = 0; y < MAXYKACH; y++) {
         for (let x = 0; x < MAXXKACH; x++) {
@@ -1757,7 +1807,7 @@ function Generate()
                 }
             }
             //Landschaftskacheln zeichnen
-            Blitten(img_terrain, lpDDSScape, true);
+            Blitten(img_terrain, landscape, true);
 
             //Gitter drüberlegen
             if (Gitter) {
@@ -1765,7 +1815,7 @@ function Generate()
                 rcRectsrc.right = KXPIXEL * Scape[x][y].Typ + KXPIXEL;
                 rcRectsrc.top = 1 * KYPIXEL;
                 rcRectsrc.bottom = 1 * KYPIXEL + KYPIXEL;
-                Blitten(img_terrain, lpDDSScape, true);
+                Blitten(img_terrain, landscape, true);
             }
 
             //Landschaftsobjekte zeichnen (falls Animationen ausgeschaltet sind)
@@ -1786,7 +1836,7 @@ function Generate()
                     rcRectdes.top = Scape[x][y].yScreen + Bmp[Scape[x][y].Objekt].rcDes.top;
                     rcRectdes.bottom = Scape[x][y].yScreen + Bmp[Scape[x][y].Objekt].rcDes.bottom;
                     //Landschaftsobjekt zeichnen
-                    Blitten(img_animations, lpDDSScape, true);
+                    Blitten(img_animations, landscape, true);
                 }
             }
 
@@ -1796,20 +1846,26 @@ function Generate()
             rcRectdes.right = rcRectdes.left + 2;
             rcRectdes.bottom = rcRectdes.top + 2;
 
-            if ((Scape[x][y].Art === 1) && (Scape[x][y].Typ === 0))	//Meer
-                fill_dest([228, 207, 182], lpDDSKarte);
+            if ((Scape[x][y].Art === 1) && (Scape[x][y].Typ === 0)) {
+                // Meer
+                fill_dest([228, 207, 182], minimap);
+            }
             else {
-                if ((Scape[x][y].Typ === 0) &&
-                    ((Scape[x][y].Art === 2) ||
-                        (Scape[x][y].Art === 3)))	//Strand
-                    fill_dest([112, 103, 93], lpDDSKarte);
-                else
-                    //Land
-                    fill_dest([
+                if (Scape[x][y].Typ === 0 && (Scape[x][y].Art === 2 || Scape[x][y].Art === 3)) {
+                    // Strand
+                    fill_dest([112, 103, 93], minimap);
+                }
+                else {
+                    // Land
+                    fill_dest(
+                        [
                             139 + Scape[x][y].Hoehe * 20,
                             128 + Scape[x][y].Hoehe * 20,
-                            115 + Scape[x][y].Hoehe * 20],
-                        lpDDSKarte);
+                            115 + Scape[x][y].Hoehe * 20,
+                        ],
+                        minimap
+                    );
+                }
             }
         }
     }
@@ -1826,7 +1882,7 @@ function Zeige()
     rcRectdes.right = rcSpielflaeche.right;
     rcRectdes.bottom = rcSpielflaeche.bottom;
 
-    Blitten(lpDDSScape, canvas, false); //Landschaft zeichnen
+    Blitten(landscape, canvas, false); //Landschaft zeichnen
 
     ZeichneObjekte();
 
@@ -1857,7 +1913,7 @@ function Zeige()
         if (!TextBereich[i].Aktiv) continue; //Die nicht aktiven Felder auslassen
         copy_rect(rcRectsrc, TextBereich[i].rcText);
         copy_rect(rcRectdes, TextBereich[i].rcText);
-        Blitten(lpDDSSchrift, canvas, true);
+        Blitten(text_surface, canvas, true);
     }
     //Alles schwarz übermalen und nur das Papier mit Text anzeigen
     if (Nacht) {
@@ -1871,7 +1927,7 @@ function Zeige()
             ZeichnePapier();
             copy_rect(rcRectsrc, TextBereich[TXTPAPIER].rcText);
             copy_rect(rcRectdes, TextBereich[TXTPAPIER].rcText);
-            Blitten(lpDDSSchrift, canvas, true);
+            Blitten(text_surface, canvas, true);
         }
         Fade(100, 100, 100);
     }
@@ -1922,7 +1978,7 @@ function ZeigeIntro()
     rcRectdes.right = rcSpielflaeche.right;
     rcRectdes.bottom = rcSpielflaeche.bottom;
 
-    Blitten(lpDDSScape, canvas, false); //Landschaft zeichnen
+    Blitten(landscape, canvas, false); //Landschaft zeichnen
 
     ZeichneObjekte();
 
@@ -1933,13 +1989,13 @@ function ZeigeIntro()
         if (!TextBereich[i].Aktiv) continue; //Die nicht aktiven Felder auslassen
         copy_rect(rcRectsrc, TextBereich[i].rcText);
         copy_rect(rcRectdes, TextBereich[i].rcText);
-        Blitten(lpDDSSchrift, canvas, true);
+        Blitten(text_surface, canvas, true);
     }
 }
 
 function ZeigeAbspann()
 {
-    PlaySound(WAVABSPANN, 100);
+    play_sound(sfx_outro, 100);
 
     rcRectdes.left = 0;
     rcRectdes.top = 0;
@@ -2004,36 +2060,31 @@ function ZeigeAbspann()
 
 function ZeigeLogo()
 {
-    rcRectdes.left = 0;
-    rcRectdes.top = 0;
-    rcRectdes.right = MAXX;
-    rcRectdes.bottom = MAXY;
-    fill_dest([0, 0, 0], canvas);
+    fill_rect([0,0,0], 0, 0, MAXX, MAXY);
 
     rcRectsrc.left = 0;
     rcRectsrc.right = 500;
     rcRectsrc.top = 0;
     rcRectsrc.bottom = 500;
-    rcRectdes.left = Math.floor(MAXX / 2) - 250;
-    rcRectdes.right = Math.floor(MAXX / 2) + 250;
-    rcRectdes.top = Math.floor(MAXY / 2) - 250;
-    rcRectdes.bottom = Math.floor(MAXY / 2) + 250;
+    rcRectdes.left = floor(MAXX / 2) - 250;
+    rcRectdes.right = floor(MAXX / 2) + 250;
+    rcRectdes.top = floor(MAXY / 2) - 250;
+    rcRectdes.bottom = floor(MAXY / 2) + 250;
 
+    Blitten(img_logo, canvas, false);
 
-    Blitten(lpDDSLogo, canvas, false);
-
-    PlaySound(WAVLOGO, 100);
+    play_sound(sfx_mainscreen, 100);
 }
 
 function AbspannBlt(Bild, Prozent)
 {
-    ctx.globalAlpha = Prozent / 100;
+    canvas.ctx.globalAlpha = Prozent / 100;
     copy_rect(rcRectdes, Bmp[Bild].rcDes);
     rcRectdes.right = rcRectdes.left + Bmp[Bild].Breite;
     rcRectdes.bottom = rcRectdes.top + Bmp[Bild].Hoehe;
     copy_rect(rcRectsrc,  Bmp[Bild].rcSrc);
     Blitten(Bmp[Bild].Surface, canvas, false);
-    ctx.globalAlpha = 1;
+    canvas.ctx.globalAlpha = 1;
 }
 
 function AbspannCalc()
@@ -2141,9 +2192,9 @@ function ZeichneObjekte()
                     let guy_pos_obj = Scape[Guy.Pos.x][Guy.Pos.y].Objekt;
 
                     if ((x === Guy.Pos.x) && (y === Guy.Pos.y))
-                        PlaySound(Bmp[Scape[x][y].Objekt].Sound, 100);
+                        play_sound(Bmp[Scape[x][y].Objekt].Sound, 100);
                     else if (guy_pos_obj > -1 && Bmp[Scape[x][y].Objekt].Sound !== Bmp[guy_pos_obj].Sound)
-                        PlaySound(Bmp[Scape[x][y].Objekt].Sound, 90);
+                        play_sound(Bmp[Scape[x][y].Objekt].Sound, 90);
                 }
 
                 ZeichneBilder(Scape[x][y].xScreen + Scape[x][y].ObPos.x - Camera.x,
@@ -2165,9 +2216,9 @@ function ZeichneObjekte()
                         ((Guy.Pos.x - 1 <= x) && (x <= Guy.Pos.x + 1)) &&
                         ((Guy.Pos.y - 1 <= y) && (y <= Guy.Pos.y + 1))) {
                         if ((x === Guy.Pos.x) && (y === Guy.Pos.y))
-                            PlaySound(Bmp[Obj].Sound, 100);
+                            play_sound(Bmp[Obj].Sound, 100);
                         else if (Bmp[Obj].Sound !== Bmp[Scape[Guy.Pos.x][Guy.Pos.y].Objekt].Sound)
-                            PlaySound(Bmp[Obj].Sound, 90);
+                            play_sound(Bmp[Obj].Sound, 90);
                     }
                     if (Guyzeichnen) {
                         if ((Guy.PosScreen.y) < (Scape[x][y].yScreen + Scape[x][y].ObPos.y
@@ -2204,7 +2255,7 @@ function ZeichneGuy()
         Guy.PosScreen.y - (Bmp[Guy.Zustand].Hoehe) - Camera.y,
         Guy.Zustand, rcSpielflaeche, false, -1);
     //Sound abspielen
-    if (Guy.Aktiv) PlaySound(Bmp[Guy.Zustand].Sound, 100);
+    if (Guy.Aktiv) play_sound(Bmp[Guy.Zustand].Sound, 100);
 }
 
 function ZeichnePapier()
@@ -2246,7 +2297,7 @@ function ZeichnePanel()
     rcRectdes.top = rcKarte.top;
     rcRectdes.right = rcKarte.right;
     rcRectdes.bottom = rcKarte.bottom;
-    Blitten(lpDDSKarte, canvas, false);
+    Blitten(minimap, canvas, false);
 
     //Spielfigur
     rcRectdes.left = rcKarte.left + 2 * Guy.Pos.x;
@@ -2409,7 +2460,7 @@ function ZeichnePanel()
     }
 
     //Säule1
-    i = Bmp[SAEULE1].Hoehe - Guy.Resource[WASSER] * Bmp[SAEULE1].Hoehe / 100;
+    i = Bmp[SAEULE1].Hoehe - Guy.Resource[RES_WATER] * Bmp[SAEULE1].Hoehe / 100;
     copy_rect(rcRectsrc, Bmp[SAEULE1].rcSrc);
     rcRectsrc.top += i;
     copy_rect(rcRectdes, Bmp[SAEULE1].rcDes);
@@ -2417,7 +2468,7 @@ function ZeichnePanel()
     Blitten(Bmp[SAEULE1].Surface, canvas, true);
 
     //Säule2
-    i = Bmp[SAEULE2].Hoehe - Guy.Resource[NAHRUNG] * Bmp[SAEULE2].Hoehe / 100;
+    i = Bmp[SAEULE2].Hoehe - Guy.Resource[RES_FOOD] * Bmp[SAEULE2].Hoehe / 100;
     copy_rect(rcRectsrc, Bmp[SAEULE2].rcSrc);
     rcRectsrc.top += i;
     copy_rect(rcRectdes, Bmp[SAEULE2].rcDes);
@@ -2425,7 +2476,7 @@ function ZeichnePanel()
     Blitten(Bmp[SAEULE2].Surface, canvas, true);
 
     //Säule3
-    i = Bmp[SAEULE3].Hoehe - Guy.Resource[GESUNDHEIT] * Bmp[SAEULE3].Hoehe / 100;
+    i = Bmp[SAEULE3].Hoehe - Guy.Resource[RES_HEALTH] * Bmp[SAEULE3].Hoehe / 100;
     copy_rect(rcRectsrc, Bmp[SAEULE3].rcSrc);
     rcRectsrc.top += i;
     copy_rect(rcRectdes, Bmp[SAEULE3].rcDes);
@@ -2442,7 +2493,7 @@ function ZeichnePanel()
         SONNE, Bmp[SONNE].rcDes, false, -1);
 
     //Rettungsring
-    if (Chance < 100) Ringtmp = Math.floor(100 * Math.sin(pi / 200 * Chance));
+    if (Chance < 100) Ringtmp = floor(100 * Math.sin(pi / 200 * Chance));
     else Ringtmp = 100;
     if (Ringtmp > 100) Ringtmp = 100;
     ZeichneBilder((Bmp[RING].rcDes.left),
@@ -2521,12 +2572,12 @@ function DrawString(string, x, y, Art)
         rcRectdes.bottom = y + Hoehe;
         //Zeichen zeichnen
         if (Art === 1) {
-            Blitten(img_font1, lpDDSSchrift, true);
+            Blitten(img_font1, text_surface, true);
             //x Position weiterschieben
             x += S1ABSTAND;
         }
         if (Art === 2) {
-            Blitten(img_font2, lpDDSSchrift, true);
+            Blitten(img_font2, text_surface, true);
             //x Position weiterschieben
             x += S2ABSTAND;
         }
@@ -2569,7 +2620,7 @@ function DrawText(Text, Bereich, Art)
                     Posx += BBreite * (Anzahl);
                     break;
                 case 'b':
-                    StdString2 = " " + floor(Guy.Resource[GESUNDHEIT]);
+                    StdString2 = " " + floor(Guy.Resource[RES_HEALTH]);
                     Anzahl = StdString2.length;
                     DrawString(StdString2, Posx, Posy, Art);
                     Posx += BBreite * (Anzahl);
@@ -2588,7 +2639,7 @@ function DrawText(Text, Bereich, Art)
                     rcRectdes.right = rcRectdes.left + Bmp[JA].Breite;
                     rcRectdes.bottom = rcRectdes.top + Bmp[JA].Hoehe;
                     copy_rect(Bmp[JA].rcDes, rcRectdes);
-                    Blitten(Bmp[JA].Surface, lpDDSSchrift, false);
+                    Blitten(Bmp[JA].Surface, text_surface, false);
 
                     copy_rect(rcRectsrc, Bmp[NEIN].rcSrc);
                     rcRectdes.left = TextBereich[Bereich].rcText.left + 220;
@@ -2596,7 +2647,7 @@ function DrawText(Text, Bereich, Art)
                     rcRectdes.right = rcRectdes.left + Bmp[NEIN].Breite;
                     rcRectdes.bottom = rcRectdes.top + Bmp[NEIN].Hoehe;
                     copy_rect(Bmp[NEIN].rcDes, rcRectdes);
-                    Blitten(Bmp[NEIN].Surface, lpDDSSchrift, false);
+                    Blitten(Bmp[NEIN].Surface, text_surface, false);
                     Posy += 115;
                     break;
                 case 'z':
@@ -2626,9 +2677,9 @@ function DrawText(Text, Bereich, Art)
 function Textloeschen(Bereich)
 {
     TextBereich[Bereich].Aktiv = false;
-    //fill_dest([255, 0, 255], lpDDSSchrift);
+    //fill_dest([255, 0, 255], text_surface);
     copy_rect(rcRectdes, TextBereich[Bereich].rcText)
-    clear_dest(lpDDSSchrift);
+    clear_dest(text_surface);
 }
 
 function DrawSchatzkarte()
@@ -2646,7 +2697,7 @@ function DrawSchatzkarte()
     rcRectdes.right = rcRectdes.left + SKARTEX;
     rcRectdes.bottom = rcRectdes.top + SKARTEY;
 
-    Blitten(lpDDSSchatzkarte, lpDDSSchrift, false);
+    Blitten(treasure_map, text_surface, false);
 }
 
 function CalcRect(rcBereich) {
@@ -2835,8 +2886,8 @@ function Compute(MinGroesse, MaxGroesse) //Groesse der Insel in Anzahl der Landk
 {
     let gefunden;
 
-    let Mittex = Math.floor(MAXXKACH / 2) - 1;
-    let Mittey = Math.floor(MAXYKACH / 2) - 1;
+    let Mittex = floor(MAXXKACH / 2) - 1;
+    let Mittey = floor(MAXYKACH / 2) - 1;
 
     for (let m = 0; m < 1000; m++)	//100mal wiederholen, oder bis eine geeignete Insel gefunden ist
     {
@@ -3678,7 +3729,7 @@ function Baeume(Prozent)
             if ((Scape[x][y].Objekt !== -1) ||
                 ((Scape[x][y].Art === 3) && (Scape[x][y].Typ === 0))) continue;
             //Wenn schon ein Objekt da ist oder Treibsand ist, dann mit nächsten Teil weitermachen
-            if (rand() % Math.floor(100 / Prozent) !== 0) continue; //Die Wahrscheinlichkeit für einen Baum bestimmen
+            if (rand() % floor(100 / Prozent) !== 0) continue; //Die Wahrscheinlichkeit für einen Baum bestimmen
             while (1) {
                 Pos.x = rand() % KXPIXEL;
                 Pos.y = rand() % KYPIXEL;
@@ -3761,15 +3812,15 @@ function Schatz()
                 SchatzPos.y = y;
             }
 
-            lock_canvas(lpDDSScape);
-            lock_canvas(lpDDSSchatzkarte);
+            lock_canvas(landscape);
+            lock_canvas(treasure_map);
 
             //Diese Kachel wird angeschaut
             for (let i = 0; i < SKARTEX; i++) {
                 for (let j = 0; j < SKARTEY; j++) {
                     let rgbStruct = GetPixel(
                         (i + Scape[SchatzPos.x][SchatzPos.y].xScreen - SKARTEX / 2 + KXPIXEL / 2),
-                        (j + Scape[SchatzPos.x][SchatzPos.y].yScreen - SKARTEY / 2 + 30), lpDDSScape
+                        (j + Scape[SchatzPos.x][SchatzPos.y].yScreen - SKARTEY / 2 + 30), landscape
                     );
                     PutPixel(
                         i, j,
@@ -3778,30 +3829,30 @@ function Schatz()
                             (rgbStruct[0] * 30 + rgbStruct[1] * 59 + rgbStruct[2] * 11) / 100,
                             (rgbStruct[0] * 30 + rgbStruct[1] * 59 + rgbStruct[2] * 11) / 100 * 3 / 4
                         ],
-                        lpDDSSchatzkarte
+                        treasure_map
                     );
                 }
             }
-            upload_canvas(lpDDSSchatzkarte);
+            upload_canvas(treasure_map);
 
             copy_rect(rcRectsrc, Bmp[KREUZ].rcSrc);
             rcRectdes.left = SKARTEX / 2 - Bmp[KREUZ].Breite / 2;
             rcRectdes.right = rcRectdes.left + Bmp[KREUZ].Breite;
             rcRectdes.top = SKARTEY / 2 - Bmp[KREUZ].Hoehe / 2;
             rcRectdes.bottom = rcRectdes.top + Bmp[KREUZ].Hoehe;
-            Blitten(Bmp[KREUZ].Surface, lpDDSSchatzkarte, true);
+            Blitten(Bmp[KREUZ].Surface, treasure_map, true);
 
-            lock_canvas(lpDDSSchatzkarte);
+            lock_canvas(treasure_map);
 
             //Weichzeichnen
             for (let i = 0; i < SKARTEX; i++) {
                 for (let j = 0; j < SKARTEY; j++) {
                     if ((i > 0) && (i < SKARTEX - 1) && (j > 0) && (j < SKARTEY - 1)) {
-                        let rgbleft = GetPixel(i - 1, j, lpDDSSchatzkarte);
-                        let rgbtop = GetPixel(i, j - 1, lpDDSSchatzkarte);
-                        let rgbright = GetPixel(i + 1, j, lpDDSSchatzkarte);
-                        let rgbbottom = GetPixel(i, j + 1, lpDDSSchatzkarte);
-                        let rgbStruct = GetPixel(i, j, lpDDSSchatzkarte);
+                        let rgbleft = GetPixel(i - 1, j, treasure_map);
+                        let rgbtop = GetPixel(i, j - 1, treasure_map);
+                        let rgbright = GetPixel(i + 1, j, treasure_map);
+                        let rgbbottom = GetPixel(i, j + 1, treasure_map);
+                        let rgbStruct = GetPixel(i, j, treasure_map);
                         PutPixel(
                             i, j,
                             [
@@ -3812,12 +3863,12 @@ function Schatz()
                                 (rgbleft[2] + rgbtop[2] + rgbright[2] + rgbbottom[2] +
                                     rgbStruct[2]) / 5
                             ],
-                            lpDDSSchatzkarte
+                            treasure_map
                         );
                     }
                 }
             }
-            upload_canvas(lpDDSSchatzkarte);
+            upload_canvas(treasure_map);
 
             break;
         }
@@ -3877,26 +3928,26 @@ function LineIntersect(LineStartPos, Pos, store)
     }
 
     for (let i = 0; i < Steps; i++) {
-        if (!Scape[ROUND(x)][ROUND(y)].Begehbar) erg = true;
+        if (!Scape[round(x)][round(y)].Begehbar) erg = true;
         if (store) {
-            Route[RouteLaenge].x = ROUND(x);
-            Route[RouteLaenge].y = ROUND(y);
+            Route[RouteLaenge].x = round(x);
+            Route[RouteLaenge].y = round(y);
             RouteLaenge++;
         }
         let Nextx = x + Sx;
         let Nexty = y + Sy;
-        if ((ROUND(y) !== ROUND(Nexty)) && (ROUND(x) !== ROUND(Nextx))) {
-            if (Scape[ROUND(x)][ROUND(Nexty)].Begehbar) {
+        if ((round(y) !== round(Nexty)) && (round(x) !== round(Nextx))) {
+            if (Scape[round(x)][round(Nexty)].Begehbar) {
                 if (store) {
-                    Route[RouteLaenge].x = ROUND(x);
-                    Route[RouteLaenge].y = ROUND(Nexty);
+                    Route[RouteLaenge].x = round(x);
+                    Route[RouteLaenge].y = round(Nexty);
                     RouteLaenge++;
                 }
             } else {
-                if (Scape[ROUND(Nextx)][ROUND(y)].Begehbar) {
+                if (Scape[round(Nextx)][round(y)].Begehbar) {
                     if ((store)) {
-                        Route[RouteLaenge].x = ROUND(Nextx);
-                        Route[RouteLaenge].y = ROUND(y);
+                        Route[RouteLaenge].x = round(Nextx);
+                        Route[RouteLaenge].y = round(y);
                         RouteLaenge++;
                     }
                 } else {
@@ -4151,14 +4202,14 @@ function CheckBenutze(Objekt)
             Bmp[BUTTBOOT].Phase = 0;
             Bmp[BUTTROHR].Phase = 0;
             PapierText = DrawText(messages.BAUEAXT, TXTPAPIER, 1);
-            PlaySound(WAVERFINDUNG, 100);
+            play_sound(sfx_invention, 100);
         } else if (Guy.Inventar[ROHEGGE] < 1) {
             Guy.Inventar[ROHSTEIN]--;
             Guy.Inventar[ROHAST]--;
             Guy.Inventar[ROHEGGE] = 1;
             Bmp[BUTTFELD].Phase = 0;
             PapierText = DrawText(messages.BAUEEGGE, TXTPAPIER, 1);
-            PlaySound(WAVERFINDUNG, 100);
+            play_sound(sfx_invention, 100);
         } else {
             PapierText = DrawText(messages.STEINPLUSASTNICHTS, TXTPAPIER, 1);
         }
@@ -4170,7 +4221,7 @@ function CheckBenutze(Objekt)
             Guy.Inventar[ROHANGEL] = 1;
             Bmp[BUTTANGELN].Phase = 0;
             PapierText = DrawText(messages.BAUEANGEL, TXTPAPIER, 1);
-            PlaySound(WAVERFINDUNG, 100);
+            play_sound(sfx_invention, 100);
         } else {
             PapierText = DrawText(messages.ASTPLUSLIANENICHTS, TXTPAPIER, 1);
         }
@@ -4182,7 +4233,7 @@ function CheckBenutze(Objekt)
             Guy.Inventar[ROHSCHLEUDER] = 1;
             Bmp[BUTTSCHLEUDER].Phase = 0;
             PapierText = DrawText(messages.BAUESCHLEUDER, TXTPAPIER, 1);
-            PlaySound(WAVERFINDUNG, 100);
+            play_sound(sfx_invention, 100);
         } else {
             PapierText = DrawText(messages.STEINPLUSLIANENICHTS, TXTPAPIER, 1);
         }
@@ -4198,7 +4249,7 @@ function Animationen()
         for (let x = 0; x < MAXXKACH; x++) {
             let j = Scape[x][y].Objekt;
             if ((j === -1) || (!Bmp[j].Animation)) continue;
-            let i = Math.floor(LastBild / Bmp[j].Geschwindigkeit);
+            let i = floor(LastBild / Bmp[j].Geschwindigkeit);
             if (i < 1) i = 1;
             if (Bild % i === 0) {
                 if ((j >= BAUM1DOWN) && (j <= BAUM4DOWN) &&  //Die Baumfällenanimation nur ein mal abspielen
@@ -4211,7 +4262,7 @@ function Animationen()
 
     for (let j = BUTTGITTER; j <= BUTTDESTROY; j++) {
         if (!Bmp[j].Animation) continue;
-        let i = Math.floor(LastBild / Bmp[j].Geschwindigkeit);
+        let i = floor(LastBild / Bmp[j].Geschwindigkeit);
         if (i < 1) i = 1;
         if (Bild % i === 0) {
             Bmp[j].Phase++;
@@ -4225,7 +4276,7 @@ function Animationen()
     if (((Guy.Zustand >= GUYLINKS) && (Guy.Zustand <= GUYUNTEN)) ||
         ((Guy.Zustand >= GUYBOOTLINKS) && (Guy.Zustand <= GUYBOOTUNTEN)) ||
         (Guy.Zustand === GUYSCHIFF) || (Guy.Zustand === GUYSCHWIMMEN)) {
-        let i = Math.floor(LastBild / Bmp[Guy.Zustand].Geschwindigkeit);
+        let i = floor(LastBild / Bmp[Guy.Zustand].Geschwindigkeit);
         if (i < 1) i = 1;
         let loop; //Zwischenspeicher
         if (LastBild - Bmp[Guy.Zustand].Geschwindigkeit < 0) loop = 2; else loop = 1;
@@ -4236,7 +4287,7 @@ function Animationen()
     //sonstige Aktionen
     if ((Guy.Zustand >= GUYSUCHEN) && (Guy.Zustand <= GUYSCHLEUDER) &&
         (Bmp[Guy.Zustand].Phase !== Bmp[Guy.Zustand].Anzahl)) {
-        let i = Math.floor(LastBild / Bmp[Guy.Zustand].Geschwindigkeit);
+        let i = floor(LastBild / Bmp[Guy.Zustand].Geschwindigkeit);
         if (i < 1) i = 1;
         if (Bild % i === 0) {
             Bmp[Guy.Zustand].Phase++;
@@ -4262,15 +4313,15 @@ function CalcGuyKoor()
             RouteZiel.y = -1;
             return;
         }
-        Guy.Pos.x = Route[Math.floor((RoutePunkt + 1) / 2)].x;
-        Guy.Pos.y = Route[Math.floor((RoutePunkt + 1) / 2)].y;
+        Guy.Pos.x = Route[floor((RoutePunkt + 1) / 2)].x;
+        Guy.Pos.y = Route[floor((RoutePunkt + 1) / 2)].y;
         Entdecken();
 
         if (BootsFahrt)
-            AddTime(0, Scape[Route[Math.floor((RoutePunkt + 1) / 2)].x][Route[Math.floor((RoutePunkt + 1) / 2)].y].LaufZeit * 3);
-        else AddTime(0, Scape[Route[Math.floor((RoutePunkt + 1) / 2)].x][Route[Math.floor((RoutePunkt + 1) / 2)].y].LaufZeit * 5);
-        AddResource(NAHRUNG, -1);
-        AddResource(WASSER, -1);
+            AddTime(0, Scape[Route[floor((RoutePunkt + 1) / 2)].x][Route[floor((RoutePunkt + 1) / 2)].y].LaufZeit * 3);
+        else AddTime(0, Scape[Route[floor((RoutePunkt + 1) / 2)].x][Route[floor((RoutePunkt + 1) / 2)].y].LaufZeit * 5);
+        AddResource(RES_FOOD, -1);
+        AddResource(RES_WATER, -1);
 
         if ((Guy.Zustand === GUYSCHIFF) || (Guy.Zustand === GUYSCHWIMMEN)) Guy.Zustand -= 2; //nichts machen
         else if (BootsFahrt) Guy.Zustand = GUYBOOTLINKS;
@@ -4278,10 +4329,10 @@ function CalcGuyKoor()
 
         if (RouteLaenge > 1)	//Bei normaler Routenabarbeitung die Richung Kachelmäßig rausfinden
         {
-            if (Route[Math.floor(RoutePunkt / 2)].x > Route[Math.floor(RoutePunkt / 2 + 1)].x) Guy.Zustand += 0;
-            else if (Route[Math.floor(RoutePunkt / 2)].x < Route[Math.floor(RoutePunkt / 2 + 1)].x) Guy.Zustand += 2;
-            else if (Route[Math.floor(RoutePunkt / 2)].y < Route[Math.floor(RoutePunkt / 2 + 1)].y) Guy.Zustand += 3;
-            else if (Route[Math.floor(RoutePunkt / 2)].y > Route[Math.floor(RoutePunkt / 2 + 1)].y) Guy.Zustand += 1;
+            if (Route[floor(RoutePunkt / 2)].x > Route[floor(RoutePunkt / 2 + 1)].x) Guy.Zustand += 0;
+            else if (Route[floor(RoutePunkt / 2)].x < Route[floor(RoutePunkt / 2 + 1)].x) Guy.Zustand += 2;
+            else if (Route[floor(RoutePunkt / 2)].y < Route[floor(RoutePunkt / 2 + 1)].y) Guy.Zustand += 3;
+            else if (Route[floor(RoutePunkt / 2)].y > Route[floor(RoutePunkt / 2 + 1)].y) Guy.Zustand += 1;
         } else {
             if ((RouteKoor[RoutePunkt].x > RouteKoor[RoutePunkt + 1].x) &&
                 (RouteKoor[RoutePunkt].y >= RouteKoor[RoutePunkt + 1].y)) Guy.Zustand += 0;
@@ -4321,9 +4372,9 @@ function CalcGuyKoor()
             Bmp[Guy.Zustand].Phase++;
             if (Bmp[Guy.Zustand].Phase >= Bmp[Guy.Zustand].Anzahl) Bmp[Guy.Zustand].Phase = 0;
         }
-        Guy.PosScreen.x = GuyPosScreenStart.x + ROUND(Step * Schrittx);
-        Guy.PosScreen.y = GuyPosScreenStart.y + ROUND(Step * Schritty);
-        if ((Spielzustand === SZINTRO) || (Spielzustand === SZGERETTET)) //Beim Intro führt die Kamera mit
+        Guy.PosScreen.x = GuyPosScreenStart.x + round(Step * Schrittx);
+        Guy.PosScreen.y = GuyPosScreenStart.y + round(Step * Schritty);
+        if ((game_state === STATE_INTRO) || (game_state === STATE_RESCUED)) //Beim Intro führt die Kamera mit
         {
             Camera.x = Guy.PosScreen.x - floor(rcGesamt.right / 2);
             Camera.y = Guy.PosScreen.y - floor(rcGesamt.bottom / 2);
@@ -4366,6 +4417,9 @@ function CalcKoor()
     }
 }
 
+/*
+    Exit game on return 0
+ */
 function frame(now)
 {
     requestAnimationFrame(frame);
@@ -4379,18 +4433,18 @@ function frame(now)
         if (LastBild === 0) LastBild = 60;
     }
 
-    switch (Spielzustand) {
-        case SZLOGO:
-            if (CheckKey() === 2) return; // Das Keyboard abfragen
+    switch (game_state) {
+        case STATE_LOGO:
+            if (CheckKey() === 2) break; // Das Keyboard abfragen
             ZeigeLogo(); //Bild auffrischen
             break;
-        case SZINTRO: case SZGERETTET:
+        case STATE_INTRO: case STATE_RESCUED:
             if (CheckKey() === 0) return 0; // Das Keyboard abfragen
             Animationen(); // Animationen weiterschalten
             if (!Guy.Aktiv) Event(Guy.Aktion); // Aktionen starten
             if (Guy.Pos.x !== RouteStart.x) ZeigeIntro(); // Bild auffrischen (if-Abfrage nötig (seltsamerweise))
             break;
-        case SZSPIEL:
+        case STATE_INGAME:
             if ((Stunden >= 12) && (Minuten !== 0) && (Guy.Aktion !== AKTAGENDE)) {
                 // Hier ist der Tag zu Ende
                 if (Guy.Aktion === AKAUSSCHAU) Chance -= 1 + Scape[Guy.Pos.x][Guy.Pos.y].Hoehe;
@@ -4407,7 +4461,7 @@ function frame(now)
             Zeige();                            // Das Bild zeichnen
             if (Spielbeenden) return 0;
             break;
-        case SZABSPANN:
+        case STATE_OUTRO:
             if (CheckKey() === 0) return 0;
             AbspannCalc();
             ZeigeAbspann();
@@ -4417,23 +4471,20 @@ function frame(now)
 
 function main()
 {
-    canvas = document.querySelector("#canvas");
-    canvas.oncontextmenu = () => false;
-    init_input();
     init_gfx();
-    init_audio();
-    Spielzustand = SZLOGO;
-    InitStructs();
+    init_sfx();
+    init_input();
+    init_structs();
+    game_state = STATE_LOGO;
     requestAnimationFrame(frame);
 }
-
-//addEventListener("load", main);
 
 function start_game(_language)
 {
     language = _language;
     select_lang_panel.style.display = "none";
     start_logo.style.display = "none";
+
     if(language === "en") {
         messages = messages_en;
         gui_img_name = "gui_en.png";
@@ -4446,5 +4497,6 @@ function start_game(_language)
         paper_img_name = "paper.png";
         credits_img_name = "credits.png";
     }
+
     main();
 }
